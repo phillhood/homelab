@@ -83,12 +83,35 @@
     - name: Install k3s agent
       when: k3s_role == "agent"
       block:
+        - name: Create k3s config directory
+          ansible.builtin.file:
+            path: "{{ k3s_config_dir }}"
+            state: directory
+            mode: "0755"
+
+        - name: Create k3s agent config
+          ansible.builtin.copy:
+            dest: "{{ k3s_config_dir }}/config.yaml"
+            mode: "0644"
+            content: |
+              server: https://{{ k3s_server_ip }}:6443
+              token: {{ k3s_token }}
+              node-name: {{ inventory_hostname }}
+              {% if k3s_system_reserved_memory is defined or k3s_system_reserved_storage is defined %}
+              kubelet-arg:
+              {% if k3s_system_reserved_memory is defined %}
+                - "system-reserved=memory={{ k3s_system_reserved_memory }}"
+              {% endif %}
+              {% if k3s_system_reserved_storage is defined %}
+                - "eviction-hard=nodefs.available<{{ k3s_eviction_threshold | default('5%') }}"
+              {% endif %}
+              {% endif %}
+
         - name: Download and run k3s agent install script
           ansible.builtin.shell: |
             curl -sfL {{ k3s_install_script_url }} | \
+              INSTALL_K3S_EXEC="agent" \
               INSTALL_K3S_VERSION={{ k3s_version }} \
-              K3S_URL=https://{{ k3s_server_ip }}:6443 \
-              K3S_TOKEN={{ k3s_token }} \
               sh -
           args:
             creates: /usr/local/bin/k3s
