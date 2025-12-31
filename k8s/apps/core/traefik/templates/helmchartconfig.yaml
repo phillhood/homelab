@@ -8,6 +8,12 @@ spec:
     service:
       spec:
         loadBalancerIP: {{ .Values.global.ingressIP }}
+    ports:
+      web:
+        redirections:
+          entryPoint:
+            to: websecure
+            scheme: https
     logs:
       access:
         enabled: true
