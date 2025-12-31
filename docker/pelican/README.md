@@ -4,22 +4,12 @@ Game server management panel using Pelican Panel and Wings.
 
 ## Panel Setup
 
-1. Create `.env` file in `panel/`:
-   ```bash
-   cp panel/.env.example panel/.env
-   ```
-
-2. Edit `panel/.env` with your domain:
-   ```
-   APP_URL=https://pelican.home.pharah.ca
-   ```
-
-3. Start panel:
+1. Start panel:
    ```bash
    cd panel && sudo docker compose up -d
    ```
 
-4. Complete the web installer at your panel URL `/installer`
+2. Complete the web installer at your panel URL `/installer`
 
 ## Wings Setup
 

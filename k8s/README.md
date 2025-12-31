@@ -1,24 +1,10 @@
 # Kubernetes
 
-## Setup
-
-1. Copy and configure values:
-   ```bash
-   cp values.yaml.example values.yaml
-   ```
-
-2. Deploy everything:
-   ```bash
-   ./deploy.sh
-   ```
-
-## Cheat Sheet
-
 ### bootstrap
 
 ```bash
-./deploy.sh deploy    # Deploy all apps in order
-./deploy.sh deps      # Update all Helm dependencies
+./deploy.sh deploy
+./deploy.sh deps
 ```
 
 ### helm

@@ -1,0 +1,29 @@
+grafana:
+  persistence:
+    enabled: true
+    storageClassName: local-path
+    size: 2Gi
+  initChownData:
+    enabled: false
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  grafana.ini:
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus.monitoring.svc.cluster.local
+          access: proxy
+          isDefault: true
+        - name: Loki
+          type: loki
+          url: http://loki-gateway.monitoring.svc.cluster.local
+          access: proxy
+          isDefault: false

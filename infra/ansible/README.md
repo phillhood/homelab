@@ -2,12 +2,7 @@
 
 ## Setup
 
-1. Create `group_vars/all.yml` from example:
-   ```bash
-   cp group_vars/all.yml.example group_vars/all.yml
-   ```
-
-2. Create vault password file:
+Create vault password file:
    ```bash
    echo 'your-vault-password' > .vault_pass
    chmod 600 .vault_pass

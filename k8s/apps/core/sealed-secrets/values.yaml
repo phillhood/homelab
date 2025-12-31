@@ -1,0 +1,19 @@
+sealed-secrets-web:
+  fullnameOverride: sealed-secrets-web
+  sealedSecrets:
+    namespace: sealed-secrets
+    serviceName: sealed-secrets
+  ingress:
+    enabled: true
+    className: traefik
+    annotations:
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      traefik.ingress.kubernetes.io/router.tls: "true"
+    hosts:
+      - host: secrets.home.pharah.ca
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - secrets.home.pharah.ca

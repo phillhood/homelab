@@ -1,0 +1,16 @@
+prometheus:
+  server:
+    fullnameOverride: prometheus
+    retention: 30d
+    persistentVolume:
+      enabled: true
+      storageClass: local-path
+      size: 25Gi
+  alertmanager:
+    enabled: false
+  kube-state-metrics:
+    enabled: true
+  prometheus-node-exporter:
+    enabled: true
+  prometheus-pushgateway:
+    enabled: false
