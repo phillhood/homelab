@@ -1,0 +1,30 @@
+services:
+  panel:
+    image: ghcr.io/pelican-dev/panel:latest
+    container_name: pelican-panel
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - pelican-data:/pelican-data
+      - pelican-logs:/var/www/html/storage/logs
+    environment:
+      APP_URL: ${APP_URL}
+      APP_ENV: production
+      APP_DEBUG: "false"
+      MAIL_DRIVER: log
+      BEHIND_PROXY: "true"
+      TRUSTED_PROXIES: "*"
+      XDG_DATA_HOME: /pelican-data
+
+volumes:
+  pelican-data:
+  pelican-logs:
+
+networks:
+  default:
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
