@@ -1,4 +1,4 @@
-ca---
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,6 +28,19 @@ spec:
               value: /data/comet.db
             - name: SCRAPE_TORRENTIO
               value: "True"
+            - name: SCRAPE_PROWLARR
+              value: "True"
+            - name: PROWLARR_URL
+              value: "http://prowlarr.media.svc.cluster.local"
+            - name: PROWLARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: prowlarr-api-key
+            - name: SCRAPE_ZILEAN
+              value: "True"
+            - name: ZILEAN_URL
+              value: "http://zilean.media.svc.cluster.local"
             - name: PROXY_DEBRID_STREAM
               value: "True"
             - name: PROXY_DEBRID_STREAM_PASSWORD
@@ -45,11 +58,11 @@ spec:
               mountPath: /data
           resources:
             requests:
-              memory: "256Mi"
+              memory: "512Mi"
               cpu: "100m"
             limits:
-              memory: "512Mi"
-              cpu: "500m"
+              memory: "2Gi"
+              cpu: "1000m"
           readinessProbe:
             httpGet:
               path: /health

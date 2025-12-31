@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflare-ddns
+  namespace: cloudflare
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloudflare-ddns
+  template:
+    metadata:
+      labels:
+        app: cloudflare-ddns
+    spec:
+      containers:
+        - name: ddns
+          image: alpine:3.19
+          command:
+            - /bin/sh
+            - -c
+            - |
+              apk add --no-cache curl jq > /dev/null 2>&1
+
+              update_record() {
+                local name=$1
+                local domain=$2
+                local fqdn="${name}.${domain}"
+
+                ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=${domain}" \
+                  -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                  -H "Content-Type: application/json" | jq -r '.result[0].id')
+
+                if [ "$ZONE_ID" = "null" ] || [ -z "$ZONE_ID" ]; then
+                  echo "Failed to get zone ID for ${domain}"
+                  return 1
+                fi
+
+                RECORD=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?type=A&name=${fqdn}" \
+                  -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                  -H "Content-Type: application/json")
+
+                RECORD_ID=$(echo "$RECORD" | jq -r '.result[0].id')
+                CURRENT_IP=$(echo "$RECORD" | jq -r '.result[0].content')
+
+                if [ "$CURRENT_IP" = "$PUBLIC_IP" ]; then
+                  echo "${fqdn}: IP unchanged ($PUBLIC_IP)"
+                  return 0
+                fi
+
+                if [ "$RECORD_ID" = "null" ] || [ -z "$RECORD_ID" ]; then
+                  echo "${fqdn}: Creating new record -> $PUBLIC_IP"
+                  curl -s -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+                    -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                    -H "Content-Type: application/json" \
+                    --data "{\"type\":\"A\",\"name\":\"${name}\",\"content\":\"${PUBLIC_IP}\",\"ttl\":300,\"proxied\":false}" | jq -r '.success'
+                else
+                  echo "${fqdn}: Updating $CURRENT_IP -> $PUBLIC_IP"
+                  curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records/${RECORD_ID}" \
+                    -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                    -H "Content-Type: application/json" \
+                    --data "{\"type\":\"A\",\"name\":\"${name}\",\"content\":\"${PUBLIC_IP}\",\"ttl\":300,\"proxied\":false}" | jq -r '.success'
+                fi
+              }
+
+              while true; do
+                PUBLIC_IP=$(curl -s https://api.ipify.org)
+                if [ -z "$PUBLIC_IP" ]; then
+                  echo "Failed to get public IP"
+                else
+                  echo "$(date): Public IP is $PUBLIC_IP"
+                  {{- range .Values.records }}
+                  update_record "{{ .name }}" "{{ .domain }}"
+                  {{- end }}
+                fi
+                sleep 300
+              done
+          env:
+            - name: CF_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare-ddns
+                  key: api-token
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "100m"

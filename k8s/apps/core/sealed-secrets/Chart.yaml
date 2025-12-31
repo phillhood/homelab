@@ -6,3 +6,6 @@ dependencies:
   - name: sealed-secrets
     version: "2.*"
     repository: "https://bitnami-labs.github.io/sealed-secrets"
+  - name: sealed-secrets-web
+    version: "3.*"
+    repository: "https://bakito.github.io/helm-charts"

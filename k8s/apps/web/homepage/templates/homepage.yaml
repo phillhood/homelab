@@ -60,97 +60,130 @@ data:
     color: zinc
     theme: dark
     layout:
-      Media:
+      Apps:
         style: row
-        columns: 4
-      Infrastructure:
+        columns: 2
+        useEqualHeights: true
+      Media:
         style: column
-        rows: 2
+        rows: 4
+      Gaming:
+        style: column
+        rows: 4
+      Infrastructure:
+        style: row
+        columns: 3
+        useEqualHeights: true
       Networking:
         style: column
         rows: 2
       Monitoring:
         style: column
         rows: 2
-      Gaming:
-        style: row
-        columns: 4
-  custom.css: ""
+      Utils:
+        style: column
+        rows: 2
+
+  custom.css: |
+    .service {
+      height: 100%;
+    }
+    .services-group {
+      align-items: stretch;
+    }
+    .service-card {
+      height: 100%;
+    }
+    .services-group .service-group-name {
+      font-size: 0.85rem !important;
+      font-style: italic;
+    }
+    .subgroup .service-group-name {
+      font-style: normal;
+    }
   custom.js: ""
   bookmarks.yaml: ""
   services.yaml: |
-    - Media:
-        - Comet:
-            href: https://comet.home.{{ .Values.global.homeDomain }}
-            siteMonitor: https://comet.home.{{ .Values.global.homeDomain }}
-            icon: mdi-meteor-#ff6b35
-            namespace: media
-            podSelector: app=comet
+    - Apps:
+        - Media:
+            - Comet:
+                href: https://comet.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://comet.home.{{ .Values.global.homeDomain }}
+                icon: mdi-meteor-#ff6b35
+                namespace: media
+                podSelector: app=comet
 
-    - Gaming:
-        - Pterodactyl:
-            href: https://pterodactyl.home.{{ .Values.global.homeDomain }}
-            siteMonitor: https://pterodactyl.home.{{ .Values.global.homeDomain }}
-            icon: pterodactyl
-            widget:
-              type: pterodactyl
-              url: https://pterodactyl.home.{{ .Values.global.homeDomain }}
-              key: {{`{{HOMEPAGE_VAR_PTERODACTYL_API_KEY}}`}}
+        - Gaming:
+            - Pelican:
+                href: https://pelican.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://pelican.home.{{ .Values.global.homeDomain }}
+                icon: si-pelican-#38bdf8
+                widget:
+                  type: customapi
+                  url: https://pelican.home.{{ .Values.global.homeDomain }}/api/application/servers
+                  headers:
+                    Authorization: Bearer {{`{{HOMEPAGE_VAR_PELICAN_API_KEY}}`}}
+                    Accept: application/json
+                  mappings:
+                    - field: meta.pagination.total
+                      label: Servers
+                      format: number
 
     - Infrastructure:
-        - Sealed Secrets UI:
-            href: https://secrets.home.{{ .Values.global.homeDomain }}
-            siteMonitor: https://secrets.home.{{ .Values.global.homeDomain }}
-            icon: mdi-lock-#ffd700
-            namespace: sealed-secrets
-            podSelector: app=sealed-secrets-ui
-        - Zot Registry:
-            href: https://registry.home.{{ .Values.global.homeDomain }}
-            siteMonitor: https://registry.home.{{ .Values.global.homeDomain }}
-            icon: docker
-            namespace: registry
-            podSelector: app=zot
+        - Networking:
+            - Pi-hole:
+                href: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
+                siteMonitor: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
+                icon: pi-hole
+                widget:
+                  type: pihole
+                  url: http://192.168.2.100
+                  key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
+            - Traefik:
+                href: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
+                siteMonitor: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
+                icon: traefik
+                namespace: kube-system
+                podSelector: app.kubernetes.io/name=traefik
+                widget:
+                  type: traefik
+                  url: https://traefik.home.{{ .Values.global.homeDomain }}
 
-    - Networking:
-        - Pi-hole:
-            href: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
-            siteMonitor: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
-            icon: pi-hole
-            widget:
-              type: pihole
-              url: http://192.168.2.100
-              key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
-        - Traefik:
-            href: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
-            siteMonitor: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
-            icon: traefik
-            namespace: kube-system
-            podSelector: app.kubernetes.io/name=traefik
-            widget:
-              type: traefik
-              url: https://traefik.home.{{ .Values.global.homeDomain }}
+        - Monitoring:
+            - Grafana:
+                href: https://grafana.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://grafana.home.{{ .Values.global.homeDomain }}
+                icon: grafana
+                namespace: monitoring
+                podSelector: app.kubernetes.io/name=grafana
+                widget:
+                  type: grafana
+                  url: http://grafana.monitoring.svc.cluster.local
+                  username: {{`{{HOMEPAGE_VAR_GRAFANA_USER}}`}}
+                  password: {{`{{HOMEPAGE_VAR_GRAFANA_PASS}}`}}
+            - Prometheus:
+                href: https://prometheus.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://prometheus.home.{{ .Values.global.homeDomain }}
+                icon: prometheus
+                namespace: monitoring
+                podSelector: app.kubernetes.io/name=prometheus
+                widget:
+                  type: prometheus
+                  url: http://prometheus.monitoring.svc.cluster.local
 
-    - Monitoring:
-        - Grafana:
-            href: https://grafana.home.{{ .Values.global.homeDomain }}
-            siteMonitor: https://grafana.home.{{ .Values.global.homeDomain }}
-            icon: grafana
-            namespace: monitoring
-            podSelector: app.kubernetes.io/name=grafana
-            widget:
-              type: grafana
-              url: http://grafana.monitoring.svc.cluster.local
-              username: {{`{{HOMEPAGE_VAR_GRAFANA_USER}}`}}
-              password: {{`{{HOMEPAGE_VAR_GRAFANA_PASS}}`}}
-        - Prometheus:
-            href: https://prometheus.home.{{ .Values.global.homeDomain }}
-            siteMonitor: https://prometheus.home.{{ .Values.global.homeDomain }}
-            icon: prometheus
-            namespace: monitoring
-            podSelector: app.kubernetes.io/name=prometheus
-            widget:
-              type: prometheus
-              url: http://prometheus.monitoring.svc.cluster.local
+        - Utils:
+            - Sealed Secrets Web:
+                href: https://secrets.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://secrets.home.{{ .Values.global.homeDomain }}
+                icon: mdi-lock-#ffd700
+                namespace: sealed-secrets
+                podSelector: app.kubernetes.io/name=sealed-secrets-web
+            - Zot Registry:
+                href: https://registry.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://registry.home.{{ .Values.global.homeDomain }}
+                icon: docker
+                namespace: registry
+                podSelector: app=zot
 
   widgets.yaml: |
     - kubernetes:
@@ -231,11 +264,11 @@ spec:
                 secretKeyRef:
                   name: homepage-secrets
                   key: grafana-pass
-            - name: HOMEPAGE_VAR_PTERODACTYL_API_KEY
+            - name: HOMEPAGE_VAR_PELICAN_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: homepage-secrets
-                  key: pterodactyl-api-key
+                  key: pelican-api-key
                   optional: true
           volumeMounts:
             - mountPath: /app/config/custom.js

@@ -1,0 +1,4 @@
+apiVersion: v2
+name: cloudflare-ddns
+description: Dynamic DNS updater for Cloudflare
+version: 1.0.0
