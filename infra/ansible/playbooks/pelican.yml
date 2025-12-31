@@ -1,0 +1,127 @@
+---
+- name: Install Pelican Panel and Wings
+  hosts: gameserver
+  become: true
+  vars:
+    pelican_dir: /opt/pelican
+    panel_domain: "pelican.home.{{ home_domain }}"
+    wings_domain: "wings.home.{{ home_domain }}"
+    admin_email: "{{ pelican_admin_email | default('admin@localhost') }}"
+
+  tasks:
+    - name: Create Pelican directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ pelican_dir }}"
+        - "{{ pelican_dir }}/panel"
+        - "{{ pelican_dir }}/wings"
+
+    - name: Create Panel docker-compose.yml
+      copy:
+        dest: "{{ pelican_dir }}/panel/docker-compose.yml"
+        mode: "0644"
+        content: |
+          services:
+            panel:
+              image: ghcr.io/pelican-dev/panel:latest
+              restart: unless-stopped
+              ports:
+                - "80:80"
+              extra_hosts:
+                - "host.docker.internal:host-gateway"
+              volumes:
+                - pelican-data:/pelican-data
+                - pelican-logs:/var/www/html/storage/logs
+              environment:
+                APP_URL: "https://{{ panel_domain }}"
+                APP_ENV: "production"
+                APP_DEBUG: "false"
+                MAIL_DRIVER: "log"
+                BEHIND_PROXY: "true"
+                TRUSTED_PROXIES: "*"
+                XDG_DATA_HOME: /pelican-data
+
+          volumes:
+            pelican-data:
+            pelican-logs:
+
+          networks:
+            default:
+              ipam:
+                config:
+                  - subnet: 172.20.0.0/16
+
+    - name: Create Wings docker-compose.yml
+      copy:
+        dest: "{{ pelican_dir }}/wings/docker-compose.yml"
+        mode: "0644"
+        content: |
+          services:
+            wings:
+              image: ghcr.io/pelican-dev/wings:latest
+              restart: always
+              network_mode: host
+              tty: true
+              environment:
+                TZ: "America/Toronto"
+                WINGS_UID: 988
+                WINGS_GID: 988
+                WINGS_USERNAME: pelican
+              volumes:
+                - /var/run/docker.sock:/var/run/docker.sock
+                - /var/lib/docker/containers:/var/lib/docker/containers
+                - /etc/pelican:/etc/pelican
+                - /var/lib/pelican:/var/lib/pelican
+                - /var/log/pelican:/var/log/pelican
+                - /tmp/pelican:/tmp/pelican
+                - /etc/ssl/certs:/etc/ssl/certs:ro
+
+    - name: Create Wings directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /etc/pelican
+        - /var/lib/pelican
+        - /var/lib/pelican/volumes
+        - /var/lib/pelican/backups
+        - /var/log/pelican
+        - /tmp/pelican
+
+    - name: Start Panel containers
+      community.docker.docker_compose_v2:
+        project_src: "{{ pelican_dir }}/panel"
+        state: present
+      register: panel_output
+
+    - name: Wait for Panel to be ready
+      wait_for:
+        port: 80
+        delay: 10
+        timeout: 120
+
+    - name: Display setup instructions
+      debug:
+        msg:
+          - "=============================================="
+          - "Pelican Panel is starting!"
+          - "=============================================="
+          - ""
+          - "1. Update DNS: {{ panel_domain }} -> 192.168.2.101"
+          - "2. Update DNS: {{ wings_domain }} -> 192.168.2.101"
+          - ""
+          - "3. Access installer at: https://{{ panel_domain }}/installer"
+          - "   Complete the web-based setup wizard"
+          - ""
+          - "4. After setup, create a Node in the Panel"
+          - "   - FQDN: {{ wings_domain }}"
+          - "   - Use SSL, Behind Proxy"
+          - ""
+          - "5. Copy Wings config to /etc/pelican/config.yml"
+          - "   Then start Wings:"
+          - "   cd {{ pelican_dir }}/wings && docker compose up -d"
+          - "=============================================="

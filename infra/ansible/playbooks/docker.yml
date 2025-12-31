@@ -1,6 +1,6 @@
 ---
 - name: Install Docker CE
-  hosts: game_servers
+  hosts: gameserver
   become: true
   tasks:
     - name: Install required packages

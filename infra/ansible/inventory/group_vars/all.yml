@@ -1,0 +1,8 @@
+# User configuration
+ansible_user: shy
+homelab_user: shy
+homelab_dir: /home/shy/homelab
+
+# Domain configuration
+home_domain: pharah.ca
+hobby_domain: shychedelic.com
