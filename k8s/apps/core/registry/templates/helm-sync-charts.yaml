@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helm-sync-charts
+  namespace: registry
+data:
+  repos.txt: |
+    bitnami-labs https://bitnami-labs.github.io/sealed-secrets
+    metallb https://metallb.github.io/metallb
+    jetstack https://charts.jetstack.io
+    prometheus-community https://prometheus-community.github.io/helm-charts
+    grafana https://grafana.github.io/helm-charts
+
+  charts.txt: |
+    bitnami-labs sealed-secrets
+    metallb metallb
+    jetstack cert-manager
+    prometheus-community kube-prometheus-stack
+    grafana loki
+    grafana promtail

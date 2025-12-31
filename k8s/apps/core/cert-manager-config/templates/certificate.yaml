@@ -1,0 +1,45 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: home-wildcard
+  namespace: kube-system
+spec:
+  secretName: home-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.home.{{ .Values.global.homeDomain }}"
+  dnsNames:
+    - "*.home.{{ .Values.global.homeDomain }}"
+    - "home.{{ .Values.global.homeDomain }}"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hobby-wildcard
+  namespace: kube-system
+spec:
+  secretName: hobby-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.{{ .Values.global.hobbyDomain }}"
+  dnsNames:
+    - "*.{{ .Values.global.hobbyDomain }}"
+    - "{{ .Values.global.hobbyDomain }}"
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: home-root-wildcard
+  namespace: kube-system
+spec:
+  secretName: home-root-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.{{ .Values.global.homeDomain }}"
+  dnsNames:
+    - "*.{{ .Values.global.homeDomain }}"
+    - "{{ .Values.global.homeDomain }}"

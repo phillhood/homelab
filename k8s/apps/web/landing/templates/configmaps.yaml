@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: web
+data:
+  nginx.conf: |
+    user nginx;
+    worker_processes auto;
+    error_log /var/log/nginx/error.log notice;
+    pid /var/run/nginx.pid;
+    events {
+        worker_connections 1024;
+    }
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        set_real_ip_from 10.42.0.0/16;
+        set_real_ip_from 10.43.0.0/16;
+        real_ip_header X-Forwarded-For;
+        real_ip_recursive on;
+
+        log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for"';
+
+        access_log /var/log/nginx/access.log main;
+        sendfile on;
+        keepalive_timeout 65;
+
+        server {
+            listen 80;
+            server_name _;
+            location / {
+                root /usr/share/nginx/html;
+                index index.html;
+            }
+        }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: home-landing-html
+  namespace: web
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{{ .Values.global.homeDomain }}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          color: #fff;
+        }
+        .container {
+          text-align: center;
+          padding: 2rem;
+        }
+        h1 {
+          font-size: 3rem;
+          font-weight: 300;
+          letter-spacing: 0.5rem;
+          margin-bottom: 1rem;
+          background: linear-gradient(90deg, #f093fb, #f5576c, #4facfe);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        p {
+          color: #888;
+          font-size: 1.1rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>{{ .Values.global.homeDomain | replace "." "" }}</h1>
+        <p>powered by bean and bingus</p>
+      </div>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hobby-landing-html
+  namespace: web
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>{{ .Values.global.hobbyDomain }}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          color: #fff;
+        }
+        .container {
+          text-align: center;
+          padding: 2rem;
+        }
+        h1 {
+          font-size: 3rem;
+          font-weight: 300;
+          letter-spacing: 0.5rem;
+          margin-bottom: 1rem;
+          background: linear-gradient(90deg, #f093fb, #f5576c, #4facfe);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        p {
+          color: #888;
+          font-size: 1.1rem;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>{{ .Values.global.hobbyDomain | replace "." "" | replace "com" "" }}</h1>
+        <p>coming soon</p>
+      </div>
+    </body>
+    </html>

@@ -1,0 +1,21 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |
+    service:
+      spec:
+        loadBalancerIP: {{ .Values.global.ingressIP }}
+    logs:
+      access:
+        enabled: true
+        format: json
+        fields:
+          headers:
+            defaultMode: drop
+            names:
+              X-Forwarded-For: keep
+              X-Real-Ip: keep
+              CF-Connecting-IP: keep

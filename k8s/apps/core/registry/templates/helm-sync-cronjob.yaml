@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: helm-chart-sync
+  namespace: registry
+spec:
+  schedule: "0 4 * * *"  # Daily at 4 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: helm-sync
+              image: alpine/helm:latest
+              command: ["/bin/sh", "/scripts/sync.sh"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+                - name: charts
+                  mountPath: /charts
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "256Mi"
+                  cpu: "200m"
+          volumes:
+            - name: scripts
+              configMap:
+                name: helm-sync-config
+                defaultMode: 0755
+            - name: charts
+              configMap:
+                name: helm-sync-charts

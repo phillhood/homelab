@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zilean
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zilean
+  template:
+    metadata:
+      labels:
+        app: zilean
+    spec:
+      containers:
+        - name: zilean
+          image: docker.io/ipromknight/zilean:latest
+          ports:
+            - containerPort: 8181
+          env:
+            - name: Zilean__Database__ConnectionString
+              value: "Host=localhost;Port=5432;Database=zilean;Username=zilean;Password=zilean"
+            - name: Zilean__Dmm__EnableScraping
+              value: "true"
+            - name: Zilean__Dmm__EnableEndpoint
+              value: "true"
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+        - name: postgres
+          image: docker.io/library/postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: zilean
+            - name: POSTGRES_PASSWORD
+              value: zilean
+            - name: POSTGRES_DB
+              value: zilean
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: zilean-postgres
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zilean
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8181
+  selector:
+    app: zilean

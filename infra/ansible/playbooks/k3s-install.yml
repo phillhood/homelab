@@ -1,0 +1,106 @@
+---
+- name: Install k3s cluster
+  hosts: k3s_cluster
+  become: true
+  vars:
+    k3s_install_script_url: https://get.k3s.io
+    k3s_config_dir: /etc/rancher/k3s
+    k3s_data_dir: /var/lib/rancher/k3s
+
+  tasks:
+    - name: Install required packages
+      ansible.builtin.apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+        state: present
+        update_cache: true
+      when: ansible_os_family == "Debian"
+
+    - name: Disable swap (required for k8s)
+      ansible.builtin.command: swapoff -a
+      changed_when: false
+
+    - name: Remove swap from fstab
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        regexp: '\sswap\s'
+        state: absent
+
+    - name: Install k3s server
+      when: k3s_role == "server"
+      block:
+        - name: Create k3s config directory
+          ansible.builtin.file:
+            path: "{{ k3s_config_dir }}"
+            state: directory
+            mode: "0755"
+
+        - name: Create k3s server config
+          ansible.builtin.copy:
+            dest: "{{ k3s_config_dir }}/config.yaml"
+            mode: "0644"
+            content: |
+              # k3s server config
+              cluster-cidr: "{{ k3s_cluster_cidr }}"
+              service-cidr: "{{ k3s_service_cidr }}"
+
+              # disable servicelb, using metallb
+              disable:
+                - servicelb
+
+              # kubeconfig
+              write-kubeconfig-mode: "0644"
+
+              # api server args
+              kube-apiserver-arg:
+                - "enable-admission-plugins=NodeRestriction"
+
+        - name: Download and run k3s install script
+          ansible.builtin.shell: |
+            curl -sfL {{ k3s_install_script_url }} | INSTALL_K3S_VERSION={{ k3s_version }} sh -
+          args:
+            creates: /usr/local/bin/k3s
+
+        - name: Wait for k3s to be ready
+          ansible.builtin.command: k3s kubectl get nodes
+          register: k3s_ready
+          until: k3s_ready.rc == 0
+          retries: 30
+          delay: 5
+          changed_when: false
+
+        - name: Get node token for workers
+          ansible.builtin.slurp:
+            src: /var/lib/rancher/k3s/server/node-token
+          register: k3s_node_token
+
+        - name: Display node token
+          ansible.builtin.debug:
+            msg: "Node token: {{ k3s_node_token.content | b64decode | trim }}"
+
+    - name: Install k3s agent
+      when: k3s_role == "agent"
+      block:
+        - name: Download and run k3s agent install script
+          ansible.builtin.shell: |
+            curl -sfL {{ k3s_install_script_url }} | \
+              INSTALL_K3S_VERSION={{ k3s_version }} \
+              K3S_URL=https://{{ k3s_server_ip }}:6443 \
+              K3S_TOKEN={{ k3s_token }} \
+              sh -
+          args:
+            creates: /usr/local/bin/k3s
+
+    - name: Ensure k3s service is enabled and running
+      ansible.builtin.systemd:
+        name: "{{ 'k3s' if k3s_role == 'server' else 'k3s-agent' }}"
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart k3s
+      ansible.builtin.systemd:
+        name: k3s
+        state: restarted

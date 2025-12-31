@@ -1,0 +1,33 @@
+# Global configs
+  homeDomain: example.com
+  hobbyDomain: hobby.example.com
+  registry: registry.home.example.com
+  acmeEmail: admin@example.com
+  ingressIP: 192.168.1.100
+
+# Chart configs
+# metallb:
+#   ipAddressPool:
+#     addresses:
+#       - 192.168.1.100-192.168.1.150
+
+# loki:
+#   loki:
+#     singleBinary:
+#       persistence:
+#         size: 50Gi
+
+# prometheus:
+#   kube-prometheus-stack:
+#     prometheus:
+#       prometheusSpec:
+#         retention: 60d
+#         storageSpec:
+#           volumeClaimTemplate:
+#             spec:
+#               resources:
+#                 requests:
+#                   storage: 50Gi
+#     grafana:
+#       persistence:
+#         size: 5Gi

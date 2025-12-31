@@ -1,0 +1,106 @@
+ca---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: comet
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: comet
+  template:
+    metadata:
+      labels:
+        app: comet
+    spec:
+      containers:
+        - name: comet
+          image: ghcr.io/g0ldyy/comet:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: ADDON_NAME
+              value: "Comet"
+            - name: DATABASE_TYPE
+              value: sqlite
+            - name: DATABASE_PATH
+              value: /data/comet.db
+            - name: SCRAPE_TORRENTIO
+              value: "True"
+            - name: PROXY_DEBRID_STREAM
+              value: "True"
+            - name: PROXY_DEBRID_STREAM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: proxy-password
+            - name: ADMIN_DASHBOARD_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: admin-password
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: comet-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: comet
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8000
+  selector:
+    app: comet
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: comet
+  namespace: media
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  tls:
+    - hosts:
+        - comet.home.{{ .Values.global.homeDomain }}
+  rules:
+    - host: comet.home.{{ .Values.global.homeDomain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: comet
+                port:
+                  number: 80

@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: helm-sync-config
+  namespace: registry
+data:
+  sync.sh: |
+    #!/bin/sh
+    set -e
+
+    REGISTRY="registry.home.{{ .Values.global.homeDomain }}"
+    REPOS_FILE="/charts/repos.txt"
+    CHARTS_FILE="/charts/charts.txt"
+
+    echo "=== Helm Chart Sync Started ==="
+    date
+
+    echo "Adding Helm repos..."
+    while read -r name url; do
+      [ -z "$name" ] && continue
+      echo "  $name -> $url"
+      helm repo add "$name" "$url" --force-update
+    done < "$REPOS_FILE"
+    helm repo update
+
+    echo "Syncing charts..."
+    while read -r repo name; do
+      [ -z "$repo" ] && continue
+      echo "Syncing: $repo/$name"
+
+      helm pull "$repo/$name" --destination /tmp
+
+      chart_file=$(ls -t /tmp/${name}-*.tgz 2>/dev/null | head -1)
+
+      if [ -n "$chart_file" ]; then
+        version=$(basename "$chart_file" .tgz | sed "s/${name}-//")
+        echo "  Version: $version"
+        helm push "$chart_file" "oci://${REGISTRY}/charts" 2>&1 | grep -v "already exists" || true
+        echo "  Done"
+        rm -f "$chart_file"
+      else
+        echo "  Failed to download"
+      fi
+    done < "$CHARTS_FILE"
+
+    echo "=== Sync Complete ==="
+    date

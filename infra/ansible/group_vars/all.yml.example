@@ -1,0 +1,8 @@
+# User configuration
+ansible_user: username
+homelab_user: username
+homelab_dir: /home/username/dev/homelab
+
+# Domain configuration
+home_domain: home.com
+hobby_domain: hobby.com

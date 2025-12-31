@@ -1,0 +1,6 @@
+cloudflare_api_token           = "api-token"
+cloudflare_zone_id_home        = "home-zone-id"
+cloudflare_zone_id_hobby       = "hobby-zone-id"
+home_domain                    = "home.com"
+hobby_domain                   = "hobby.com"
+homelab_ip                     = "0.0.0.0"

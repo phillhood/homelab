@@ -1,0 +1,74 @@
+apiVersion: v2
+name: homelab
+version: 1.0.0
+description: Homelab umbrella chart
+
+dependencies:
+  # 1
+  - name: sealed-secrets
+    version: "1.0.0"
+    repository: "file://./apps/core/sealed-secrets"
+
+  - name: registry
+    version: "1.0.0"
+    repository: "file://./apps/core/registry"
+
+  # 2
+  - name: metallb
+    version: "1.0.0"
+    repository: "file://./apps/core/metallb"
+
+  - name: cert-manager
+    version: "1.0.0"
+    repository: "file://./apps/core/cert-manager"
+
+  # 3
+  - name: coredns
+    version: "1.0.0"
+    repository: "file://./apps/core/coredns"
+
+  - name: traefik
+    version: "1.0.0"
+    repository: "file://./apps/core/traefik"
+
+  - name: cloudflare-tunnel
+    version: "1.0.0"
+    repository: "file://./apps/core/cloudflare-tunnel"
+
+  # 4
+  - name: loki
+    version: "1.0.0"
+    repository: "file://./apps/core/loki"
+
+  - name: prometheus
+    version: "1.0.0"
+    repository: "file://./apps/core/prometheus"
+
+  - name: promtail
+    version: "1.0.0"
+    repository: "file://./apps/core/promtail"
+
+  # 5
+  - name: pihole
+    version: "1.0.0"
+    repository: "file://./apps/core/pihole"
+
+  - name: comet
+    version: "1.0.0"
+    repository: "file://./apps/media/comet"
+
+  - name: zilean
+    version: "1.0.0"
+    repository: "file://./apps/media/zilean"
+
+  - name: prowlarr
+    version: "1.0.0"
+    repository: "file://./apps/media/prowlarr"
+
+  - name: homepage
+    version: "1.0.0"
+    repository: "file://./apps/web/homepage"
+
+  - name: landing
+    version: "1.0.0"
+    repository: "file://./apps/web/landing"

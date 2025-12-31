@@ -1,0 +1,4 @@
+apiVersion: v2
+name: pihole
+version: 1.0.0
+description: Pi-hole ingress for external access

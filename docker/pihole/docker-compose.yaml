@@ -1,0 +1,16 @@
+services:
+  pihole:
+    image: pihole/pihole:2024.07.0
+    container_name: pihole
+    network_mode: host
+    environment:
+      TZ: America/Toronto
+      WEBPASSWORD: ${ADMIN_PASSWORD}
+      PIHOLE_DNS_: 8.8.8.8;8.8.4.4
+      DNSMASQ_LISTENING: local
+    volumes:
+      - ./data/pihole:/etc/pihole
+      - ./data/dnsmasq:/etc/dnsmasq.d
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
