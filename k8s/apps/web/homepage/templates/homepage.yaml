@@ -59,6 +59,10 @@ data:
     useEqualHeights: true
     color: zinc
     theme: dark
+    background:
+      image: https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Guisard_-_Milky_Way.jpg/2560px-Guisard_-_Milky_Way.jpg
+      opacity: 100
+      blur: xs
     layout:
       Apps:
         style: row
@@ -93,6 +97,8 @@ data:
     }
     .service-card {
       height: 100%;
+      background: rgba(0, 0, 0, 0.4) !important;
+      backdrop-filter: blur(8px);
     }
     .services-group .service-group-name {
       font-size: 0.85rem !important;
@@ -108,15 +114,25 @@ data:
         - Media:
             - Comet:
                 href: https://comet.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://comet.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://comet.media.svc.cluster.local
                 icon: mdi-meteor-#ff6b35
                 namespace: media
                 podSelector: app=comet
+            - Prowlarr:
+                href: https://prowlarr.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://prowlarr.media.svc.cluster.local/ping
+                icon: prowlarr
+                namespace: media
+                podSelector: app=prowlarr
+                widget:
+                  type: prowlarr
+                  url: http://prowlarr.media.svc.cluster.local
+                  key: {{`{{HOMEPAGE_VAR_PROWLARR_API_KEY}}`}}
 
         - Gaming:
             - Pelican:
                 href: https://pelican.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://pelican.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://pelican.home.{{ .Values.global.homeDomain }}/login
                 icon: si-pelican-#38bdf8
                 widget:
                   type: customapi
@@ -141,18 +157,27 @@ data:
                   key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
             - Traefik:
                 href: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
-                siteMonitor: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
+                siteMonitor: http://traefik-api.kube-system.svc.cluster.local:8080/ping
                 icon: traefik
                 namespace: kube-system
                 podSelector: app.kubernetes.io/name=traefik
                 widget:
                   type: traefik
-                  url: https://traefik.home.{{ .Values.global.homeDomain }}
+                  url: http://traefik-api.kube-system.svc.cluster.local:8080
 
         - Monitoring:
+            - Gatus:
+                href: https://status.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://gatus.monitoring.svc.cluster.local:8080
+                icon: gatus
+                namespace: monitoring
+                podSelector: app=gatus
+                widget:
+                  type: gatus
+                  url: http://gatus.monitoring.svc.cluster.local:8080
             - Grafana:
                 href: https://grafana.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://grafana.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://grafana.monitoring.svc.cluster.local
                 icon: grafana
                 namespace: monitoring
                 podSelector: app.kubernetes.io/name=grafana
@@ -163,7 +188,7 @@ data:
                   password: {{`{{HOMEPAGE_VAR_GRAFANA_PASS}}`}}
             - Prometheus:
                 href: https://prometheus.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://prometheus.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://prometheus.monitoring.svc.cluster.local
                 icon: prometheus
                 namespace: monitoring
                 podSelector: app.kubernetes.io/name=prometheus
@@ -174,13 +199,13 @@ data:
         - Utils:
             - Sealed Secrets Web:
                 href: https://secrets.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://secrets.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://sealed-secrets-web.sealed-secrets.svc.cluster.local
                 icon: mdi-lock-#ffd700
                 namespace: sealed-secrets
                 podSelector: app.kubernetes.io/name=sealed-secrets-web
             - Zot Registry:
                 href: https://registry.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://registry.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://zot.registry.svc.cluster.local:5000
                 icon: docker
                 namespace: registry
                 podSelector: app=zot
@@ -269,6 +294,12 @@ spec:
                 secretKeyRef:
                   name: homepage-secrets
                   key: pelican-api-key
+                  optional: true
+            - name: HOMEPAGE_VAR_PROWLARR_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: prowlarr-api-key
                   optional: true
           volumeMounts:
             - mountPath: /app/config/custom.js

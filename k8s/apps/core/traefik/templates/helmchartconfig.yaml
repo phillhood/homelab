@@ -5,6 +5,11 @@ metadata:
   namespace: kube-system
 spec:
   valuesContent: |
+    api:
+      dashboard: true
+      insecure: true
+    additionalArguments:
+      - "--api.insecure=true"
     service:
       spec:
         loadBalancerIP: {{ .Values.global.ingressIP }}

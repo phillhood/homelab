@@ -85,7 +85,7 @@ data:
     </head>
     <body>
       <div class="container">
-        <h1>{{ .Values.global.homeDomain | replace "." "" }}</h1>
+        <h1>{{ .Values.global.homeDomain }}</h1>
         <p>powered by bean and bingus</p>
       </div>
     </body>
@@ -137,7 +137,7 @@ data:
     </head>
     <body>
       <div class="container">
-        <h1>{{ .Values.global.hobbyDomain | replace "." "" | replace "com" "" }}</h1>
+        <h1>{{ .Values.global.hobbyDomain | replace ".com" "" }}</h1>
         <p>coming soon</p>
       </div>
     </body>
