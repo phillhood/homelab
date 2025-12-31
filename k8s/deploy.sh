@@ -114,6 +114,11 @@ case "${1:-deploy}" in
             -n monitoring \
             -f values.yaml
 
+        helm dependency update apps/core/grafana
+        helm upgrade --install grafana apps/core/grafana \
+            -n monitoring \
+            -f values.yaml
+
         helm dependency update apps/core/promtail
         helm upgrade --install promtail apps/core/promtail \
             -n monitoring \
