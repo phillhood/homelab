@@ -60,7 +60,7 @@ data:
     color: zinc
     theme: dark
     background:
-      image: https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Guisard_-_Milky_Way.jpg/2560px-Guisard_-_Milky_Way.jpg
+      image: /images/purple_nebula.jpg
       opacity: 100
       blur: xs
     layout:
@@ -97,8 +97,6 @@ data:
     }
     .service-card {
       height: 100%;
-      background: rgba(0, 0, 0, 0.4) !important;
-      backdrop-filter: blur(8px);
     }
     .services-group .service-group-name {
       font-size: 0.85rem !important;
@@ -328,6 +326,8 @@ spec:
               subPath: widgets.yaml
             - mountPath: /app/config/logs
               name: logs
+            - mountPath: /app/public/images
+              name: images
           resources:
             requests:
               memory: "128Mi"
@@ -341,6 +341,10 @@ spec:
             name: homepage
         - name: logs
           emptyDir: {}
+        - name: images
+          hostPath:
+            path: /assets/backgrounds
+            type: Directory
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
