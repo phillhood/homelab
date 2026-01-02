@@ -35,6 +35,7 @@
         src: ../../../docker/pelican/panel/docker-compose.yaml
         dest: "{{ pelican_dir }}/panel/docker-compose.yaml"
         mode: "0644"
+      notify: Restart panel
 
     - name: Copy Wings docker-compose
       ansible.builtin.copy:
@@ -117,14 +118,26 @@
           - ""
           - "2. After setup, create a Node in the Panel:"
           - "   - FQDN: {{ wings_domain }}"
-          - "   - Enable SSL and Behind Proxy"
+          - "   - Communicate over SSL: OFF (Panel connects directly via HTTP)"
+          - "   - Behind Proxy: ON (browser uses HTTPS via Traefik)"
+          - "   - Daemon Port: 8080"
           - ""
           - "3. Copy Wings config to /etc/pelican/config.yml"
           - "   Then enable Wings:"
           - "   sudo systemctl enable --now pelican-wings"
+          - ""
+          - "4. Update Wings trusted_proxies in /etc/pelican/config.yml:"
+          - "   trusted_proxies:"
+          - "     - 192.168.2.100"
+          - "     - 10.42.0.0/16"
           - "=============================================="
 
   handlers:
     - name: Reload systemd
       ansible.builtin.systemd:
         daemon_reload: true
+
+    - name: Restart panel
+      ansible.builtin.shell:
+        cmd: docker compose up -d --force-recreate
+        chdir: "{{ pelican_dir }}/panel"

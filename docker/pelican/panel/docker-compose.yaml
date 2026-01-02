@@ -3,10 +3,10 @@ services:
     image: ghcr.io/pelican-dev/panel:latest
     container_name: pelican-panel
     restart: unless-stopped
-    ports:
-      - "80:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    network_mode: host
+    user: root
+    dns:
+      - 192.168.2.100
     volumes:
       - pelican-data:/pelican-data
       - pelican-logs:/var/www/html/storage/logs
@@ -18,13 +18,9 @@ services:
       BEHIND_PROXY: "true"
       TRUSTED_PROXIES: "*"
       XDG_DATA_HOME: /pelican-data
+      GUZZLE_TIMEOUT: 30
+      GUZZLE_CONNECT_TIMEOUT: 10
 
 volumes:
   pelican-data:
   pelican-logs:
-
-networks:
-  default:
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
