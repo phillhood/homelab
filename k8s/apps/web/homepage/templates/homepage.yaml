@@ -61,8 +61,7 @@ data:
     theme: dark
     background:
       image: /images/purple_nebula.jpg
-      opacity: 100
-      blur: xs
+      opacity: 50
     layout:
       Apps:
         style: row
@@ -83,10 +82,10 @@ data:
         rows: 2
       Monitoring:
         style: column
-        rows: 2
+        rows: 3
       Utils:
         style: column
-        rows: 2
+        rows: 3
 
   custom.css: |
     .service {
@@ -97,6 +96,7 @@ data:
     }
     .service-card {
       height: 100%;
+      backdrop-filter: blur(12px);
     }
     .services-group .service-group-name {
       font-size: 0.85rem !important;
@@ -151,7 +151,7 @@ data:
                 icon: pi-hole
                 widget:
                   type: pihole
-                  url: http://192.168.2.100
+                  url: http://192.168.1.100
                   key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
             - Traefik:
                 href: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
@@ -195,6 +195,12 @@ data:
                   url: http://prometheus.monitoring.svc.cluster.local
 
         - Utils:
+            - pgAdmin:
+                href: https://pgadmin.home.{{ .Values.global.homeDomain }}
+                siteMonitor: http://pgadmin.tools.svc.cluster.local/misc/ping
+                icon: pgadmin
+                namespace: tools
+                podSelector: app=pgadmin
             - Sealed Secrets Web:
                 href: https://secrets.home.{{ .Values.global.homeDomain }}
                 siteMonitor: http://sealed-secrets-web.sealed-secrets.svc.cluster.local
@@ -262,6 +268,8 @@ spec:
       labels:
         app: homepage
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: lab
       serviceAccountName: homepage
       automountServiceAccountToken: true
       containers:
@@ -343,7 +351,7 @@ spec:
           emptyDir: {}
         - name: images
           hostPath:
-            path: /assets/backgrounds
+            path: /home/shy/homelab/assets/backgrounds
             type: Directory
 ---
 apiVersion: networking.k8s.io/v1

@@ -3,4 +3,4 @@ global:
   hobbyDomain: shychedelic.com
   registry: registry.home.pharah.ca
   acmeEmail: admin@pharah.ca
-  ingressIP: 192.168.2.101
+  ingressIP: 192.168.1.200

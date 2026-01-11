@@ -26,6 +26,12 @@ spec:
               value: sqlite
             - name: DATABASE_PATH
               value: /data/comet.db
+            - name: FASTAPI_WORKERS
+              value: "2"
+            - name: INDEXER_MANAGER_TIMEOUT
+              value: "15"
+            - name: GET_TORRENT_TIMEOUT
+              value: "5"
             - name: SCRAPE_TORRENTIO
               value: "True"
             - name: SCRAPE_PROWLARR

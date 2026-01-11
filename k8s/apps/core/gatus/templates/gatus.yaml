@@ -11,8 +11,8 @@ data:
       path: /data/data.db
 
     ui:
-      title: Pharah Homelab Uptime
-      header: Pharah Uptime
+      title: Homelap Uptime
+      header: Homelab Uptime
 
     endpoints:
       - name: Homepage
@@ -65,6 +65,13 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      - name: pgAdmin
+        group: Monitoring
+        url: http://pgadmin.tools.svc.cluster.local/misc/ping
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       - name: Traefik
         group: Infrastructure
         url: http://traefik-api.kube-system.svc.cluster.local:8080/ping
@@ -74,7 +81,7 @@ data:
 
       - name: Pi-hole
         group: Infrastructure
-        url: http://192.168.2.100/admin/
+        url: http://192.168.1.100/admin/
         interval: 60s
         conditions:
           - "[STATUS] == 200"

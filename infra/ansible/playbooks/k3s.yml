@@ -46,6 +46,9 @@
               cluster-cidr: "{{ k3s_cluster_cidr }}"
               service-cidr: "{{ k3s_service_cidr }}"
 
+              # node ip (for multi-homed or changed network)
+              node-ip: "{{ ansible_host if ansible_host != 'localhost' else ansible_default_ipv4.address }}"
+
               # disable servicelb, using metallb
               disable:
                 - servicelb
@@ -97,6 +100,7 @@
               server: https://{{ k3s_server_ip }}:6443
               token: {{ k3s_token }}
               node-name: {{ inventory_hostname }}
+              node-ip: {{ ansible_host }}
               {% if k3s_system_reserved_memory is defined or k3s_system_reserved_storage is defined %}
               kubelet-arg:
               {% if k3s_system_reserved_memory is defined %}

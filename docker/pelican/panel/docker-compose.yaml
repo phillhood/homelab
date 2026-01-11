@@ -6,7 +6,7 @@ services:
     network_mode: host
     user: root
     dns:
-      - 192.168.2.100
+      - 192.168.1.100
     volumes:
       - pelican-data:/pelican-data
       - pelican-logs:/var/www/html/storage/logs

@@ -128,7 +128,7 @@
           - ""
           - "4. Update Wings trusted_proxies in /etc/pelican/config.yml:"
           - "   trusted_proxies:"
-          - "     - 192.168.2.100"
+          - "     - 192.168.1.100"
           - "     - 10.42.0.0/16"
           - "=============================================="
 

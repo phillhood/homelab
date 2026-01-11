@@ -24,7 +24,7 @@ Game server management panel using Pelican Panel and Wings.
 3. Add trusted proxies to `/etc/pelican/config.yml`:
    ```yaml
    trusted_proxies:
-     - 192.168.2.100
+     - 192.168.1.100
      - 10.42.0.0/16
    ```
 

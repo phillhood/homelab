@@ -26,6 +26,8 @@ spec:
               value: "true"
             - name: Zilean__Dmm__EnableEndpoint
               value: "true"
+            - name: Zilean__Dmm__ScrapeSchedule
+              value: "0 4 * * *"
           resources:
             requests:
               memory: "256Mi"
@@ -47,6 +49,8 @@ spec:
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
+            - name: dshm
+              mountPath: /dev/shm
           resources:
             requests:
               memory: "256Mi"
@@ -58,6 +62,10 @@ spec:
         - name: postgres-data
           persistentVolumeClaim:
             claimName: zilean-postgres
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
 ---
 apiVersion: v1
 kind: Service
@@ -69,5 +77,18 @@ spec:
   ports:
     - port: 80
       targetPort: 8181
+  selector:
+    app: zilean
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zilean-postgres
+  namespace: media
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
   selector:
     app: zilean
