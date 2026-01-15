@@ -10,6 +10,7 @@ services:
     volumes:
       - pelican-data:/pelican-data
       - pelican-logs:/var/www/html/storage/logs
+      - pelican-cache:/var/www/html/storage/framework/cache
     environment:
       APP_URL: https://panel.home.pharah.ca
       APP_ENV: production
@@ -24,3 +25,4 @@ services:
 volumes:
   pelican-data:
   pelican-logs:
+  pelican-cache:
