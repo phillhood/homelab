@@ -1,0 +1,148 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: homarr
+  namespace: web
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: homarr
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps", "secrets", "namespaces", "nodes", "persistentvolumeclaims"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods", "nodes"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: homarr
+subjects:
+  - kind: ServiceAccount
+    name: homarr
+    namespace: web
+roleRef:
+  kind: ClusterRole
+  name: homarr
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homarr-data
+  namespace: web
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homarr
+  namespace: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homarr
+  template:
+    metadata:
+      labels:
+        app: homarr
+    spec:
+      serviceAccountName: homarr
+      nodeSelector:
+        kubernetes.io/hostname: lab
+      containers:
+        - name: homarr
+          image: ghcr.io/homarr-labs/homarr:latest
+          ports:
+            - containerPort: 7575
+          env:
+            - name: TZ
+              value: America/Toronto
+            - name: ENABLE_KUBERNETES
+              value: "true"
+            - name: SECRET_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homarr-secrets
+                  key: encryption-key
+          volumeMounts:
+            - name: data
+              mountPath: /appdata
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 7575
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 7575
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: homarr-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homarr
+  namespace: web
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 7575
+  selector:
+    app: homarr
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homarr
+  namespace: web
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    gethomepage.dev/enabled: "false"
+spec:
+  tls:
+    - hosts:
+        - homarr.home.{{ .Values.global.homeDomain }}
+  rules:
+    - host: homarr.home.{{ .Values.global.homeDomain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: homarr
+                port:
+                  number: 80

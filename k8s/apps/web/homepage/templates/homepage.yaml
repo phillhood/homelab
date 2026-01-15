@@ -57,6 +57,7 @@ data:
     title: Homelab
     headerStyle: boxed
     useEqualHeights: true
+    statusStyle: dot
     color: zinc
     theme: dark
     background:
@@ -130,7 +131,7 @@ data:
         - Gaming:
             - Pelican:
                 href: https://pelican.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://pelican.home.{{ .Values.global.homeDomain }}/login
+                siteMonitor: https://pelican.home.{{ .Values.global.homeDomain }}
                 icon: si-pelican-#38bdf8
                 widget:
                   type: customapi
@@ -151,8 +152,17 @@ data:
                 icon: pi-hole
                 widget:
                   type: pihole
-                  url: http://192.168.1.100
+                  url: https://pihole.home.{{ .Values.global.homeDomain }}
                   key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
+            - OPNsense:
+                href: https://opnsense.home.{{ .Values.global.homeDomain }}
+                siteMonitor: https://192.168.1.1
+                icon: opnsense
+                widget:
+                  type: opnsense
+                  url: https://192.168.1.1
+                  username: {{`{{HOMEPAGE_VAR_OPNSENSE_KEY}}`}}
+                  password: {{`{{HOMEPAGE_VAR_OPNSENSE_SECRET}}`}}
             - Traefik:
                 href: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
                 siteMonitor: http://traefik-api.kube-system.svc.cluster.local:8080/ping
@@ -307,6 +317,16 @@ spec:
                   name: homepage-secrets
                   key: prowlarr-api-key
                   optional: true
+            - name: HOMEPAGE_VAR_OPNSENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: opnsense-key
+            - name: HOMEPAGE_VAR_OPNSENSE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: opnsense-secret
           volumeMounts:
             - mountPath: /app/config/custom.js
               name: config

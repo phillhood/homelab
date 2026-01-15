@@ -154,6 +154,11 @@ case "${1:-deploy}" in
             -n web \
             -f values.yaml
 
+        helm dependency update apps/tools/headlamp
+        helm upgrade --install headlamp apps/tools/headlamp \
+            -n tools \
+            -f values.yaml
+
         log "=== Deployment Complete ==="
         ;;
 

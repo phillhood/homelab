@@ -1,0 +1,10 @@
+headlamp:
+  config:
+    oidc:
+      enabled: false
+
+  persistentVolumeClaim:
+    enabled: false
+
+  clusterRoleBinding:
+    create: true

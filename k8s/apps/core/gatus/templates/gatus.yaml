@@ -46,7 +46,7 @@ data:
 
       - name: Pelican
         group: Gaming
-        url: http://pelican.home.pharah.ca
+        url: https://pelican.home.{{ .Values.global.homeDomain }}
         interval: 60s
         conditions:
           - "[STATUS] == 200"
@@ -81,7 +81,7 @@ data:
 
       - name: Pi-hole
         group: Infrastructure
-        url: http://192.168.1.100/admin/
+        url: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
         interval: 60s
         conditions:
           - "[STATUS] == 200"
