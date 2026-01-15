@@ -1,0 +1,4 @@
+apiVersion: v2
+name: wyoming-piper
+version: 1.0.0
+description: Wyoming Piper text-to-speech service

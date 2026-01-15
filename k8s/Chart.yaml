@@ -76,3 +76,28 @@ dependencies:
   - name: headlamp
     version: "1.0.0"
     repository: "file://./apps/tools/headlamp"
+
+  # 6 - Home Assistant Voice Stack
+  - name: nvidia-device-plugin
+    version: "1.0.0"
+    repository: "file://./apps/core/nvidia-device-plugin"
+
+  - name: home-assistant
+    version: "1.0.0"
+    repository: "file://./apps/home-assistant/home-assistant"
+
+  - name: ollama
+    version: "1.0.0"
+    repository: "file://./apps/home-assistant/ollama"
+
+  - name: wyoming-whisper
+    version: "1.0.0"
+    repository: "file://./apps/home-assistant/wyoming-whisper"
+
+  - name: wyoming-piper
+    version: "1.0.0"
+    repository: "file://./apps/home-assistant/wyoming-piper"
+
+  - name: wyoming-openwakeword
+    version: "1.0.0"
+    repository: "file://./apps/home-assistant/wyoming-openwakeword"

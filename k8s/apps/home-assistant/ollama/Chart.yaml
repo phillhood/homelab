@@ -1,0 +1,4 @@
+apiVersion: v2
+name: ollama
+version: 1.0.0
+description: Ollama local LLM server with GPU support

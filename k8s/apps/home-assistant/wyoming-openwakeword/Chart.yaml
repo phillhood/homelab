@@ -1,0 +1,4 @@
+apiVersion: v2
+name: wyoming-openwakeword
+version: 1.0.0
+description: Wyoming OpenWakeWord wake word detection service

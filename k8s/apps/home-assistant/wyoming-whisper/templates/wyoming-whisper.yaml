@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wyoming-whisper
+  namespace: home-assistant
+  labels:
+    app: wyoming-whisper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wyoming-whisper
+  template:
+    metadata:
+      labels:
+        app: wyoming-whisper
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: lab
+      runtimeClassName: nvidia
+      containers:
+        - name: wyoming-whisper
+          image: rhasspy/wyoming-whisper:latest
+          args:
+            - --model
+            - small-int8
+            - --language
+            - en
+            - --device
+            - cuda
+          ports:
+            - containerPort: 10300
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "2000m"
+              nvidia.com/gpu: "1"
+          readinessProbe:
+            tcpSocket:
+              port: 10300
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 10300
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            failureThreshold: 3
+          volumeMounts:
+            - name: cudnn-libs
+              mountPath: /host-libs
+              readOnly: true
+          env:
+            - name: LD_LIBRARY_PATH
+              value: "/host-libs:/usr/local/nvidia/lib64"
+      volumes:
+        - name: cudnn-libs
+          hostPath:
+            path: /opt/cudnn
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wyoming-whisper
+  namespace: home-assistant
+spec:
+  type: ClusterIP
+  ports:
+    - port: 10300
+      targetPort: 10300
+  selector:
+    app: wyoming-whisper
