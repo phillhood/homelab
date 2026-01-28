@@ -23,30 +23,34 @@ spec:
             - name: ADDON_NAME
               value: "Comet"
             - name: DATABASE_TYPE
-              value: sqlite
-            - name: DATABASE_PATH
-              value: /data/comet.db
+              value: postgresql
+            - name: DATABASE_URL
+              value: "comet:comet@postgres.databases.svc.cluster.local:5432/comet"
             - name: FASTAPI_WORKERS
               value: "2"
-            - name: INDEXER_MANAGER_TIMEOUT
-              value: "15"
-            - name: GET_TORRENT_TIMEOUT
-              value: "5"
+            - name: BACKGROUND_SCRAPER_ENABLED
+              value: "True"
+            - name: BACKGROUND_SCRAPER_INTERVAL
+              value: "3600"
+            - name: BACKGROUND_SCRAPER_CONCURRENT_WORKERS
+              value: "1"
+            - name: BACKGROUND_SCRAPER_MAX_MOVIES_PER_RUN
+              value: "100"
+            - name: BACKGROUND_SCRAPER_MAX_SERIES_PER_RUN
+              value: "100"
             - name: SCRAPE_TORRENTIO
-              value: "True"
-            - name: SCRAPE_PROWLARR
-              value: "True"
-            - name: PROWLARR_URL
-              value: "http://prowlarr.media.svc.cluster.local"
-            - name: PROWLARR_API_KEY
+              value: "live"
+            - name: SCRAPE_ZILEAN
+              value: "both"
+            - name: ZILEAN_URL
+              value: "http://zilean.media.svc.cluster.local"
+            - name: SCRAPE_TORBOX
+              value: "False"
+            - name: TORBOX_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: comet-secrets
-                  key: prowlarr-api-key
-            - name: SCRAPE_ZILEAN
-              value: "True"
-            - name: ZILEAN_URL
-              value: "http://zilean.media.svc.cluster.local"
+                  key: torbox-api-key
             - name: PROXY_DEBRID_STREAM
               value: "True"
             - name: PROXY_DEBRID_STREAM_PASSWORD
@@ -59,15 +63,22 @@ spec:
                 secretKeyRef:
                   name: comet-secrets
                   key: admin-password
-          volumeMounts:
-            - name: data
-              mountPath: /data
+            - name: HTTP_CACHE_ENABLED
+              value: "False"
+            - name: LIVE_TORRENT_CACHE_TTL
+              value: "3600"
+            - name: DEBRID_CACHE_TTL
+              value: "3600"
+            - name: EXECUTOR_MAX_WORKERS
+              value: "2"
+            - name: SCRAPE_WAIT_TIMEOUT
+              value: "10"
           resources:
             requests:
-              memory: "512Mi"
+              memory: "1Gi"
               cpu: "100m"
             limits:
-              memory: "2Gi"
+              memory: "4Gi"
               cpu: "1000m"
           readinessProbe:
             httpGet:
@@ -82,10 +93,6 @@ spec:
             initialDelaySeconds: 30
             periodSeconds: 30
             failureThreshold: 3
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: comet-data
 ---
 apiVersion: v1
 kind: Service

@@ -112,7 +112,7 @@ data:
     - Apps:
         - Media:
             - Comet:
-                href: https://comet.home.{{ .Values.global.homeDomain }}
+                href: https://comet.home.{{ .Values.global.homeDomain }}/admin
                 siteMonitor: http://comet.media.svc.cluster.local
                 icon: mdi-meteor-#ff6b35
                 namespace: media
@@ -156,11 +156,11 @@ data:
                   key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
             - OPNsense:
                 href: https://opnsense.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://192.168.1.1
+                siteMonitor: http://192.168.1.1
                 icon: opnsense
                 widget:
                   type: opnsense
-                  url: https://192.168.1.1
+                  url: http://192.168.1.1
                   username: {{`{{HOMEPAGE_VAR_OPNSENSE_KEY}}`}}
                   password: {{`{{HOMEPAGE_VAR_OPNSENSE_SECRET}}`}}
             - Traefik:
@@ -213,7 +213,7 @@ data:
                 podSelector: app=pgadmin
             - Sealed Secrets Web:
                 href: https://secrets.home.{{ .Values.global.homeDomain }}
-                siteMonitor: http://sealed-secrets-web.sealed-secrets.svc.cluster.local
+                siteMonitor: https://secrets.home.{{ .Values.global.homeDomain }}
                 icon: mdi-lock-#ffd700
                 namespace: sealed-secrets
                 podSelector: app.kubernetes.io/name=sealed-secrets-web

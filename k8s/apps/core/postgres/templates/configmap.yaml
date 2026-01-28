@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init
+  namespace: databases
+data:
+  01-create-media-databases.sql: |
+    -- Create comet database and user
+    CREATE USER comet WITH PASSWORD 'comet';
+    CREATE DATABASE comet OWNER comet;
+    GRANT ALL PRIVILEGES ON DATABASE comet TO comet;
+
+    -- Create zilean database and user (for future migration)
+    CREATE USER zilean WITH PASSWORD 'zilean';
+    CREATE DATABASE zilean OWNER zilean;
+    GRANT ALL PRIVILEGES ON DATABASE zilean TO zilean;
+  02-create-headscale-database.sql: |
+    CREATE USER headscale WITH PASSWORD 'headscale';
+    CREATE DATABASE headscale OWNER headscale;
+    GRANT ALL PRIVILEGES ON DATABASE headscale TO headscale;
