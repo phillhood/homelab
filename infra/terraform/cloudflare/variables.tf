@@ -28,3 +28,8 @@ variable "homelab_ip" {
   description = "Internal IP for Traefik ingress"
   type        = string
 }
+
+variable "admin_email" {
+  description = "Admin email for Cloudflare Zero Trust"
+  type        = string
+}

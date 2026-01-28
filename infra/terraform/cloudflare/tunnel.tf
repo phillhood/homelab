@@ -87,6 +87,45 @@ resource "cloudflare_record" "home_www_tunnel" {
   allow_overwrite = true
 }
 
+resource "cloudflare_record" "home_vpn_tunnel" {
+  zone_id         = var.cloudflare_zone_id_home
+  name            = "vpn"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
+resource "cloudflare_record" "home_headscale_tunnel" {
+  zone_id         = var.cloudflare_zone_id_home
+  name            = "headscale"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
+resource "cloudflare_zero_trust_access_application" "headscale_ui" {
+  account_id                = local.account_id
+  name                      = "Headscale Admin"
+  domain                    = "headscale.${var.home_domain}"
+  type                      = "self_hosted"
+  session_duration          = "24h"
+  auto_redirect_to_identity = false
+}
+
+resource "cloudflare_zero_trust_access_policy" "headscale_ui" {
+  account_id     = local.account_id
+  application_id = cloudflare_zero_trust_access_application.headscale_ui.id
+  name           = "Allow admin emails"
+  precedence     = 1
+  decision       = "allow"
+
+  include {
+    email = [var.admin_email]
+  }
+}
+
 output "tunnel_token" {
   value     = cloudflare_zero_trust_tunnel_cloudflared.homelab.tunnel_token
   sensitive = true
