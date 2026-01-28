@@ -1,0 +1,37 @@
+---
+- name: Update Pelican Panel and Wings
+  hosts: game_servers
+  become: true
+  vars:
+    pelican_dir: /opt/pelican
+
+  tasks:
+    - name: Pull latest Panel image
+      community.docker.docker_compose_v2:
+        project_src: "{{ pelican_dir }}/panel"
+        pull: always
+        state: present
+
+    - name: Recreate Panel container
+      community.docker.docker_compose_v2:
+        project_src: "{{ pelican_dir }}/panel"
+        recreate: always
+        state: present
+
+    - name: Wait for Panel to be ready
+      ansible.builtin.wait_for:
+        port: 80
+        delay: 5
+        timeout: 120
+
+    - name: Pull latest Wings image
+      community.docker.docker_compose_v2:
+        project_src: "{{ pelican_dir }}/wings"
+        pull: always
+        state: present
+
+    - name: Recreate Wings container
+      community.docker.docker_compose_v2:
+        project_src: "{{ pelican_dir }}/wings"
+        recreate: always
+        state: present
