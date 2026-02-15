@@ -9,9 +9,9 @@ metadata:
 spec:
   tls:
     - hosts:
-        - registry.home.{{ .Values.global.homeDomain }}
+        - registry.{{ .Values.global.homeDomain }}
   rules:
-    - host: registry.home.{{ .Values.global.homeDomain }}
+    - host: registry.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

@@ -5,17 +5,71 @@ metadata:
   name: postgres-init
   namespace: databases
 data:
-  01-create-media-databases.sql: |
-    -- Create comet database and user
-    CREATE USER comet WITH PASSWORD 'comet';
-    CREATE DATABASE comet OWNER comet;
-    GRANT ALL PRIVILEGES ON DATABASE comet TO comet;
+  init-databases.sh: |
+    #!/bin/bash
+    set -e
 
-    -- Create zilean database and user (for future migration)
-    CREATE USER zilean WITH PASSWORD 'zilean';
-    CREATE DATABASE zilean OWNER zilean;
-    GRANT ALL PRIVILEGES ON DATABASE zilean TO zilean;
-  02-create-headscale-database.sql: |
-    CREATE USER headscale WITH PASSWORD 'headscale';
-    CREATE DATABASE headscale OWNER headscale;
-    GRANT ALL PRIVILEGES ON DATABASE headscale TO headscale;
+    create_db() {
+      local user=$1
+      local password_file="/run/secrets/$1"
+      local extra_flags="${2:-}"
+
+      if [ ! -f "$password_file" ]; then
+        echo "ERROR: password file not found for $user"
+        return 1
+      fi
+
+      local password
+      password=$(cat "$password_file")
+
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        SELECT 'CREATE USER $user' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$user')
+        \gexec
+        ALTER USER $user WITH PASSWORD '$password' $extra_flags;
+      EOSQL
+
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        SELECT 'CREATE DATABASE $user OWNER $user' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$user')
+        \gexec
+        GRANT ALL PRIVILEGES ON DATABASE $user TO $user;
+      EOSQL
+    }
+
+    create_db_custom() {
+      local user=$1
+      local dbname=$2
+      local password_file="/run/secrets/$1"
+      local create_opts="${3:-}"
+      local extra_flags="${4:-}"
+
+      if [ ! -f "$password_file" ]; then
+        echo "ERROR: password file not found for $user"
+        return 1
+      fi
+
+      local password
+      password=$(cat "$password_file")
+
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        SELECT 'CREATE USER $user' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$user')
+        \gexec
+        ALTER USER $user WITH PASSWORD '$password' $extra_flags;
+      EOSQL
+
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        SELECT 'CREATE DATABASE $dbname OWNER $user $create_opts' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$dbname')
+        \gexec
+        GRANT ALL PRIVILEGES ON DATABASE $dbname TO $user;
+      EOSQL
+    }
+
+    echo "Initializing databases..."
+
+    create_db comet
+    create_db zilean
+    create_db headscale
+    create_db mealie
+    create_db_custom synapse synapse "ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' TEMPLATE template0"
+    create_db shychedelic "CONNECTION LIMIT 20"
+
+    echo "Database initialization complete."

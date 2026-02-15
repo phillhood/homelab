@@ -9,9 +9,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - prometheus.home.{{ .Values.global.homeDomain }}
+        - prometheus.{{ .Values.global.homeDomain }}
   rules:
-    - host: prometheus.home.{{ .Values.global.homeDomain }}
+    - host: prometheus.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

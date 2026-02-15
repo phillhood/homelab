@@ -8,6 +8,9 @@ spec:
     api:
       dashboard: true
       insecure: true
+    providers:
+      kubernetesCRD:
+        allowExternalNameServices: true
     additionalArguments:
       - "--api.insecure=true"
     service:

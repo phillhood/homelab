@@ -1,0 +1,4 @@
+apiVersion: v2
+name: opnsense
+version: 1.0.0
+description: Traefik proxy to OPNsense firewall

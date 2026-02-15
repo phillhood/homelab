@@ -9,9 +9,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - grafana.home.{{ .Values.global.homeDomain }}
+        - grafana.{{ .Values.global.homeDomain }}
   rules:
-    - host: grafana.home.{{ .Values.global.homeDomain }}
+    - host: grafana.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

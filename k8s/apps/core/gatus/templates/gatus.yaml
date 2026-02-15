@@ -11,28 +11,20 @@ data:
       path: /data/data.db
 
     ui:
-      title: Homelap Uptime
+      title: Homelab Uptime
       header: Homelab Uptime
 
     endpoints:
-      - name: Homepage
-        group: Apps
-        url: http://homepage.web.svc.cluster.local:3000
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
-          - "[RESPONSE_TIME] < 1000"
-
       - name: Comet
         group: Media
-        url: http://comet.media.svc.cluster.local
+        url: https://comet.{{ .Values.global.homeDomain }}
         interval: 60s
         conditions:
           - "[STATUS] == 200"
 
       - name: Prowlarr
         group: Media
-        url: http://prowlarr.media.svc.cluster.local
+        url: https://prowlarr.{{ .Values.global.homeDomain }}
         interval: 60s
         conditions:
           - "[STATUS] == 200"
@@ -46,56 +38,64 @@ data:
 
       - name: Pelican
         group: Gaming
-        url: https://pelican.home.{{ .Values.global.homeDomain }}
+        url: https://pelican.{{ .Values.global.homeDomain }}
         interval: 60s
         conditions:
           - "[STATUS] == 200"
 
+      - name: Pi-hole
+        group: Networking
+        url: https://pihole.{{ .Values.global.homeDomain }}/admin/
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Traefik
+        group: Networking
+        url: https://traefik.{{ .Values.global.homeDomain }}/dashboard/
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Homepage
+        group: Monitoring
+        url: https://home.{{ .Values.global.homeDomain }}
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+          - "[RESPONSE_TIME] < 1000"
+
       - name: Grafana
         group: Monitoring
-        url: http://grafana.monitoring.svc.cluster.local/api/health
+        url: https://grafana.{{ .Values.global.homeDomain }}/api/health
         interval: 60s
         conditions:
           - "[STATUS] == 200"
 
       - name: Prometheus
         group: Monitoring
-        url: http://prometheus.monitoring.svc.cluster.local/-/healthy
+        url: https://prometheus.{{ .Values.global.homeDomain }}/-/healthy
         interval: 60s
         conditions:
           - "[STATUS] == 200"
 
       - name: pgAdmin
-        group: Monitoring
-        url: http://pgadmin.tools.svc.cluster.local/misc/ping
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
-
-      - name: Traefik
-        group: Infrastructure
-        url: http://traefik-api.kube-system.svc.cluster.local:8080/ping
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
-
-      - name: Pi-hole
-        group: Infrastructure
-        url: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
-        interval: 60s
-        conditions:
-          - "[STATUS] == 200"
-
-      - name: Zot Registry
-        group: Infrastructure
-        url: http://zot.registry.svc.cluster.local:5000/v2/
+        group: Utils
+        url: https://pgadmin.{{ .Values.global.homeDomain }}/misc/ping
         interval: 60s
         conditions:
           - "[STATUS] == 200"
 
       - name: Sealed Secrets Web
-        group: Infrastructure
-        url: http://sealed-secrets-web.sealed-secrets.svc.cluster.local
+        group: Utils
+        url: https://secrets.{{ .Values.global.homeDomain }}
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Zot Registry
+        group: Utils
+        url: https://registry.{{ .Values.global.homeDomain }}/v2/
         interval: 60s
         conditions:
           - "[STATUS] == 200"
@@ -178,9 +178,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - status.home.{{ .Values.global.homeDomain }}
+        - status.{{ .Values.global.homeDomain }}
   rules:
-    - host: status.home.{{ .Values.global.homeDomain }}
+    - host: status.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: network-policies
+description: Cluster-wide NetworkPolicies for namespace isolation
+type: application
+version: 1.0.0

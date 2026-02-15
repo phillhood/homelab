@@ -27,8 +27,8 @@ metadata:
   namespace: default
 spec:
   redirectRegex:
-    regex: ^https://pihole.home.{{ .Values.global.homeDomain }}/$
-    replacement: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
+    regex: ^https://pihole.{{ .Values.global.homeDomain }}/$
+    replacement: https://pihole.{{ .Values.global.homeDomain }}/admin/
     permanent: true
 ---
 apiVersion: networking.k8s.io/v1
@@ -43,9 +43,9 @@ metadata:
 spec:
   tls:
     - hosts:
-        - pihole.home.{{ .Values.global.homeDomain }}
+        - pihole.{{ .Values.global.homeDomain }}
   rules:
-    - host: pihole.home.{{ .Values.global.homeDomain }}
+    - host: pihole.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

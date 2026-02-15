@@ -21,7 +21,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`traefik.home.{{ .Values.global.homeDomain }}`)
+    - match: Host(`traefik.{{ .Values.global.homeDomain }}`)
       kind: Rule
       services:
         - name: api@internal

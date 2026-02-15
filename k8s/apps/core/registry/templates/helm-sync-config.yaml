@@ -8,7 +8,7 @@ data:
     #!/bin/sh
     set -e
 
-    REGISTRY="registry.home.{{ .Values.global.homeDomain }}"
+    REGISTRY="registry.{{ .Values.global.homeDomain }}"
     REPOS_FILE="/charts/repos.txt"
     CHARTS_FILE="/charts/charts.txt"
 

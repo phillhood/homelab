@@ -6,4 +6,4 @@ metadata:
   namespace: kube-system
 spec:
   defaultCertificate:
-    secretName: home-wildcard-tls
+    secretName: home-root-wildcard-tls
