@@ -51,6 +51,8 @@ spec:
               value: "true"
             - name: JICOFO_ENABLE_REST
               value: "1"
+            - name: JICOFO_ENABLE_HEALTH_CHECKS
+              value: "true"
           resources:
             requests:
               memory: "256Mi"
