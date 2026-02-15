@@ -15,7 +15,7 @@ spec:
         app: jellyfin
     spec:
       nodeSelector:
-        kubernetes.io/hostname: lab
+        kubernetes.io/hostname: cyrodiil
       runtimeClassName: nvidia
       containers:
         - name: jellyfin

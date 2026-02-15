@@ -44,7 +44,7 @@ homelab/
 
 | Name | Role | IP |
 |------|------|-----|
-| lab | control-plane | 192.168.1.100 |
+| cyrodiil | control-plane | 192.168.1.100 |
 | kvatch | worker | 192.168.1.101 |
 
 More nodes coming soon when I inevitably make poor financial decisions.

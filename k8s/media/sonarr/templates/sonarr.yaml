@@ -15,7 +15,7 @@ spec:
         app: sonarr
     spec:
       nodeSelector:
-        kubernetes.io/hostname: lab
+        kubernetes.io/hostname: cyrodiil
       containers:
         - name: sonarr
           image: lscr.io/linuxserver/sonarr:latest

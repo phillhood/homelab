@@ -34,7 +34,7 @@ case "${1:-deploy}" in
         helm upgrade --install argocd argocd \
             -n argocd --create-namespace \
             -f values.yaml
-        wait_for_deployment argocd argocd-argo-cd-server
+        wait_for_deployment argocd argocd-server
 
         log "ArgoCD deployed. Access UI at https://argocd.pharah.ca"
         log "Get admin password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"

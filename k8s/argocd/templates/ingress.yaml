@@ -9,7 +9,7 @@ spec:
     - match: Host(`argocd.{{ .Values.global.homeDomain }}`)
       kind: Rule
       services:
-        - name: argocd-argo-cd-server
+        - name: argocd-server
           port: 80
   tls:
     secretName: home-root-wildcard-tls

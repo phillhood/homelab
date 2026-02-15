@@ -15,7 +15,7 @@ spec:
         app: decypharr
     spec:
       nodeSelector:
-        kubernetes.io/hostname: lab
+        kubernetes.io/hostname: cyrodiil
       containers:
         - name: decypharr
           image: ghcr.io/sirrobot01/decypharr:latest

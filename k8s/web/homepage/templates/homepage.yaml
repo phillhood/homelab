@@ -323,7 +323,7 @@ spec:
         app: homepage
     spec:
       nodeSelector:
-        kubernetes.io/hostname: lab
+        kubernetes.io/hostname: cyrodiil
       serviceAccountName: homepage
       automountServiceAccountToken: true
       containers:

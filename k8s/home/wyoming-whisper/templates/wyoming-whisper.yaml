@@ -16,7 +16,7 @@ spec:
         app: wyoming-whisper
     spec:
       nodeSelector:
-        kubernetes.io/hostname: lab
+        kubernetes.io/hostname: cyrodiil
       runtimeClassName: nvidia
       containers:
         - name: wyoming-whisper

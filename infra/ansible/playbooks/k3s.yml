@@ -15,7 +15,7 @@
           - apt-transport-https
           - ca-certificates
         state: present
-        update_cache: true
+        update_cache: false
       when: ansible_os_family == "Debian"
 
     - name: Disable swap (required for k8s)

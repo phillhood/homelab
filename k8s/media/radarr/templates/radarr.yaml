@@ -15,7 +15,7 @@ spec:
         app: radarr
     spec:
       nodeSelector:
-        kubernetes.io/hostname: lab
+        kubernetes.io/hostname: cyrodiil
       containers:
         - name: radarr
           image: lscr.io/linuxserver/radarr:latest

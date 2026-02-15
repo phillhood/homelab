@@ -1,6 +1,6 @@
 nvidia-device-plugin:
   nodeSelector:
-    kubernetes.io/hostname: lab
+    kubernetes.io/hostname: cyrodiil
   tolerations:
     - key: nvidia.com/gpu
       operator: Exists
