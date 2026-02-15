@@ -2,9 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: homelab
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "0"
+  namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:

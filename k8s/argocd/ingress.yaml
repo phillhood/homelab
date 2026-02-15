@@ -2,11 +2,12 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: argocd-server
+  namespace: argocd
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`argocd.{{ .Values.global.homeDomain }}`)
+    - match: Host(`argocd.pharah.ca`)
       kind: Rule
       services:
         - name: argocd-server

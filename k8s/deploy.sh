@@ -9,6 +9,10 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
+ARGO_CHART=argo-cd
+ARGO_REPO=https://argoproj.github.io/argo-helm
+ARGO_VERSION=7.9.1
+
 log() { echo -e "${GREEN}[INFO]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
@@ -22,22 +26,25 @@ wait_for_deployment() {
     kubectl rollout status deployment/$deployment -n $namespace --timeout=${timeout}s
 }
 
-if [[ ! -f "values.yaml" ]]; then
-    error "values.yaml not found. Copy values.yaml.example and configure it."
-fi
-
 case "${1:-deploy}" in
     deploy)
         log "Bootstrapping ArgoCD..."
 
-        helm dependency update argocd
-        helm upgrade --install argocd argocd \
+        helm repo add argo https://argoproj.github.io/argo-helm --force-update
+        helm upgrade --install argocd $ARGO_CHART \
+            --repo $ARGO_REPO \
+            --version $ARGO_VERSION \
             -n argocd --create-namespace \
-            -f values.yaml
+            -f argocd/helm-values.yaml
         wait_for_deployment argocd argocd-server
 
+        log "Applying manifests..."
+        kubectl apply -f argocd/ingress.yaml
+        kubectl apply -f argocd/project.yaml
+        kubectl apply -f argocd/appset.yaml
+
         log "ArgoCD deployed. Access UI at https://argocd.pharah.ca"
-        log "Get admin password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d"
+        log "Get admin password: $0 password"
         ;;
 
     password)
