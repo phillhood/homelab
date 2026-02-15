@@ -39,7 +39,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
       }
     }
     ingress_rule {
-      hostname = "*.${var.home_domain}"
+      hostname = "auth.${var.home_domain}"
       service  = "https://traefik.kube-system.svc.cluster.local:443"
       origin_request {
         no_tls_verify = true
@@ -87,43 +87,67 @@ resource "cloudflare_record" "home_www_tunnel" {
   allow_overwrite = true
 }
 
-resource "cloudflare_record" "home_vpn_tunnel" {
+resource "cloudflare_record" "auth" {
   zone_id         = var.cloudflare_zone_id_home
-  name            = "vpn"
+  name            = "auth"
   content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
   type            = "CNAME"
   proxied         = true
   allow_overwrite = true
 }
 
-resource "cloudflare_record" "home_headscale_tunnel" {
-  zone_id         = var.cloudflare_zone_id_home
-  name            = "headscale"
+resource "cloudflare_record" "matrix" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "matrix"
   content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
   type            = "CNAME"
   proxied         = true
   allow_overwrite = true
 }
 
-resource "cloudflare_zero_trust_access_application" "headscale_ui" {
-  account_id                = local.account_id
-  name                      = "Headscale Admin"
-  domain                    = "headscale.${var.home_domain}"
-  type                      = "self_hosted"
-  session_duration          = "24h"
-  auto_redirect_to_identity = false
+resource "cloudflare_record" "element" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "element"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
 }
 
-resource "cloudflare_zero_trust_access_policy" "headscale_ui" {
-  account_id     = local.account_id
-  application_id = cloudflare_zero_trust_access_application.headscale_ui.id
-  name           = "Allow admin emails"
-  precedence     = 1
-  decision       = "allow"
+resource "cloudflare_record" "jitsi" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "jitsi"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
 
-  include {
-    email = [var.admin_email]
-  }
+resource "cloudflare_record" "cinny" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "cinny"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
+resource "cloudflare_record" "api_hobby" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "api"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
+resource "cloudflare_record" "auth_hobby" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "auth"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
 }
 
 output "tunnel_token" {

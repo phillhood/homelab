@@ -4,8 +4,8 @@
   become: true
   vars:
     pelican_dir: /opt/pelican
-    panel_domain: "pelican.home.{{ home_domain }}"
-    wings_domain: "wings.home.{{ home_domain }}"
+    panel_domain: "pelican.{{ home_domain }}"
+    wings_domain: "wings.{{ home_domain }}"
 
   tasks:
     - name: Ensure docker is installed
@@ -42,6 +42,14 @@
         src: ../../../docker/pelican/wings/docker-compose.yaml
         dest: "{{ pelican_dir }}/wings/docker-compose.yaml"
         mode: "0644"
+
+    - name: Update Wings allowed_origins to current domain
+      ansible.builtin.replace:
+        path: /etc/pelican/config.yml
+        regexp: 'pelican\.home\.pharah\.ca'
+        replace: "{{ panel_domain }}"
+      notify: Restart wings
+      ignore_errors: true
 
     - name: Create Panel .env file
       ansible.builtin.copy:
@@ -141,3 +149,8 @@
       ansible.builtin.shell:
         cmd: docker compose up -d --force-recreate
         chdir: "{{ pelican_dir }}/panel"
+
+    - name: Restart wings
+      ansible.builtin.shell:
+        cmd: docker compose up -d --force-recreate
+        chdir: "{{ pelican_dir }}/wings"
