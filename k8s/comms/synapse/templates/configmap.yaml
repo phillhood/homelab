@@ -56,6 +56,22 @@ data:
     experimental_features:
       msc4222_enabled: false
 
+    oidc_providers:
+      - idp_id: shychedelic
+        idp_name: Shychedelic
+        discover: true
+        issuer: "https://{{ .Values.global.hobbyDomain }}"
+        client_id: "synapse"
+        client_secret: "__OIDC_CLIENT_SECRET__"
+        scopes: ["openid", "profile", "email"]
+        allow_existing_users: true
+        user_mapping_provider:
+          config:
+            subject_claim: "sub"
+            localpart_template: "{{ '{{' }} user.preferred_username {{ '}}' }}"
+            display_name_template: "{{ '{{' }} user.name {{ '}}' }}"
+            email_template: "{{ '{{' }} user.email {{ '}}' }}"
+
     app_service_config_files:
       - /bridges/discord-registration.yaml
 
