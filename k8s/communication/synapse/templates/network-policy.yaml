@@ -10,6 +10,18 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: allow-intra-namespace
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: allow-from-traefik
 spec:
   podSelector: {}
@@ -32,78 +44,6 @@ spec:
           port: 8888
         - protocol: TCP
           port: 9090
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: clients-to-synapse
-spec:
-  podSelector:
-    matchLabels:
-      app: synapse
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: element
-      ports:
-        - protocol: TCP
-          port: 8008
-    - from:
-        - podSelector:
-            matchLabels:
-              app: cinny
-      ports:
-        - protocol: TCP
-          port: 8008
-    - from:
-        - podSelector:
-            matchLabels:
-              app: discord-bridge
-      ports:
-        - protocol: TCP
-          port: 8008
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: synapse-to-bridges
-spec:
-  podSelector:
-    matchLabels:
-      app: discord-bridge
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: synapse
-      ports:
-        - protocol: TCP
-          port: 29334
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: jitsi-internal
-spec:
-  podSelector:
-    matchExpressions:
-      - key: app
-        operator: In
-        values: [jicofo, jvb, prosody, jitsi-web]
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchExpressions:
-              - key: app
-                operator: In
-                values: [jicofo, jvb, prosody, jitsi-web]
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy

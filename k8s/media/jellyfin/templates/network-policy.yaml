@@ -10,6 +10,18 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: allow-intra-namespace
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: allow-from-traefik
 spec:
   podSelector: {}
@@ -40,108 +52,6 @@ spec:
           port: 80
         - protocol: TCP
           port: 8282
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: jellyseerr-to-arr-stack
-spec:
-  podSelector:
-    matchLabels:
-      app: radarr
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: jellyseerr
-      ports:
-        - protocol: TCP
-          port: 7878
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: jellyseerr-to-sonarr
-spec:
-  podSelector:
-    matchLabels:
-      app: sonarr
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: jellyseerr
-      ports:
-        - protocol: TCP
-          port: 8989
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: jellyseerr-to-jellyfin
-spec:
-  podSelector:
-    matchLabels:
-      app: jellyfin
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: jellyseerr
-      ports:
-        - protocol: TCP
-          port: 8096
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: arr-to-prowlarr
-spec:
-  podSelector:
-    matchLabels:
-      app: prowlarr
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: radarr
-      ports:
-        - protocol: TCP
-          port: 9696
-    - from:
-        - podSelector:
-            matchLabels:
-              app: sonarr
-      ports:
-        - protocol: TCP
-          port: 9696
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: comet-to-zilean
-spec:
-  podSelector:
-    matchLabels:
-      app: zilean
-  policyTypes:
-    - Ingress
-  ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              app: comet
-      ports:
-        - protocol: TCP
-          port: 8181
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
