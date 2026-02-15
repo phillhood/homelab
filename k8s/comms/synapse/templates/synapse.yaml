@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: synapse
-  namespace: communication
+  namespace: comms
   labels:
     app: synapse
 spec:
@@ -117,7 +117,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: synapse
-  namespace: communication
+  namespace: comms
 spec:
   type: ClusterIP
   ports:

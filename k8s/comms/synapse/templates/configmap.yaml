@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: synapse-config
-  namespace: communication
+  namespace: comms
 data:
   homeserver.yaml: |
     server_name: "{{ .Values.global.hobbyDomain }}"

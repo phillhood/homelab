@@ -51,7 +51,7 @@ spec:
                   name: shychedelic-api-secrets
                   key: totp-encryption-key
             - name: SYNAPSE_URL
-              value: "http://synapse.communication.svc.cluster.local:8008"
+              value: "http://synapse.comms.svc.cluster.local:8008"
             - name: MATRIX_SERVER_NAME
               value: "shychedelic.com"
             - name: SYNAPSE_ADMIN_TOKEN

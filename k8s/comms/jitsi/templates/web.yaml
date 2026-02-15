@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jitsi-web
-  namespace: communication
+  namespace: comms
   labels:
     app: jitsi-web
 spec:
@@ -26,7 +26,7 @@ spec:
             - name: PUBLIC_URL
               value: "https://jitsi.{{ .Values.global.hobbyDomain }}"
             - name: XMPP_SERVER
-              value: prosody.communication.svc.cluster.local
+              value: prosody.comms.svc.cluster.local
             - name: XMPP_DOMAIN
               value: meet.jitsi
             - name: XMPP_AUTH_DOMAIN
@@ -36,7 +36,7 @@ spec:
             - name: XMPP_MUC_DOMAIN
               value: muc.meet.jitsi
             - name: XMPP_BOSH_URL_BASE
-              value: http://prosody.communication.svc.cluster.local:5280
+              value: http://prosody.comms.svc.cluster.local:5280
             - name: JICOFO_AUTH_USER
               value: focus
             - name: TZ
@@ -73,7 +73,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jitsi-web
-  namespace: communication
+  namespace: comms
 spec:
   type: ClusterIP
   ports:
@@ -86,7 +86,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: jitsi
-  namespace: communication
+  namespace: comms
 spec:
   entryPoints:
     - websecure

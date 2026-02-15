@@ -14,9 +14,6 @@ spec:
           - path: k8s/*/*
           - path: k8s/argocd
             exclude: true
-            # TODO: Remove once finished
-          - path: k8s/communication/*
-            exclude: true
   template:
     metadata:
       name: "{{ .path.basename }}"

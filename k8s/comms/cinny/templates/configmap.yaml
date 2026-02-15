@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: cinny-config
-  namespace: communication
+  namespace: comms
 data:
   config.json: |
     {

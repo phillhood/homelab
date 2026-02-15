@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jvb
-  namespace: communication
+  namespace: comms
   labels:
     app: jvb
 spec:
@@ -53,7 +53,7 @@ spec:
               readOnly: true
           env:
             - name: XMPP_SERVER
-              value: prosody.communication.svc.cluster.local
+              value: prosody.comms.svc.cluster.local
             - name: XMPP_DOMAIN
               value: meet.jitsi
             - name: XMPP_AUTH_DOMAIN
@@ -102,7 +102,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jvb
-  namespace: communication
+  namespace: comms
   annotations:
     metallb.io/loadBalancerIPs: "192.168.1.201"
 spec:

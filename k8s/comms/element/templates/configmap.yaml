@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: element-config
-  namespace: communication
+  namespace: comms
 data:
   config.json: |
     {
