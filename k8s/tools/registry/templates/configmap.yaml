@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: zot-config
-  namespace: kube-system
+  namespace: tools
 data:
   config.json: |
     {

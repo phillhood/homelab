@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: helm-sync-config
-  namespace: kube-system
+  namespace: tools
 data:
   sync.sh: |
     #!/bin/sh

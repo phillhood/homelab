@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: helm-chart-sync
-  namespace: kube-system
+  namespace: tools
 spec:
   schedule: "0 4 * * *"  # Daily at 4 AM
   concurrencyPolicy: Forbid

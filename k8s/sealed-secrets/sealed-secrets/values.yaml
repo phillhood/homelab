@@ -1,5 +1,6 @@
 sealed-secrets-web:
   fullnameOverride: sealed-secrets-web
+  disableLoadSecrets: false
   sealedSecrets:
     namespace: sealed-secrets
     serviceName: sealed-secrets

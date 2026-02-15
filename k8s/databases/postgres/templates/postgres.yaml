@@ -39,7 +39,7 @@ spec:
             - name: init-scripts
               mountPath: /docker-entrypoint-initdb.d
             - name: db-passwords
-              mountPath: /run/secrets
+              mountPath: /etc/db-passwords
               readOnly: true
           resources:
             requests:

@@ -1,6 +1,6 @@
 loki:
   global:
-    imageRegistry: ""
+    imageRegistry: docker.io
   deploymentMode: SingleBinary
   sidecar:
     rules:

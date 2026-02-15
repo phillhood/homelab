@@ -11,7 +11,7 @@ data:
 
     create_db() {
       local user=$1
-      local password_file="/run/secrets/$1"
+      local password_file="/etc/db-passwords/$1"
       local extra_flags="${2:-}"
 
       if [ ! -f "$password_file" ]; then
@@ -38,7 +38,7 @@ data:
     create_db_custom() {
       local user=$1
       local dbname=$2
-      local password_file="/run/secrets/$1"
+      local password_file="/etc/db-passwords/$1"
       local create_opts="${3:-}"
       local extra_flags="${4:-}"
 
