@@ -1,0 +1,4 @@
+apiVersion: v2
+name: matrix-well-known
+version: 1.0.0
+description: Matrix federation well-known delegation service

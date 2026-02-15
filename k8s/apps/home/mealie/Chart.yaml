@@ -1,0 +1,4 @@
+apiVersion: v2
+name: mealie
+version: 1.0.0
+description: Mealie recipe manager

@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shychedelic
+  namespace: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shychedelic
+  template:
+    metadata:
+      labels:
+        app: shychedelic
+    spec:
+      containers:
+        - name: shychedelic
+          image: {{ .Values.global.registry }}/shychedelic:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "32Mi"
+              cpu: "10m"
+            limits:
+              memory: "64Mi"
+              cpu: "50m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shychedelic
+  namespace: web
+spec:
+  selector:
+    app: shychedelic
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: shychedelic
+  namespace: web
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: kube-system-rate-limit@kubernetescrd,kube-system-secure-headers@kubernetescrd
+spec:
+  tls:
+    - hosts:
+        - {{ .Values.global.hobbyDomain }}
+        - www.{{ .Values.global.hobbyDomain }}
+      secretName: shychedelic-tls
+  rules:
+    - host: {{ .Values.global.hobbyDomain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shychedelic
+                port:
+                  number: 80
+    - host: www.{{ .Values.global.hobbyDomain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: shychedelic
+                port:
+                  number: 80

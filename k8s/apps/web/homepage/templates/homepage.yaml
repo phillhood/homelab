@@ -112,13 +112,13 @@ data:
     - Apps:
         - Media:
             - Comet:
-                href: https://comet.home.{{ .Values.global.homeDomain }}/admin
+                href: https://comet.{{ .Values.global.homeDomain }}/admin
                 siteMonitor: http://comet.media.svc.cluster.local
                 icon: mdi-meteor-#ff6b35
                 namespace: media
                 podSelector: app=comet
             - Prowlarr:
-                href: https://prowlarr.home.{{ .Values.global.homeDomain }}
+                href: https://prowlarr.{{ .Values.global.homeDomain }}
                 siteMonitor: http://prowlarr.media.svc.cluster.local/ping
                 icon: prowlarr
                 namespace: media
@@ -128,14 +128,47 @@ data:
                   url: http://prowlarr.media.svc.cluster.local
                   key: {{`{{HOMEPAGE_VAR_PROWLARR_API_KEY}}`}}
 
+        - Home:
+            - Home Assistant:
+                href: https://ha.{{ .Values.global.homeDomain }}
+                siteMonitor: http://home-assistant.home.svc.cluster.local
+                icon: home-assistant
+                namespace: home
+                podSelector: app=home-assistant
+                widget:
+                  type: homeassistant
+                  url: http://home-assistant.home.svc.cluster.local
+                  key: {{`{{HOMEPAGE_VAR_HOMEASSISTANT_API_KEY}}`}}
+            - Mealie:
+                href: https://mealie.{{ .Values.global.homeDomain }}
+                siteMonitor: http://mealie.home.svc.cluster.local
+                icon: mealie
+                namespace: home
+                podSelector: app=mealie
+                widget:
+                  type: customapi
+                  url: http://mealie.home.svc.cluster.local/api/households/statistics
+                  headers:
+                    Authorization: Bearer {{`{{HOMEPAGE_VAR_MEALIE_API_KEY}}`}}
+                  mappings:
+                    - field: totalRecipes
+                      label: Recipes
+                      format: number
+                    - field: totalCategories
+                      label: Categories
+                      format: number
+                    - field: totalTags
+                      label: Tags
+                      format: number
+
         - Gaming:
             - Pelican:
-                href: https://pelican.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://pelican.home.{{ .Values.global.homeDomain }}
+                href: https://pelican.{{ .Values.global.homeDomain }}
+                siteMonitor: https://pelican.{{ .Values.global.homeDomain }}
                 icon: si-pelican-#38bdf8
                 widget:
                   type: customapi
-                  url: https://pelican.home.{{ .Values.global.homeDomain }}/api/application/servers
+                  url: https://pelican.{{ .Values.global.homeDomain }}/api/application/servers
                   headers:
                     Authorization: Bearer {{`{{HOMEPAGE_VAR_PELICAN_API_KEY}}`}}
                     Accept: application/json
@@ -147,24 +180,24 @@ data:
     - Infrastructure:
         - Networking:
             - Pi-hole:
-                href: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
-                siteMonitor: https://pihole.home.{{ .Values.global.homeDomain }}/admin/
+                href: https://pihole.{{ .Values.global.homeDomain }}/admin/
+                siteMonitor: https://pihole.{{ .Values.global.homeDomain }}/admin/
                 icon: pi-hole
                 widget:
                   type: pihole
-                  url: https://pihole.home.{{ .Values.global.homeDomain }}
+                  url: https://pihole.{{ .Values.global.homeDomain }}
                   key: {{`{{HOMEPAGE_VAR_PIHOLE_API_KEY}}`}}
             - OPNsense:
-                href: https://opnsense.home.{{ .Values.global.homeDomain }}
-                siteMonitor: http://192.168.1.1
+                href: https://opnsense.{{ .Values.global.homeDomain }}
+                siteMonitor: https://opnsense.{{ .Values.global.homeDomain }}
                 icon: opnsense
                 widget:
                   type: opnsense
-                  url: http://192.168.1.1
+                  url: https://opnsense.{{ .Values.global.homeDomain }}
                   username: {{`{{HOMEPAGE_VAR_OPNSENSE_KEY}}`}}
                   password: {{`{{HOMEPAGE_VAR_OPNSENSE_SECRET}}`}}
             - Traefik:
-                href: https://traefik.home.{{ .Values.global.homeDomain }}/dashboard/
+                href: https://traefik.{{ .Values.global.homeDomain }}/dashboard/
                 siteMonitor: http://traefik-api.kube-system.svc.cluster.local:8080/ping
                 icon: traefik
                 namespace: kube-system
@@ -172,10 +205,21 @@ data:
                 widget:
                   type: traefik
                   url: http://traefik-api.kube-system.svc.cluster.local:8080
+            - Headscale:
+                href: https://vpn.{{ .Values.global.homeDomain }}/admin
+                siteMonitor: http://headscale.headscale.svc.cluster.local:8080/health
+                icon: headscale
+                namespace: headscale
+                podSelector: app=headscale
+                widget:
+                  type: headscale
+                  url: http://headscale.headscale.svc.cluster.local:8080
+                  key: {{`{{HOMEPAGE_VAR_HEADSCALE_KEY}}`}}
+                  nodeId: 10
 
         - Monitoring:
             - Gatus:
-                href: https://status.home.{{ .Values.global.homeDomain }}
+                href: https://status.{{ .Values.global.homeDomain }}
                 siteMonitor: http://gatus.monitoring.svc.cluster.local:8080
                 icon: gatus
                 namespace: monitoring
@@ -184,7 +228,7 @@ data:
                   type: gatus
                   url: http://gatus.monitoring.svc.cluster.local:8080
             - Grafana:
-                href: https://grafana.home.{{ .Values.global.homeDomain }}
+                href: https://grafana.{{ .Values.global.homeDomain }}
                 siteMonitor: http://grafana.monitoring.svc.cluster.local
                 icon: grafana
                 namespace: monitoring
@@ -195,7 +239,7 @@ data:
                   username: {{`{{HOMEPAGE_VAR_GRAFANA_USER}}`}}
                   password: {{`{{HOMEPAGE_VAR_GRAFANA_PASS}}`}}
             - Prometheus:
-                href: https://prometheus.home.{{ .Values.global.homeDomain }}
+                href: https://prometheus.{{ .Values.global.homeDomain }}
                 siteMonitor: http://prometheus.monitoring.svc.cluster.local
                 icon: prometheus
                 namespace: monitoring
@@ -206,19 +250,19 @@ data:
 
         - Utils:
             - pgAdmin:
-                href: https://pgadmin.home.{{ .Values.global.homeDomain }}
+                href: https://pgadmin.{{ .Values.global.homeDomain }}
                 siteMonitor: http://pgadmin.tools.svc.cluster.local/misc/ping
                 icon: pgadmin
                 namespace: tools
                 podSelector: app=pgadmin
             - Sealed Secrets Web:
-                href: https://secrets.home.{{ .Values.global.homeDomain }}
-                siteMonitor: https://secrets.home.{{ .Values.global.homeDomain }}
+                href: https://secrets.{{ .Values.global.homeDomain }}
+                siteMonitor: https://secrets.{{ .Values.global.homeDomain }}
                 icon: mdi-lock-#ffd700
                 namespace: sealed-secrets
                 podSelector: app.kubernetes.io/name=sealed-secrets-web
             - Zot Registry:
-                href: https://registry.home.{{ .Values.global.homeDomain }}
+                href: https://registry.{{ .Values.global.homeDomain }}
                 siteMonitor: http://zot.registry.svc.cluster.local:5000
                 icon: docker
                 namespace: registry
@@ -327,6 +371,24 @@ spec:
                 secretKeyRef:
                   name: homepage-secrets
                   key: opnsense-secret
+            - name: HOMEPAGE_VAR_HEADSCALE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: headscale-key
+                  optional: true
+            - name: HOMEPAGE_VAR_MEALIE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: mealie-api-key
+                  optional: true
+            - name: HOMEPAGE_VAR_HOMEASSISTANT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: homepage-secrets
+                  key: homeassistant-api-key
+                  optional: true
           volumeMounts:
             - mountPath: /app/config/custom.js
               name: config

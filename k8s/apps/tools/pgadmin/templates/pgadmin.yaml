@@ -83,9 +83,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - pgadmin.home.{{ .Values.global.homeDomain }}
+        - pgadmin.{{ .Values.global.homeDomain }}
   rules:
-    - host: pgadmin.home.{{ .Values.global.homeDomain }}
+    - host: pgadmin.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

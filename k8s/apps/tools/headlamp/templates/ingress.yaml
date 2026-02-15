@@ -9,9 +9,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - headlamp.home.{{ .Values.global.homeDomain }}
+        - headlamp.{{ .Values.global.homeDomain }}
   rules:
-    - host: headlamp.home.{{ .Values.global.homeDomain }}
+    - host: headlamp.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

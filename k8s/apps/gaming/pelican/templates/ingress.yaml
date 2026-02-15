@@ -9,9 +9,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - pelican.home.{{ .Values.global.homeDomain }}
+        - pelican.{{ .Values.global.homeDomain }}
   rules:
-    - host: pelican.home.{{ .Values.global.homeDomain }}
+    - host: pelican.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /
@@ -33,9 +33,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - wings.home.{{ .Values.global.homeDomain }}
+        - wings.{{ .Values.global.homeDomain }}
   rules:
-    - host: wings.home.{{ .Values.global.homeDomain }}
+    - host: wings.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

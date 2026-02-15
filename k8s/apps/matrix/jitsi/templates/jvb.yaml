@@ -1,0 +1,120 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jvb
+  namespace: matrix
+  labels:
+    app: jvb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jvb
+  template:
+    metadata:
+      labels:
+        app: jvb
+    spec:
+      initContainers:
+        - name: get-public-ip
+          image: alpine:3.19
+          command:
+            - sh
+            - -c
+            - |
+              apk add --no-cache curl > /dev/null 2>&1
+              PUBLIC_IP=$(curl -s https://api.ipify.org)
+              echo "Detected public IP: $PUBLIC_IP"
+              echo "$PUBLIC_IP" > /shared/public-ip
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+      containers:
+        - name: jvb
+          image: jitsi/jvb:stable
+          command:
+            - /bin/bash
+            - -c
+            - |
+              export JVB_ADVERTISE_IPS=$(cat /shared/public-ip)
+              export DOCKER_HOST_ADDRESS=$(cat /shared/public-ip)
+              echo "Starting JVB with public IP: $JVB_ADVERTISE_IPS"
+              exec /init
+          ports:
+            - containerPort: 9090
+              name: colibri
+            - containerPort: 10000
+              name: media
+              protocol: UDP
+          volumeMounts:
+            - name: shared
+              mountPath: /shared
+              readOnly: true
+          env:
+            - name: XMPP_SERVER
+              value: prosody.matrix.svc.cluster.local
+            - name: XMPP_DOMAIN
+              value: meet.jitsi
+            - name: XMPP_AUTH_DOMAIN
+              value: auth.meet.jitsi
+            - name: XMPP_INTERNAL_MUC_DOMAIN
+              value: internal-muc.meet.jitsi
+            - name: JVB_AUTH_USER
+              value: jvb
+            - name: JVB_AUTH_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: jitsi-secrets
+                  key: jvb-auth-password
+            - name: JVB_BREWERY_MUC
+              value: jvbbrewery
+            - name: JVB_PORT
+              value: "10000"
+            - name: JVB_TCP_HARVESTER_DISABLED
+              value: "false"
+            - name: JVB_TCP_PORT
+              value: "4443"
+            - name: JVB_STUN_SERVERS
+              value: meet-jit-si-turnrelay.jitsi.net:443
+            - name: TZ
+              value: America/Toronto
+            - name: PUBLIC_URL
+              value: "https://jitsi.{{ .Values.global.hobbyDomain }}"
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /about/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: shared
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jvb
+  namespace: matrix
+  annotations:
+    metallb.io/loadBalancerIPs: "192.168.1.201"
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - port: 9090
+      targetPort: 9090
+      name: colibri
+    - port: 10000
+      targetPort: 10000
+      name: media
+      protocol: UDP
+  selector:
+    app: jvb

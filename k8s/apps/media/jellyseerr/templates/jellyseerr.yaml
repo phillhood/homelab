@@ -2,62 +2,73 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prowlarr
+  name: jellyseerr
   namespace: media
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prowlarr
+      app: jellyseerr
   template:
     metadata:
       labels:
-        app: prowlarr
+        app: jellyseerr
     spec:
       containers:
-        - name: prowlarr
-          image: lscr.io/linuxserver/prowlarr:latest
+        - name: jellyseerr
+          image: fallenbagel/jellyseerr:latest
           ports:
-            - containerPort: 9696
+            - containerPort: 5055
           env:
-            - name: PUID
-              value: "1000"
-            - name: PGID
-              value: "1000"
             - name: TZ
               value: America/Toronto
+            - name: LOG_LEVEL
+              value: info
           volumeMounts:
             - name: config
-              mountPath: /config
+              mountPath: /app/config
           resources:
             requests:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "100m"
             limits:
               memory: "1Gi"
-              cpu: "500m"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/status
+              port: 5055
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/status
+              port: 5055
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: prowlarr-config
+            claimName: jellyseerr-config
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prowlarr
+  name: jellyseerr
   namespace: media
 spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: 9696
+      targetPort: 5055
   selector:
-    app: prowlarr
+    app: jellyseerr
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: prowlarr
+  name: jellyseerr
   namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -65,15 +76,15 @@ metadata:
 spec:
   tls:
     - hosts:
-        - prowlarr.{{ .Values.global.homeDomain }}
+        - requests.pharah.ca
   rules:
-    - host: prowlarr.{{ .Values.global.homeDomain }}
+    - host: requests.pharah.ca
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: prowlarr
+                name: jellyseerr
                 port:
                   number: 80

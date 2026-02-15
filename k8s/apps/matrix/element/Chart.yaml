@@ -1,0 +1,4 @@
+apiVersion: v2
+name: element
+version: 1.0.0
+description: Element Web Matrix client

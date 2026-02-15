@@ -53,6 +53,13 @@ spec:
                   key: torbox-api-key
             - name: PROXY_DEBRID_STREAM
               value: "True"
+            - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_SERVICE
+              value: "torbox"
+            - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: torbox-api-key
             - name: PROXY_DEBRID_STREAM_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -107,6 +114,19 @@ spec:
   selector:
     app: comet
 ---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: comet-cert
+  namespace: media
+spec:
+  secretName: comet-cert-tls
+  dnsNames:
+    - comet.{{ .Values.global.homeDomain }}
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -118,9 +138,9 @@ metadata:
 spec:
   tls:
     - hosts:
-        - comet.home.{{ .Values.global.homeDomain }}
+        - comet.{{ .Values.global.homeDomain }}
   rules:
-    - host: comet.home.{{ .Values.global.homeDomain }}
+    - host: comet.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /

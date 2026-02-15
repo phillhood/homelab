@@ -1,0 +1,44 @@
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: api-rate-limit
+  namespace: web
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: api-secure-headers
+  namespace: web
+spec:
+  headers:
+    frameDeny: true
+    contentTypeNosniff: true
+    browserXssFilter: true
+    referrerPolicy: "strict-origin-when-cross-origin"
+    customResponseHeaders:
+      server: ""
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: shychedelic-api
+  namespace: web
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`api.{{ .Values.global.hobbyDomain }}`)
+      kind: Rule
+      middlewares:
+        - name: api-rate-limit
+        - name: api-secure-headers
+      services:
+        - name: shychedelic-api
+          port: 3000
+  tls:
+    secretName: hobby-wildcard-tls

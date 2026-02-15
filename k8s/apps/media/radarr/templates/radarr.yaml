@@ -2,23 +2,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: prowlarr
+  name: radarr
   namespace: media
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: prowlarr
+      app: radarr
   template:
     metadata:
       labels:
-        app: prowlarr
+        app: radarr
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: lab
       containers:
-        - name: prowlarr
-          image: lscr.io/linuxserver/prowlarr:latest
+        - name: radarr
+          image: lscr.io/linuxserver/radarr:latest
           ports:
-            - containerPort: 9696
+            - containerPort: 7878
           env:
             - name: PUID
               value: "1000"
@@ -29,35 +31,60 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /config
+            - name: media
+              mountPath: /media
+            - name: downloads
+              mountPath: /downloads
           resources:
             requests:
-              memory: "512Mi"
+              memory: "256Mi"
               cpu: "100m"
             limits:
               memory: "1Gi"
-              cpu: "500m"
+              cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 7878
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 7878
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
       volumes:
         - name: config
           persistentVolumeClaim:
-            claimName: prowlarr-config
+            claimName: radarr-config
+        - name: media
+          hostPath:
+            path: /srv/media
+            type: Directory
+        - name: downloads
+          hostPath:
+            path: /srv/downloads
+            type: Directory
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: prowlarr
+  name: radarr
   namespace: media
 spec:
   type: ClusterIP
   ports:
     - port: 80
-      targetPort: 9696
+      targetPort: 7878
   selector:
-    app: prowlarr
+    app: radarr
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: prowlarr
+  name: radarr
   namespace: media
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -65,15 +92,15 @@ metadata:
 spec:
   tls:
     - hosts:
-        - prowlarr.{{ .Values.global.homeDomain }}
+        - radarr.pharah.ca
   rules:
-    - host: prowlarr.{{ .Values.global.homeDomain }}
+    - host: radarr.pharah.ca
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: prowlarr
+                name: radarr
                 port:
                   number: 80

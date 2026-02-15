@@ -1,0 +1,4 @@
+apiVersion: v2
+name: jitsi
+version: 1.0.0
+description: Jitsi Meet video conferencing
