@@ -1,4 +1,0 @@
-apiVersion: v2
-name: metallb-config
-version: 1.0.0
-description: MetalLB IP pool configuration
