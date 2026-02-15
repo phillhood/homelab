@@ -17,8 +17,6 @@ spec:
             # TODO: Remove once finished
           - path: k8s/communication/*
             exclude: true
-          - path: k8s/headscale/*
-            exclude: true
   template:
     metadata:
       name: "{{ .path.basename }}"

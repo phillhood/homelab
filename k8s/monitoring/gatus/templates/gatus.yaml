@@ -36,6 +36,20 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      - name: Mealie
+        group: Home
+        url: https://mealie.{{ .Values.global.homeDomain }}/api/app/about
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Home Assistant
+        group: Home
+        url: https://ha.{{ .Values.global.homeDomain }}
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       - name: Pelican
         group: Gaming
         url: https://pelican.{{ .Values.global.homeDomain }}
@@ -53,6 +67,20 @@ data:
       - name: Traefik
         group: Networking
         url: https://traefik.{{ .Values.global.homeDomain }}/dashboard/
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: OPNsense
+        group: Networking
+        url: https://opnsense.{{ .Values.global.homeDomain }}
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Headscale
+        group: Networking
+        url: https://vpn.{{ .Values.global.homeDomain }}/health
         interval: 60s
         conditions:
           - "[STATUS] == 200"
@@ -89,6 +117,13 @@ data:
       - name: Sealed Secrets Web
         group: Utils
         url: https://secrets.{{ .Values.global.homeDomain }}
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Headlamp
+        group: Utils
+        url: https://headlamp.{{ .Values.global.homeDomain }}
         interval: 60s
         conditions:
           - "[STATUS] == 200"

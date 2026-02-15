@@ -47,7 +47,7 @@ metadata:
   name: headplane
   namespace: headscale
 spec:
-  replicas: 1
+  replicas: 0
   selector:
     matchLabels:
       app: headplane
@@ -58,14 +58,14 @@ spec:
     spec:
       containers:
         - name: headplane
-          image: ghcr.io/tale/headplane:latest
+          image: ghcr.io/tale/headplane:0.6.1
           ports:
             - containerPort: 3000
           env:
             - name: HEADSCALE_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: headplane-secrets
+                  name: headscale-secrets
                   key: api-key
           volumeMounts:
             - name: config
@@ -88,7 +88,7 @@ spec:
             name: headplane-config
         - name: secrets
           secret:
-            secretName: headplane-secrets
+            secretName: headscale-secrets
         - name: data
           persistentVolumeClaim:
             claimName: headplane-data
