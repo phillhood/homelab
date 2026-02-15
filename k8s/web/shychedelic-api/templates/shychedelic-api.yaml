@@ -70,6 +70,13 @@ spec:
               value: "https://{{ .Values.global.hobbyDomain }}"
             - name: MAIL_FROM
               value: "noreply@{{ .Values.global.hobbyDomain }}"
+            - name: OIDC_ISSUER
+              value: "https://{{ .Values.global.hobbyDomain }}"
+            - name: OIDC_SIGNING_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shychedelic-api-secrets
+                  key: oidc-signing-key
           resources:
             requests:
               memory: "128Mi"
