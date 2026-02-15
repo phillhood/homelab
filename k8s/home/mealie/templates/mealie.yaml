@@ -31,8 +31,13 @@ spec:
               value: "https://mealie.pharah.ca"
             - name: DB_ENGINE
               value: "postgres"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mealie-secrets
+                  key: db-password
             - name: POSTGRES_URL_OVERRIDE
-              value: "postgresql://mealie:mealie@postgres.databases.svc.cluster.local:5432/mealie"
+              value: "postgresql://mealie:$(DB_PASSWORD)@postgres.databases.svc.cluster.local:5432/mealie"
           volumeMounts:
             - name: data
               mountPath: /app/data

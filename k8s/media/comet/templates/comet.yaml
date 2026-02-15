@@ -24,8 +24,13 @@ spec:
               value: "Comet"
             - name: DATABASE_TYPE
               value: postgresql
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: db-password
             - name: DATABASE_URL
-              value: "comet:comet@postgres.databases.svc.cluster.local:5432/comet"
+              value: "comet:$(DB_PASSWORD)@postgres.databases.svc.cluster.local:5432/comet"
             - name: FASTAPI_WORKERS
               value: "2"
             - name: BACKGROUND_SCRAPER_ENABLED

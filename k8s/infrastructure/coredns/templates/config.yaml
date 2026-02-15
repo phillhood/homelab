@@ -8,16 +8,8 @@ data:
     {{ .Values.global.homeDomain }}:53 {
       errors
       cache 30
-      template IN A {
-        match .*\.home\.{{ .Values.global.homeDomain | replace "." "\\." }}\.$
-        answer "{{`{{ .Name }}`}} 60 IN A {{ .Values.global.ingressIP }}"
-      }
       template IN A {{ .Values.global.homeDomain }} {
         answer "{{`{{ .Name }}`}} 60 IN A {{ .Values.global.ingressIP }}"
-      }
-      template IN AAAA {
-        match .*\.home\.{{ .Values.global.homeDomain | replace "." "\\." }}\.$
-        rcode NOERROR
       }
       template IN AAAA {{ .Values.global.homeDomain }} {
         rcode NOERROR

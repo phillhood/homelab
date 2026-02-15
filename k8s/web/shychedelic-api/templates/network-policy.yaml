@@ -1,20 +1,16 @@
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: default-deny-ingress
-spec:
-  podSelector: {}
-  policyTypes:
-    - Ingress
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-from-traefik
+  name: shychedelic-api-policy
+  namespace: web
 spec:
-  podSelector: {}
+  podSelector:
+    matchLabels:
+      app: shychedelic-api
   policyTypes:
     - Ingress
+    - Egress
   ingress:
     - from:
         - namespaceSelector:
@@ -25,18 +21,7 @@ spec:
               app.kubernetes.io/name: traefik
       ports:
         - protocol: TCP
-          port: 80
-        - protocol: TCP
-          port: 443
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: allow-egress
-spec:
-  podSelector: {}
-  policyTypes:
-    - Egress
+          port: 3000
   egress:
     - to:
         - namespaceSelector:
@@ -48,6 +33,26 @@ spec:
         - protocol: TCP
           port: 53
     - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: databases
+          podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: communication
+          podSelector:
+            matchLabels:
+              app: synapse
+      ports:
+        - protocol: TCP
+          port: 8008
+    - to:
         - ipBlock:
             cidr: 0.0.0.0/0
             except:
@@ -57,5 +62,3 @@ spec:
       ports:
         - protocol: TCP
           port: 443
-        - protocol: TCP
-          port: 80

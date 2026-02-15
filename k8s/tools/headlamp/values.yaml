@@ -1,4 +1,6 @@
 headlamp:
+  namespaceOverride: tools
+
   config:
     oidc:
       enabled: false

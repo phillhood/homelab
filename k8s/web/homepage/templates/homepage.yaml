@@ -249,6 +249,12 @@ data:
                   url: http://prometheus.monitoring.svc.cluster.local
 
         - Utils:
+            - Headlamp:
+                href: https://headlamp.{{ .Values.global.homeDomain }}
+                siteMonitor: http://headlamp.tools.svc.cluster.local
+                icon: kubernetes-dashboard
+                namespace: tools
+                podSelector: app.kubernetes.io/name=headlamp
             - pgAdmin:
                 href: https://pgadmin.{{ .Values.global.homeDomain }}
                 siteMonitor: http://pgadmin.tools.svc.cluster.local/misc/ping

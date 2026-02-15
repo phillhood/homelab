@@ -43,7 +43,7 @@ data:
         port: 5432
         name: headscale
         user: headscale
-        pass: headscale
+        pass: __DB_PASSWORD__
         max_open_conns: 10
         max_idle_conns: 10
         conn_max_idle_time_secs: 3600
@@ -111,6 +111,23 @@ spec:
       labels:
         app: headscale
     spec:
+      initContainers:
+        - name: render-config
+          image: headscale/headscale:latest
+          command:
+            - sh
+            - -c
+            - |
+              DB_PW=$(cat /db-secret/db-password)
+              sed "s/__DB_PASSWORD__/$DB_PW/g" /config-template/config.yaml > /rendered-config/config.yaml
+          volumeMounts:
+            - name: config-template
+              mountPath: /config-template
+            - name: db-secret
+              mountPath: /db-secret
+              readOnly: true
+            - name: rendered-config
+              mountPath: /rendered-config
       containers:
         - name: headscale
           image: headscale/headscale:latest
@@ -122,7 +139,7 @@ spec:
             - containerPort: 9090
               name: metrics
           volumeMounts:
-            - name: config
+            - name: rendered-config
               mountPath: /etc/headscale/config.yaml
               subPath: config.yaml
             - name: oidc-secret
@@ -150,9 +167,14 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 5
       volumes:
-        - name: config
+        - name: config-template
           configMap:
             name: headscale-config
+        - name: rendered-config
+          emptyDir: {}
+        - name: db-secret
+          secret:
+            secretName: headscale-secrets
         - name: oidc-secret
           secret:
             secretName: headscale-oidc

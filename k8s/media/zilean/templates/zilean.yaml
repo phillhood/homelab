@@ -20,8 +20,13 @@ spec:
           ports:
             - containerPort: 8181
           env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: zilean-secrets
+                  key: db-password
             - name: Zilean__Database__ConnectionString
-              value: "Host=postgres.databases.svc.cluster.local;Port=5432;Database=zilean;Username=zilean;Password=zilean"
+              value: "Host=postgres.databases.svc.cluster.local;Port=5432;Database=zilean;Username=zilean;Password=$(DB_PASSWORD)"
             - name: Zilean__Dmm__EnableScraping
               value: "true"
             - name: Zilean__Dmm__EnableEndpoint

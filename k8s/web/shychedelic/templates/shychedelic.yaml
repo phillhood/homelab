@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shychedelic
+  name: shychedelic-web
   namespace: web
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: shychedelic
+      app: shychedelic-web
   template:
     metadata:
       labels:
-        app: shychedelic
+        app: shychedelic-web
     spec:
       containers:
-        - name: shychedelic
-          image: {{ .Values.global.registry }}/shychedelic:latest
+        - name: shychedelic-web
+          image: {{ .Values.global.registry }}/shychedelic-web:latest
           ports:
             - containerPort: 80
           resources:
@@ -29,11 +29,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: shychedelic
+  name: shychedelic-web
   namespace: web
 spec:
   selector:
-    app: shychedelic
+    app: shychedelic-web
   ports:
     - port: 80
       targetPort: 80
@@ -41,7 +41,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: shychedelic
+  name: shychedelic-web
   namespace: web
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -61,7 +61,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: shychedelic
+                name: shychedelic-web
                 port:
                   number: 80
     - host: www.{{ .Values.global.hobbyDomain }}
@@ -71,6 +71,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: shychedelic
+                name: shychedelic-web
                 port:
                   number: 80
