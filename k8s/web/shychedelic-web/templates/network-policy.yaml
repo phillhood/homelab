@@ -22,4 +22,20 @@ spec:
       ports:
         - protocol: TCP
           port: 80
-  egress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app: shychedelic-api
+      ports:
+        - protocol: TCP
+          port: 3000

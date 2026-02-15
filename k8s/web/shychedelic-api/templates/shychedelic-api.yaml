@@ -72,6 +72,8 @@ spec:
               value: "noreply@{{ .Values.global.hobbyDomain }}"
             - name: OIDC_ISSUER
               value: "https://{{ .Values.global.hobbyDomain }}"
+            - name: OIDC_API_BASE_URL
+              value: "https://api.{{ .Values.global.hobbyDomain }}"
             - name: OIDC_SIGNING_KEY
               valueFrom:
                 secretKeyRef:
