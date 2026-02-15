@@ -105,7 +105,7 @@ spec:
     spec:
       initContainers:
         - name: render-config
-          image: headscale/headscale:0.28.0
+          image: busybox:1.37
           command:
             - sh
             - -c
