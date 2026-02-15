@@ -3,7 +3,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: vpn-cert
-  namespace: headscale
+  namespace: vpn
 spec:
   secretName: vpn-cert-tls
   dnsNames:
@@ -16,7 +16,7 @@ apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: cors-headscale
-  namespace: headscale
+  namespace: vpn
 spec:
   headers:
     accessControlAllowMethods:
@@ -36,7 +36,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: headscale
-  namespace: headscale
+  namespace: vpn
 spec:
   entryPoints:
     - websecure
@@ -53,7 +53,7 @@ apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
   name: headplane
-  namespace: headscale
+  namespace: vpn
 spec:
   entryPoints:
     - websecure

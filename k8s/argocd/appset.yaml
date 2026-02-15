@@ -30,7 +30,7 @@ spec:
           0
           {{- else if eq $parent "infrastructure" -}}
           1
-          {{- else if or (eq $parent "cloudflare") (eq $parent "networking") (eq $parent "headscale") -}}
+          {{- else if or (eq $parent "cloudflare") (eq $parent "networking") (eq $parent "vpn") -}}
           2
           {{- else if eq $parent "databases" -}}
           3

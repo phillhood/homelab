@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: headplane-config
-  namespace: headscale
+  namespace: vpn
 data:
   config.yaml: |
     server:
@@ -12,14 +12,14 @@ data:
       cookie_secure: true
       cookie_secret_path: /etc/headplane-secrets/cookie-secret
     headscale:
-      url: http://headscale.headscale.svc.cluster.local:8080
+      url: http://headscale.vpn.svc.cluster.local:8080
       config_strict: false
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: headplane-data
-  namespace: headscale
+  namespace: vpn
 spec:
   accessModes:
     - ReadWriteOnce
@@ -31,7 +31,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: headplane
-  namespace: headscale
+  namespace: vpn
 spec:
   type: ClusterIP
   ports:
@@ -45,7 +45,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: headplane
-  namespace: headscale
+  namespace: vpn
 spec:
   replicas: 1
   selector:
