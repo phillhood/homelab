@@ -1,0 +1,104 @@
+---
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: tailscale-subnet-router
+  namespace: headscale
+spec:
+  encryptedData:
+    authkey: AgA0znMUgtnG0WrQwvLyXZ57tuOV/IpMVg45EyFrN10wEswEAdMwR7hoCjyKYBitxkjeeAbxpf51Ohd3ZkU6MfPQyeqqRHOSyQghV3EIEj80GbTFe8Hw4KYfTOSdgahb0dHD/RsXOKVLQCxvXBke6cE/NFUD1E7N9t0o+Y3k+ldz8iXmROzcaSVZO03n/AHWmeovHTzdPeT/3NLggpjunm99w/HtcrykHq0jFQgshoEjBCDeU9Ognx8RvbmKOoRoWWO0jR7cHmPQpTJSG/YyiSfJtlfVSp6lwwqU2wdCD48ZjgBOksd0de3IiAzj2/KuSaqrpe2jzGuTF715BWGI3vrGPQDNbHEhbwhpcRPxkK54dE4rNcB6HcON+MsyBNTnMMIP9bUJxTVIoYEWs/Gb4SGbEk6gV6YDw4TtXubaxvC8UXnuRca/7f9vOocXgx/rf161LwFU4C1pMk3dlcakvLBC/O2wyjFDmW9GNbMk2jB2nGgcIb27cXyPwt9CTHyPrfdytC7x+qIzwSkFLnT3/nyB6B3rD+/aOfsIMCJeUQ4yZiU8fq6AlCoeMNX+QVWg80+/xe3pFGuh/QJ5kyGJbv+aWLBo/5NT/xc4a5SMQKWrb7xuvPR20qkxjNCRJCaq69TbbBO1n2vyqoQTZdDmlHeE0Fwwu9DD6r36B5AhZFwrjslgWoeW2zsMxF+/nPYVrhyquwiJ9iqfRELtWvyGtn8laRAzqzaNuSPwDUakyhdPlKE11379xqp4Uw6INGd6qgU=
+  template:
+    metadata:
+      name: tailscale-subnet-router
+      namespace: headscale
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tailscale-subnet-router
+  namespace: headscale
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tailscale-subnet-router
+  namespace: headscale
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["create", "get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tailscale-subnet-router
+  namespace: headscale
+subjects:
+  - kind: ServiceAccount
+    name: tailscale-subnet-router
+    namespace: headscale
+roleRef:
+  kind: Role
+  name: tailscale-subnet-router
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tailscale-subnet-router
+  namespace: headscale
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tailscale-subnet-router
+  template:
+    metadata:
+      labels:
+        app: tailscale-subnet-router
+    spec:
+      serviceAccountName: tailscale-subnet-router
+      containers:
+        - name: tailscale
+          image: tailscale/tailscale:latest
+          env:
+            - name: TS_AUTHKEY
+              valueFrom:
+                secretKeyRef:
+                  name: tailscale-subnet-router
+                  key: authkey
+            - name: TS_HOSTNAME
+              value: "k8s-subnet-router"
+            - name: TS_STATE_DIR
+              value: "/var/lib/tailscale"
+            - name: TS_USERSPACE
+              value: "false"
+            - name: TS_ROUTES
+              value: "192.168.1.0/24"
+            - name: TS_EXTRA_ARGS
+              value: "--login-server=http://headscale.headscale.svc.cluster.local:8080 --accept-routes=false"
+            - name: TS_KUBE_SECRET
+              value: "tailscale-subnet-router-state"
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+          volumeMounts:
+            - name: dev-tun
+              mountPath: /dev/net/tun
+            - name: state
+              mountPath: /var/lib/tailscale
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+      volumes:
+        - name: dev-tun
+          hostPath:
+            path: /dev/net/tun
+        - name: state
+          emptyDir: {}

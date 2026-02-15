@@ -1,4 +1,17 @@
 ---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vpn-cert
+  namespace: headscale
+spec:
+  secretName: vpn-cert-tls
+  dnsNames:
+    - vpn.{{ .Values.global.homeDomain }}
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+---
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
@@ -16,56 +29,39 @@ spec:
       - Authorization
       - Content-Type
     accessControlAllowOriginList:
-      - https://headscale.{{ .Values.global.homeDomain }}
+      - https://vpn.{{ .Values.global.homeDomain }}
     accessControlMaxAge: 86400
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: headscale-ui
-  namespace: headscale
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
-spec:
-  ingressClassName: traefik
-  tls:
-    - hosts:
-        - headscale.{{ .Values.global.homeDomain }}
-  rules:
-    - host: headscale.{{ .Values.global.homeDomain }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: headscale-ui
-                port:
-                  number: 80
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
   name: headscale
   namespace: headscale
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: headscale-cors-headscale@kubernetescrd
 spec:
-  ingressClassName: traefik
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vpn.{{ .Values.global.homeDomain }}`) && !PathPrefix(`/admin`)
+      kind: Rule
+      services:
+        - name: headscale
+          port: 8080
   tls:
-    - hosts:
-        - vpn.{{ .Values.global.homeDomain }}
-  rules:
-    - host: vpn.{{ .Values.global.homeDomain }}
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: headscale
-                port:
-                  number: 8080
+    secretName: vpn-cert-tls
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headplane
+  namespace: headscale
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`vpn.{{ .Values.global.homeDomain }}`) && PathPrefix(`/admin`)
+      kind: Rule
+      services:
+        - name: headplane
+          port: 3000
+  tls:
+    secretName: vpn-cert-tls
