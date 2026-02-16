@@ -4,3 +4,4 @@ global:
   registry: registry.pharah.ca
   acmeEmail: admin@pharah.ca
   ingressIP: 192.168.1.200
+  gameserverIP: 192.168.1.101
