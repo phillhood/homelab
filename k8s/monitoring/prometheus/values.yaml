@@ -1,3 +1,19 @@
+prometheus-blackbox-exporter:
+  config:
+    modules:
+      http_2xx:
+        prober: http
+        timeout: 5s
+        http:
+          preferred_ip_protocol: ip4
+          follow_redirects: true
+      http_401:
+        prober: http
+        timeout: 5s
+        http:
+          preferred_ip_protocol: ip4
+          valid_status_codes: [401]
+
 prometheus:
   server:
     fullnameOverride: prometheus
@@ -14,3 +30,46 @@ prometheus:
     enabled: true
   prometheus-pushgateway:
     enabled: false
+  extraScrapeConfigs: |
+    - job_name: blackbox
+      metrics_path: /probe
+      scrape_interval: 30s
+      params:
+        module: [http_2xx]
+      static_configs:
+        - targets:
+            - http://shychedelic-web.web.svc.cluster.local
+          labels:
+            service: website
+        - targets:
+            - http://shychedelic-api.web.svc.cluster.local:3000/health
+          labels:
+            service: api
+        - targets:
+            - http://synapse.comms.svc.cluster.local:8008/_matrix/client/versions
+          labels:
+            service: matrix
+      relabel_configs:
+        - source_labels: [__address__]
+          target_label: __param_target
+        - source_labels: [__param_target]
+          target_label: instance
+        - target_label: __address__
+          replacement: prometheus-blackbox-exporter:9115
+    - job_name: blackbox-401
+      metrics_path: /probe
+      scrape_interval: 30s
+      params:
+        module: [http_401]
+      static_configs:
+        - targets:
+            - http://192.168.1.101:8080
+          labels:
+            service: gameservers
+      relabel_configs:
+        - source_labels: [__address__]
+          target_label: __param_target
+        - source_labels: [__param_target]
+          target_label: instance
+        - target_label: __address__
+          replacement: prometheus-blackbox-exporter:9115
