@@ -8,7 +8,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-    - match: Host(`matrix.{{ .Values.global.hobbyDomain }}`) && (Path(`/_matrix/client/v3/login`) || Path(`/_matrix/client/v3/logout`) || Path(`/_matrix/client/v3/refresh`))
+    - match: Host(`matrix.{{ .Values.global.hobbyDomain }}`) && (PathPrefix(`/_matrix/client/v3/login`) || PathPrefix(`/_matrix/client/v3/logout`) || PathPrefix(`/_matrix/client/v3/refresh`))
       kind: Rule
       priority: 110
       services:

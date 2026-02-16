@@ -48,8 +48,9 @@ data:
         ],
         "theme": "custom-Shychedelic"
       },
-      "jitsi": {
-        "preferred_domain": "jitsi.{{ .Values.global.hobbyDomain }}"
+      "element_call": {
+        "url": "https://call.{{ .Values.global.hobbyDomain }}",
+        "use_exclusively": true
       },
       "disable_guests": true,
       "disable_3pid_login": false,

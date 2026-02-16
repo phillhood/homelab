@@ -26,6 +26,12 @@ data:
         }
       ]
     }
+  element: |
+    {
+      "call": {
+        "widget_url": "https://call.{{ .Values.global.hobbyDomain }}"
+      }
+    }
   nginx.conf: |
     server {
       listen 80;
@@ -38,6 +44,11 @@ data:
         default_type application/json;
         add_header Access-Control-Allow-Origin *;
         alias /data/client;
+      }
+      location /.well-known/element/element.json {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin *;
+        alias /data/element;
       }
     }
 ---
@@ -73,6 +84,9 @@ spec:
             - name: config
               mountPath: /data/client
               subPath: client
+            - name: config
+              mountPath: /data/element
+              subPath: element
           resources:
             requests:
               memory: "16Mi"

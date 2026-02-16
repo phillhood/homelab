@@ -14,7 +14,7 @@ spec:
       services:
         - name: mas
           port: 8080
-    - match: Host(`{{ .Values.global.hobbyDomain }}`) && PathPrefix(`/.well-known/matrix/`)
+    - match: Host(`{{ .Values.global.hobbyDomain }}`) && (PathPrefix(`/.well-known/matrix/`) || PathPrefix(`/.well-known/element/`))
       kind: Rule
       priority: 100
       services:

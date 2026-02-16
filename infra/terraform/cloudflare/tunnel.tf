@@ -159,6 +159,15 @@ resource "cloudflare_record" "mas" {
   allow_overwrite = true
 }
 
+resource "cloudflare_record" "call" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "call"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
 resource "cloudflare_record" "rtc" {
   zone_id         = var.cloudflare_zone_id_hobby
   name            = "rtc"

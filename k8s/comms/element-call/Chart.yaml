@@ -1,0 +1,4 @@
+apiVersion: v2
+name: element-call
+version: 1.0.0
+description: Element Call standalone SPA for MatrixRTC video/voice calls
