@@ -28,6 +28,12 @@ spec:
           podSelector:
             matchLabels:
               app: gatus
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus-blackbox-exporter
       ports:
         - protocol: TCP
           port: 3000
@@ -71,6 +77,16 @@ spec:
       ports:
         - protocol: TCP
           port: 8080
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: prometheus
+      ports:
+        - protocol: TCP
+          port: 80
     - to:
         - ipBlock:
             cidr: 0.0.0.0/0
