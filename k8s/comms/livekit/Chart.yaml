@@ -1,0 +1,4 @@
+apiVersion: v2
+name: livekit
+version: 1.0.0
+description: LiveKit SFU and JWT service for Element Call (MatrixRTC)

@@ -19,7 +19,12 @@ data:
         "issuer": "https://{{ .Values.global.hobbyDomain }}/",
         "account": "https://mas.{{ .Values.global.hobbyDomain }}/account"
       },
-      "org.jitsi.msc3401.call": {"base_url": "https://jitsi.{{ .Values.global.hobbyDomain }}"}
+      "org.matrix.msc4143.rtc_foci": [
+        {
+          "type": "livekit",
+          "livekit_service_url": "https://rtc.{{ .Values.global.hobbyDomain }}/livekit/jwt"
+        }
+      ]
     }
   nginx.conf: |
     server {

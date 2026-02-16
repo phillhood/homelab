@@ -28,6 +28,15 @@
         regexp: '\sswap\s'
         state: absent
 
+    - name: Increase UDP receive buffer for LiveKit
+      ansible.builtin.sysctl:
+        name: net.core.rmem_max
+        value: "5000000"
+        sysctl_set: true
+        state: present
+        reload: true
+      when: inventory_hostname == "kvatch"
+
     - name: Install k3s server
       when: k3s_role == "server"
       block:
