@@ -36,6 +36,13 @@ data:
         conditions:
           - "[STATUS] == 200"
 
+      - name: Synapse
+        group: Comms
+        url: http://synapse.comms.svc.cluster.local:8008/_matrix/client/versions
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
       - name: Mealie
         group: Home
         url: https://mealie.{{ .Values.global.homeDomain }}/api/app/about
@@ -46,6 +53,20 @@ data:
       - name: Home Assistant
         group: Home
         url: https://ha.{{ .Values.global.homeDomain }}
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Shychedelic Web
+        group: Web
+        url: https://shychedelic.com
+        interval: 60s
+        conditions:
+          - "[STATUS] == 200"
+
+      - name: Shychedelic API
+        group: Web
+        url: https://shychedelic.com/api/health
         interval: 60s
         conditions:
           - "[STATUS] == 200"
