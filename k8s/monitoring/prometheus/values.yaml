@@ -1,4 +1,5 @@
 prometheus-blackbox-exporter:
+  fullnameOverride: prometheus-blackbox-exporter
   config:
     modules:
       http_2xx:
