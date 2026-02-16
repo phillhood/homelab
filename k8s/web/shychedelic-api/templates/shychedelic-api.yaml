@@ -79,6 +79,10 @@ spec:
                 secretKeyRef:
                   name: shychedelic-api-secrets
                   key: oidc-signing-key
+            - name: GATUS_URL
+              value: "http://gatus.monitoring.svc.cluster.local:8080"
+            - name: PELICAN_URL
+              value: "https://pelican.{{ .Values.global.homeDomain }}"
           resources:
             requests:
               memory: "128Mi"
