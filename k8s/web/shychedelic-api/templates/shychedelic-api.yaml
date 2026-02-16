@@ -82,7 +82,21 @@ spec:
             - name: GATUS_URL
               value: "http://gatus.monitoring.svc.cluster.local:8080"
             - name: PELICAN_URL
-              value: "https://pelican.{{ .Values.global.homeDomain }}"
+              value: "http://pelican.gaming.svc.cluster.local"
+            - name: PELICAN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shychedelic-api-secrets
+                  key: pelican-api-key
+            - name: PELICAN_CLIENT_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: shychedelic-api-secrets
+                  key: pelican-client-api-key
+            - name: GAME_SERVER_HOST
+              value: "game.{{ .Values.global.hobbyDomain }}"
+            - name: GAME_SERVER_IP
+              value: "{{ .Values.global.gameserverIP }}"
           resources:
             requests:
               memory: "128Mi"
