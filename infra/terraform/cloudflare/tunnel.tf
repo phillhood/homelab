@@ -150,6 +150,24 @@ resource "cloudflare_record" "auth_hobby" {
   allow_overwrite = true
 }
 
+resource "cloudflare_record" "mas" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "mas"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
+resource "cloudflare_record" "matrix_gifs" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "matrix-gifs"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
 output "tunnel_token" {
   value     = cloudflare_zero_trust_tunnel_cloudflared.homelab.tunnel_token
   sensitive = true
