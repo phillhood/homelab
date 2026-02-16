@@ -8,6 +8,12 @@ spec:
   entryPoints:
     - websecure
   routes:
+    - match: Host(`{{ .Values.global.hobbyDomain }}`) && Path(`/.well-known/openid-configuration`)
+      kind: Rule
+      priority: 110
+      services:
+        - name: mas
+          port: 8080
     - match: Host(`{{ .Values.global.hobbyDomain }}`) && PathPrefix(`/.well-known/matrix/`)
       kind: Rule
       priority: 100

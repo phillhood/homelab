@@ -48,33 +48,251 @@ data:
     registration_shared_secret_path: "/secrets/registration-shared-secret"
 
     login_via_existing_session:
-      enabled: true
-      token_timeout: "2m"
+      enabled: false
+
+    ui_auth:
+      session_timeout: "120s"
 
     suppress_key_server_warning: true
 
+    templates:
+      custom_template_directory: "/custom-templates"
+
+    room_list_publication_rules:
+      - action: allow
+
     experimental_features:
+      msc4108_enabled: true
       msc4222_enabled: false
 
-    oidc_providers:
-      - idp_id: shychedelic
-        idp_name: Shychedelic
-        discover: true
-        issuer: "https://{{ .Values.global.hobbyDomain }}"
-        client_id: "synapse"
-        client_secret: "__OIDC_CLIENT_SECRET__"
-        scopes: ["openid", "profile", "email"]
-        allow_existing_users: true
-        user_mapping_provider:
-          config:
-            subject_claim: "sub"
-            localpart_template: "{{ "{{" }} user.preferred_username {{ "}}" }}"
-            display_name_template: "{{ "{{" }} user.name {{ "}}" }}"
-            email_template: "{{ "{{" }} user.email {{ "}}" }}"
+    matrix_authentication_service:
+      enabled: true
+      endpoint: "http://mas.comms.svc.cluster.local:8080/"
+      secret: "__MAS_SECRET__"
 
     app_service_config_files:
       - /bridges/discord-registration.yaml
 
+  sso_redirect_confirm.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Continue to your account</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          background: #0a0a0f;
+          font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          color: rgba(255, 255, 255, 0.95);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+        .card {
+          background: #12121a;
+          border: 1px solid #1e1e2e;
+          border-radius: 16px;
+          padding: 2.5rem;
+          max-width: 420px;
+          width: 100%;
+          text-align: center;
+        }
+        .brand {
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #a855f7, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 1.5rem;
+        }
+        .profile {
+          margin-bottom: 1.5rem;
+        }
+        .avatar {
+          width: 64px;
+          height: 64px;
+          border-radius: 50%;
+          border: 2px solid #1e1e2e;
+          margin-bottom: 0.75rem;
+        }
+        .display-name {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.9);
+        }
+        .user-id {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.4);
+          margin-top: 0.25rem;
+        }
+        .trust {
+          font-size: 0.85rem;
+          color: rgba(255, 255, 255, 0.4);
+          margin-bottom: 1.5rem;
+          line-height: 1.5;
+        }
+        .trust strong {
+          color: rgba(255, 255, 255, 0.7);
+        }
+        .btn {
+          display: inline-block;
+          padding: 0.75rem 2rem;
+          background: linear-gradient(135deg, #7c3aed, #06b6d4);
+          color: #fff;
+          font-size: 1rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          text-decoration: none;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="brand">shychedelic</div>
+        <div class="profile">
+          {{ "{%" }} if user_profile.display_name {{ "%}" }}
+            <div class="display-name">{{ "{{" }} user_profile.display_name {{ "}}" }}</div>
+          {{ "{%" }} else {{ "%}" }}
+            <div class="display-name">{{ "{{" }} user_id.split(":")[0][1:] {{ "}}" }}</div>
+          {{ "{%" }} endif {{ "%}" }}
+          <div class="user-id">{{ "{{" }} user_id {{ "}}" }}</div>
+        </div>
+        <p class="trust">Continuing will grant <strong>{{ "{{" }} display_url {{ "}}" }}</strong> access to your account.</p>
+        <a href="{{ "{{" }} redirect_url {{ "}}" }}" class="btn">Continue</a>
+      </div>
+    </body>
+    </html>
+  sso_auth_confirm.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Confirm it's you</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          background: #0a0a0f;
+          font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          color: rgba(255, 255, 255, 0.95);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+        .card {
+          background: #12121a;
+          border: 1px solid #1e1e2e;
+          border-radius: 16px;
+          padding: 2.5rem;
+          max-width: 420px;
+          width: 100%;
+          text-align: center;
+        }
+        .brand {
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #a855f7, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 1.5rem;
+        }
+        h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+        p { font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); line-height: 1.5; margin-bottom: 1rem; }
+        p strong { color: rgba(255, 255, 255, 0.7); }
+        .btn {
+          display: inline-block;
+          padding: 0.75rem 2rem;
+          background: linear-gradient(135deg, #7c3aed, #06b6d4);
+          color: #fff;
+          font-size: 1rem;
+          font-weight: 600;
+          border: none;
+          border-radius: 8px;
+          text-decoration: none;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <div class="brand">shychedelic</div>
+        <h1>Confirm it's you</h1>
+        <p>A client is trying to {{ "{{" }} description {{ "}}" }}. Re-authorize to continue.</p>
+        <p><strong>If you did not expect this, your account may be compromised.</strong></p>
+        <a href="{{ "{{" }} redirect_url {{ "}}" }}" class="btn">Continue with {{ "{{" }} idp.idp_name {{ "}}" }}</a>
+      </div>
+    </body>
+    </html>
+  sso_auth_success.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Authentication successful</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          min-height: 100vh;
+          background: #0a0a0f;
+          font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          color: rgba(255, 255, 255, 0.95);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+        }
+        .card {
+          background: #12121a;
+          border: 1px solid #1e1e2e;
+          border-radius: 16px;
+          padding: 2.5rem;
+          max-width: 420px;
+          width: 100%;
+          text-align: center;
+        }
+        .brand {
+          font-size: 1.5rem;
+          font-weight: 700;
+          background: linear-gradient(135deg, #a855f7, #06b6d4);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin-bottom: 1.5rem;
+        }
+        h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+        p { font-size: 0.9rem; color: rgba(255, 255, 255, 0.5); line-height: 1.5; }
+      </style>
+      <script>
+        if (window.onAuthDone) {
+          window.onAuthDone();
+        } else if (window.opener && window.opener.postMessage) {
+          window.opener.postMessage("authDone", "*");
+        }
+      </script>
+    </head>
+    <body>
+      <div class="card">
+        <div class="brand">shychedelic</div>
+        <h1>Authentication successful</h1>
+        <p>You can close this window and return to the app.</p>
+      </div>
+    </body>
+    </html>
   log.config: |
     version: 1
     formatters:

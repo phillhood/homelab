@@ -14,14 +14,114 @@ data:
         }
       },
       "brand": "Shychedelic Chat",
+      "branding": {
+        "welcome_background_url": "/background.svg",
+        "auth_footer_links": [
+          { "text": "shychedelic.com", "url": "https://{{ .Values.global.hobbyDomain }}" }
+        ]
+      },
+      "embedded_pages": {
+        "welcome_url": "/welcome.html"
+      },
+      "setting_defaults": {
+        "custom_themes": [
+          {
+            "name": "Shychedelic",
+            "is_dark": true,
+            "colors": {
+              "accent-color": "#a855f7",
+              "primary-color": "#a855f7",
+              "warning-color": "#ef4444",
+              "sidebar-color": "#0a0a0f",
+              "roomlist-background-color": "#0f0f17",
+              "roomlist-text-color": "#e2e2e8",
+              "roomlist-text-secondary-color": "#a0a0b8",
+              "roomlist-highlights-color": "#1a1a28",
+              "roomlist-separator-color": "#1e1e2e",
+              "timeline-background-color": "#12121a",
+              "timeline-text-color": "#e2e2e8",
+              "timeline-text-secondary-color": "#a0a0b8",
+              "timeline-highlights-color": "#1a1a28",
+              "reaction-row-button-selected-bg-color": "#7c3aed"
+            }
+          }
+        ],
+        "theme": "custom-Shychedelic"
+      },
       "jitsi": {
         "preferred_domain": "jitsi.{{ .Values.global.hobbyDomain }}"
       },
       "disable_guests": true,
       "disable_3pid_login": false,
       "show_labs_settings": true,
-      "default_theme": "dark",
       "room_directory": {
         "servers": ["{{ .Values.global.hobbyDomain }}", "matrix.org"]
       }
     }
+  welcome.html: |
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 2rem; position: relative; overflow: hidden;">
+      <div style="position: absolute; width: 400px; height: 400px; border-radius: 50%; background: #7c3aed; filter: blur(120px); opacity: 0.12; top: -100px; left: -100px; pointer-events: none;"></div>
+      <div style="position: absolute; width: 350px; height: 350px; border-radius: 50%; background: #06b6d4; filter: blur(120px); opacity: 0.12; bottom: -80px; right: -80px; pointer-events: none;"></div>
+      <div style="position: relative; z-index: 1; text-align: center; max-width: 600px; width: 100%;">
+        <svg style="width: 80px; height: 80px; margin: 0 auto 1.5rem; display: block;" viewBox="448 128 494 494" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a855f7"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient></defs>
+          <path d="M 722.00 619.37 C708.04,621.03 691.08,621.89 683.50,621.30 C639.14,617.90 598.68,603.93 561.55,579.20 C545.62,568.59 520.00,547.27 520.00,544.62 C520.00,542.81 549.84,528.00 553.48,528.00 C554.32,528.00 558.24,531.40 562.19,535.56 C566.13,539.72 573.42,545.83 578.37,549.14 C593.34,559.15 610.51,566.98 597.22,557.73 C580.81,546.31 564.47,527.86 561.39,517.28 C559.12,509.46 560.09,501.73 564.61,491.59 C573.10,472.55 576.29,460.20 579.98,432.00 C581.17,422.92 582.71,412.24 583.39,408.25 C584.07,404.26 584.36,401.00 584.02,401.00 C583.32,401.00 574.04,428.83 570.85,440.50 C569.65,444.90 568.41,448.80 568.09,449.16 C566.69,450.73 528.67,441.14 513.00,435.27 C496.79,429.19 481.05,418.86 477.47,411.95 C473.70,404.64 477.03,395.47 486.19,387.97 C510.96,367.66 572.87,343.57 624.50,334.15 C630.55,333.05 638.65,331.57 642.50,330.87 C646.35,330.17 648.66,329.42 647.63,329.20 C644.69,328.58 617.55,330.87 603.36,332.95 C596.29,333.98 590.32,334.65 590.11,334.44 C589.89,334.22 590.23,333.43 590.85,332.68 C591.48,331.92 592.93,327.54 594.07,322.94 C595.22,318.34 596.61,313.73 597.16,312.70 C598.58,310.04 606.42,306.81 625.23,301.12 C642.10,296.02 660.97,291.89 676.50,289.90 C692.40,287.87 691.46,286.95 674.00,287.48 C653.67,288.09 625.82,292.42 608.65,297.64 C608.50,297.68 608.36,297.73 608.23,297.78 C607.87,297.90 607.60,298.00 607.43,297.91 C606.83,297.55 607.78,294.56 612.23,280.58 C612.67,279.17 613.16,277.64 613.68,276.00 C621.54,251.21 632.23,220.49 640.32,199.42 C647.82,179.89 653.57,171.16 663.97,163.52 C670.47,158.75 710.28,138.62 717.15,136.64 C728.33,133.40 739.95,135.00 751.23,141.32 C754.68,143.25 768.35,152.86 781.61,162.66 C794.87,172.47 809.60,183.33 814.33,186.78 C827.09,196.09 831.51,203.50 834.49,220.63 C836.02,229.36 836.38,249.40 835.11,254.00 C834.72,255.38 833.77,256.50 832.98,256.50 C832.20,256.50 827.69,249.85 822.96,241.72 C811.13,221.37 808.90,218.88 799.14,215.11 C794.79,213.44 785.80,210.63 779.16,208.88 L 767.08 205.69 L 766.47 201.09 C765.74,195.52 762.18,183.00 761.33,183.00 C761.00,183.00 760.98,185.47 761.29,188.49 C761.87,194.11 760.61,206.08 759.17,208.66 C758.58,209.72 757.67,208.81 755.69,205.18 C751.37,197.23 741.59,184.68 736.21,180.18 C733.47,177.88 730.93,176.00 730.58,176.00 C730.23,176.00 731.65,178.36 733.74,181.25 C741.33,191.72 749.68,206.87 751.79,214.00 C753.41,219.45 754.17,225.00 753.30,224.96 C752.86,224.94 751.07,222.98 749.32,220.60 C745.35,215.19 735.42,207.62 727.26,203.77 C718.99,199.86 717.51,200.64 724.31,205.32 C731.44,210.23 743.87,222.29 747.70,228.00 C749.36,230.48 753.48,238.06 756.86,244.85 C760.24,251.64 763.91,258.46 765.00,260.01 C771.73,269.45 781.97,298.68 778.19,297.63 C772.68,296.10 750.79,291.90 749.89,292.20 C749.31,292.40 754.38,294.72 761.16,297.36 C778.12,303.96 789.63,309.60 790.46,311.72 C790.84,312.70 791.79,317.05 792.56,321.39 C793.33,325.73 794.65,330.35 795.50,331.64 C797.41,334.55 797.33,334.55 784.00,332.50 C778.78,331.70 768.42,330.58 761.00,330.02 C753.58,329.46 745.14,328.75 742.25,328.43 C733.53,327.48 736.36,329.48 745.75,330.91 C772.56,334.98 808.43,344.02 830.50,352.27 C832.70,353.09 838.10,355.11 842.50,356.76 C874.55,368.78 901.55,384.56 908.80,395.52 C912.40,400.95 913.05,407.06 910.55,411.90 C905.65,421.38 887.89,431.63 862.98,439.34 C850.86,443.10 826.21,449.02 821.12,449.40 C820.20,449.47 818.79,446.17 816.91,439.61 C813.13,426.44 804.89,401.78 804.42,402.25 C804.21,402.46 804.89,408.67 805.93,416.06 C806.98,423.45 808.59,435.12 809.52,442.00 C811.66,457.82 814.76,470.06 819.51,481.50 C828.99,504.37 829.80,509.13 825.91,519.51 C822.22,529.38 806.21,547.11 791.75,557.33 C788.59,559.56 786.00,561.76 786.00,562.21 C786.00,563.47 798.74,556.76 807.60,550.83 C817.76,544.03 825.86,537.02 830.07,531.41 C832.68,527.92 833.82,527.12 835.44,527.62 C839.39,528.84 853.56,535.54 861.34,539.87 L 869.17 544.24 L 865.34 548.22 C863.23,550.41 857.67,555.46 853.00,559.44 C814.06,592.59 767.33,613.97 722.00,619.37 ZM 678.36 547.51 C686.68,549.31 701.35,549.32 709.91,547.52 C735.22,542.19 758.95,522.96 771.85,497.29 C774.11,492.81 777.59,483.83 779.59,477.32 C782.91,466.54 783.28,464.16 783.75,450.23 C784.34,432.72 783.29,424.17 778.78,410.00 C773.97,394.89 768.49,384.76 758.56,372.59 L 754.55 367.68 L 766.02 368.37 C793.32,370.01 842.04,378.65 869.50,386.71 C888.76,392.37 890.69,392.44 878.00,387.02 C844.09,372.54 803.15,363.22 751.83,358.32 C729.80,356.22 664.42,355.90 643.00,357.80 C590.47,362.44 544.52,372.33 513.25,385.71 C508.71,387.65 505.00,389.58 505.00,389.99 C505.00,390.41 510.06,389.21 516.25,387.33 C544.03,378.88 593.60,370.09 623.05,368.40 L 634.50 367.75 L 630.92 371.62 C610.22,394.06 599.93,431.35 605.54,463.62 C608.43,480.20 615.73,498.10 624.87,511.00 C637.58,528.93 658.46,543.18 678.36,547.51 ZM 665.39 462.29 C660.99,465.39 655.18,466.46 650.63,465.02 C642.10,462.31 635.64,454.41 631.95,442.15 C629.13,432.77 629.59,418.98 633.06,409.07 C635.87,401.02 643.39,392.81 649.65,390.97 C658.98,388.22 668.65,392.78 674.10,402.50 C684.89,421.74 680.53,451.65 665.39,462.29 ZM 740.20 464.13 C734.85,466.42 731.69,466.40 726.50,464.04 C712.63,457.74 704.54,434.69 709.51,415.62 C711.99,406.10 714.98,400.28 719.52,396.09 C729.71,386.70 742.97,388.70 751.02,400.84 C764.37,421.01 758.33,456.36 740.20,464.13 ZM 697.50 591.36 C704.09,592.70 728.53,590.80 730.53,588.80 C730.81,588.53 726.36,588.02 720.65,587.67 C697.68,586.27 670.23,576.50 643.09,560.08 C638.46,557.29 634.50,555.17 634.29,555.38 C633.45,556.22 648.09,568.53 657.21,574.64 C669.92,583.16 682.18,588.25 697.50,591.36 ZM 759.60 318.91 C764.50,319.95 769.85,320.82 771.50,320.84 C774.15,320.88 773.85,320.59 769.00,318.35 C754.73,311.77 742.27,309.05 722.90,308.30 C708.68,307.75 688.00,309.33 688.00,310.96 C688.00,311.37 695.76,311.96 705.25,312.29 C722.54,312.88 742.96,315.37 759.60,318.91 Z" fill="url(#g)"/>
+        </svg>
+        <h1 style="font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 0.5rem; background: linear-gradient(135deg, #a855f7, #06b6d4); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Shychedelic - Matrix</h1>
+        <p style="font-size: 1.1rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 2rem; line-height: 1.5;">Secure, self-hosted chat for the homies.</p>
+        <div style="width: 60px; height: 2px; background: linear-gradient(90deg, #7c3aed, #06b6d4); border-radius: 1px; margin: 0 auto 1.5rem;"></div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 2rem;">
+          <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; text-align: left;">
+            <svg style="width: 20px; height: 20px; flex-shrink: 0; stroke: #a855f7; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            <span style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);">End-to-end encrypted messaging</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; text-align: left;">
+            <svg style="width: 20px; height: 20px; flex-shrink: 0; stroke: #a855f7; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);">Desktop, mobile, and web access</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; text-align: left;">
+            <svg style="width: 20px; height: 20px; flex-shrink: 0; stroke: #a855f7; stroke-width: 2; fill: none;" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.6);">No tracking, no ads, fully self-hosted</span>
+          </div>
+        </div>
+        <p style="font-size: 0.8rem; color: rgba(255, 255, 255, 0.3); line-height: 1.5;">Sign in with your shychedelic account to get started.</p>
+      </div>
+    </div>
+  auto_login.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta http-equiv="Content-Security-Policy" content="script-src 'unsafe-inline';">
+      <title>Logging in...</title>
+    </head>
+    <body>
+    <script>
+      var p = new URLSearchParams(location.search);
+      var hs = p.get('hs');
+      var user = p.get('user');
+      var token = p.get('token');
+      var device = p.get('device');
+      if (hs && user && token && device) {
+        localStorage.setItem('mx_hs_url', hs);
+        localStorage.setItem('mx_user_id', user);
+        localStorage.setItem('mx_access_token', token);
+        localStorage.setItem('mx_device_id', device);
+        localStorage.setItem('mx_is_guest', 'false');
+        location.href = '/';
+      } else {
+        location.href = '/#/login';
+      }
+    </script>
+    </body>
+    </html>
+  background.svg: |
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+      <rect width="1920" height="1080" fill="#0a0a0f"/>
+      <ellipse cx="300" cy="250" rx="600" ry="450" fill="rgba(124, 58, 237, 0.18)" filter="url(#b)"/>
+      <ellipse cx="1500" cy="800" rx="500" ry="400" fill="rgba(6, 182, 212, 0.12)" filter="url(#b)"/>
+      <ellipse cx="1200" cy="200" rx="400" ry="300" fill="rgba(168, 85, 247, 0.08)" filter="url(#b)"/>
+      <defs>
+        <filter id="b"><feGaussianBlur stdDeviation="80"/></filter>
+      </defs>
+    </svg>

@@ -8,6 +8,12 @@ spec:
   entryPoints:
     - websecure
   routes:
+    - match: Host(`matrix.{{ .Values.global.hobbyDomain }}`) && (Path(`/_matrix/client/v3/login`) || Path(`/_matrix/client/v3/logout`) || Path(`/_matrix/client/v3/refresh`))
+      kind: Rule
+      priority: 110
+      services:
+        - name: mas
+          port: 8080
     - match: Host(`matrix.{{ .Values.global.hobbyDomain }}`)
       kind: Rule
       services:

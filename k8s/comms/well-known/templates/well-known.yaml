@@ -15,6 +15,10 @@ data:
   client: |
     {
       "m.homeserver": {"base_url": "https://matrix.{{ .Values.global.hobbyDomain }}"},
+      "org.matrix.msc2965.authentication": {
+        "issuer": "https://{{ .Values.global.hobbyDomain }}/",
+        "account": "https://mas.{{ .Values.global.hobbyDomain }}/account"
+      },
       "org.jitsi.msc3401.call": {"base_url": "https://jitsi.{{ .Values.global.hobbyDomain }}"}
     }
   nginx.conf: |

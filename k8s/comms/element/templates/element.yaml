@@ -25,6 +25,15 @@ spec:
             - name: config
               mountPath: /app/config.json
               subPath: config.json
+            - name: config
+              mountPath: /app/auto_login.html
+              subPath: auto_login.html
+            - name: config
+              mountPath: /app/welcome.html
+              subPath: welcome.html
+            - name: config
+              mountPath: /app/background.svg
+              subPath: background.svg
           resources:
             requests:
               memory: "64Mi"

@@ -24,8 +24,8 @@ spec:
             - -c
             - |
               DB_PW=$(cat /db-secret/db-password)
-              OIDC_SECRET=$(cat /db-secret/oidc-client-secret)
-              sed "s/__DB_PASSWORD__/$DB_PW/g; s/__OIDC_CLIENT_SECRET__/$OIDC_SECRET/g" /config-template/homeserver.yaml > /rendered-config/homeserver.yaml
+              MAS_SECRET=$(cat /db-secret/mas-secret)
+              sed "s|__DB_PASSWORD__|$DB_PW|g; s|__MAS_SECRET__|$MAS_SECRET|g" /config-template/homeserver.yaml > /rendered-config/homeserver.yaml
               cp /config-template/log.config /rendered-config/log.config
               if [ ! -f /data/signing.key ]; then
                 python -m synapse.app.homeserver \
@@ -69,6 +69,15 @@ spec:
             - name: bridges
               mountPath: /bridges
               readOnly: true
+            - name: config-template
+              mountPath: /custom-templates/sso_redirect_confirm.html
+              subPath: sso_redirect_confirm.html
+            - name: config-template
+              mountPath: /custom-templates/sso_auth_confirm.html
+              subPath: sso_auth_confirm.html
+            - name: config-template
+              mountPath: /custom-templates/sso_auth_success.html
+              subPath: sso_auth_success.html
           resources:
             requests:
               memory: "1Gi"

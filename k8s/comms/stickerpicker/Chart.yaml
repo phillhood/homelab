@@ -1,0 +1,4 @@
+apiVersion: v2
+name: stickerpicker
+version: 1.0.0
+description: Maunium stickerpicker widget for Element (GIF search)
