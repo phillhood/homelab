@@ -73,7 +73,7 @@ data:
 
       - name: Pelican
         group: Gaming
-        url: https://pelican.{{ .Values.global.homeDomain }}
+        url: http://192.168.1.101
         interval: 60s
         conditions:
           - "[STATUS] == 200"
