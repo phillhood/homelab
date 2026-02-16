@@ -73,7 +73,7 @@ data:
 
       - name: Pelican
         group: Gaming
-        url: http://pelican.gaming.svc.cluster.local
+        url: https://pelican.{{ .Values.global.homeDomain }}
         interval: 60s
         conditions:
           - "[STATUS] == 200"

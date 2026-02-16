@@ -22,6 +22,12 @@ spec:
         - podSelector:
             matchLabels:
               app: shychedelic-web
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app: gatus
       ports:
         - protocol: TCP
           port: 3000

@@ -19,6 +19,12 @@ spec:
           podSelector:
             matchLabels:
               app.kubernetes.io/name: traefik
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+          podSelector:
+            matchLabels:
+              app: gatus
       ports:
         - protocol: TCP
           port: 80
