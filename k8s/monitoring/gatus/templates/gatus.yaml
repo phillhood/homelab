@@ -73,7 +73,7 @@ data:
 
       - name: Pelican
         group: Gaming
-        url: http://192.168.1.101
+        url: http://192.168.1.101/login
         interval: 60s
         conditions:
           - "[STATUS] == 200"
