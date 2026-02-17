@@ -97,6 +97,8 @@ spec:
               value: "game.{{ .Values.global.hobbyDomain }}"
             - name: GAME_SERVER_IP
               value: "{{ .Values.global.gameserverIP }}"
+            - name: MATRIX_NOTIFICATION_ROOM_ID
+              value: "{{ .Values.matrixNotificationRoomId }}"
           resources:
             requests:
               memory: "128Mi"
