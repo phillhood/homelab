@@ -7,7 +7,10 @@ data:
   config.json: |
     {
       "storage": {
-        "rootDirectory": "/var/lib/registry"
+        "rootDirectory": "/var/lib/registry",
+          "gc": true,
+          "gcDelay": "24h",
+          "gcInterval": "24h"
       },
       "http": {
         "address": "0.0.0.0",
