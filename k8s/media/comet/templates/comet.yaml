@@ -57,7 +57,7 @@ spec:
                   name: comet-secrets
                   key: torbox-api-key
             - name: PROXY_DEBRID_STREAM
-              value: "True"
+              value: "False"
             - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_SERVICE
               value: "torbox"
             - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_APIKEY
