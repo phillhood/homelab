@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grimoire-config
+  namespace: grimoire
+data:
+  config.yaml: |
+    server:
+      port: 8080
+      apiKey: "${GRIMOIRE_API_KEY}"
+    docker:
+      socketPath: /var/run/docker.sock
+      containerPrefix: grimoire
+    storage:
+      dbPath: /data/grimoire.db
+      gameDataPath: /srv/gameservers
+    ports:
+      rangeStart: 40000
+      rangeEnd: 49999
+    manifests:
+      path: /etc/grimoire/manifests
+    backup:
+      path: /srv/backups
+      resticBinary: restic
+      password: "${GRIMOIRE_BACKUP_PASSWORD}"
+      retention:
+        keepDaily: 7
+        keepWeekly: 4
+        keepMonthly: 3
+    opnsense:
+      url: "https://opnsense.pharah.ca"
+      apiKey: "${OPNSENSE_API_KEY}"
+      apiSecret: "${OPNSENSE_API_SECRET}"
+    notifications:
+      discord:
+        webhookURL: "${GRIMOIRE_DISCORD_WEBHOOK_URL}"
+        enabled: false

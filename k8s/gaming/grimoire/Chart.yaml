@@ -1,0 +1,4 @@
+apiVersion: v2
+name: grimoire
+version: 1.0.0
+description: Game server management platform

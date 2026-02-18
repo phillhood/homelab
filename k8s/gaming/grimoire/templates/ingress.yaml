@@ -1,0 +1,23 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grimoire
+  namespace: grimoire
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grimoire.{{ .Values.global.hobbyDomain }}`)
+      kind: Rule
+      middlewares:
+        - name: cloudflare-only
+          namespace: kube-system
+        - name: rate-limit
+          namespace: kube-system
+        - name: secure-headers
+          namespace: kube-system
+      services:
+        - name: grimoire
+          port: 8080
+  tls:
+    secretName: hobby-wildcard-tls
