@@ -10,9 +10,9 @@ spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - verdaccio.{{ .Values.global.homeDomain }}
+        - npm.{{ .Values.global.homeDomain }}
   rules:
-    - host: verdaccio.{{ .Values.global.homeDomain }}
+    - host: npm.{{ .Values.global.homeDomain }}
       http:
         paths:
           - path: /
