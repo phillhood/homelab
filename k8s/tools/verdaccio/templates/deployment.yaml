@@ -18,6 +18,9 @@ spec:
           image: verdaccio/verdaccio:6
           ports:
             - containerPort: 4873
+          env:
+            - name: VERDACCIO_PORT
+              value: "4873"
           volumeMounts:
             - name: data
               mountPath: /verdaccio/storage
