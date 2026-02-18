@@ -22,14 +22,19 @@ data:
         cache: true
 
     packages:
+      "@shychedelic/*":
+        access: $all
+        publish: $authenticated
+        unpublish: $authenticated
+
       "@*/*":
-        access: $authenticated
+        access: $all
         publish: $authenticated
         unpublish: $authenticated
         proxy: npmjs
 
       "**":
-        access: $authenticated
+        access: $all
         publish: $authenticated
         unpublish: $authenticated
         proxy: npmjs
