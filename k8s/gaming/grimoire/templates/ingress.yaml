@@ -21,3 +21,27 @@ spec:
           port: 8080
   tls:
     secretName: hobby-wildcard-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grimoire-local
+  namespace: gaming
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  tls:
+    - hosts:
+        - grimoire.{{ .Values.global.homeDomain }}
+  rules:
+    - host: grimoire.{{ .Values.global.homeDomain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grimoire
+                port:
+                  number: 8080
