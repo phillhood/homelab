@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: grimoire-policy
-  namespace: grimoire
+  namespace: gaming
 spec:
   podSelector:
     matchLabels:
