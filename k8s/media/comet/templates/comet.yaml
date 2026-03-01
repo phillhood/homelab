@@ -51,25 +51,25 @@ spec:
               value: "http://zilean.media.svc.cluster.local"
             - name: SCRAPE_TORBOX
               value: "False"
-            # - name: TORBOX_API_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: comet-secrets
-            #       key: torbox-api-key
-            # - name: PROXY_DEBRID_STREAM
-            #   value: "False"
-            # - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_SERVICE
-            #   value: "torbox"
-            # - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_APIKEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: comet-secrets
-            #       key: torbox-api-key
-            # - name: PROXY_DEBRID_STREAM_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: comet-secrets
-            #       key: proxy-password
+            - name: TORBOX_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: torbox-api-key
+            - name: PROXY_DEBRID_STREAM
+              value: "True"
+            - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_SERVICE
+              value: "torbox"
+            - name: PROXY_DEBRID_STREAM_DEBRID_DEFAULT_APIKEY
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: torbox-api-key
+            - name: PROXY_DEBRID_STREAM_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: comet-secrets
+                  key: proxy-password
             - name: ADMIN_DASHBOARD_PASSWORD
               valueFrom:
                 secretKeyRef:

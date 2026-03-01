@@ -177,6 +177,15 @@ resource "cloudflare_record" "rtc" {
   allow_overwrite = true
 }
 
+resource "cloudflare_record" "grimoire" {
+  zone_id         = var.cloudflare_zone_id_hobby
+  name            = "grimoire"
+  content         = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  type            = "CNAME"
+  proxied         = true
+  allow_overwrite = true
+}
+
 resource "cloudflare_record" "matrix_gifs" {
   zone_id         = var.cloudflare_zone_id_hobby
   name            = "matrix-gifs"

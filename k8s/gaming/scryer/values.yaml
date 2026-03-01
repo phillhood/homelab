@@ -33,9 +33,7 @@ worker:
       memory: 256Mi
       cpu: 500m
     limits:
-      memory: 512Mi
-      cpu: "1"
-  simcThreads: 4
+  simcThreads: 8
   defaultIterations: 10000
 
 database:
