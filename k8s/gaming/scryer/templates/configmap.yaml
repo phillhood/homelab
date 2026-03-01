@@ -3,8 +3,8 @@ kind: ConfigMap
 metadata:
   name: scryer-config
 data:
-  REDIS_URL: "redis://scryer-redis:6379"
-  DATABASE_URL: "postgresql://{{ .Values.postgresql.username }}:$(DATABASE_PASSWORD)@scryer-postgresql:5432/{{ .Values.postgresql.database }}?sslmode=disable"
+  REDIS_URL: "redis://{{ .Values.redis.host }}:{{ .Values.redis.port }}"
+  DATABASE_URL: "postgresql://{{ .Values.database.username }}:$(DB_PASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode=disable"
   SIMC_THREADS: {{ .Values.worker.simcThreads | quote }}
   DEFAULT_ITERATIONS: {{ .Values.worker.defaultIterations | quote }}
   REPORT_PATH: "/reports"

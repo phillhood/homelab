@@ -21,11 +21,11 @@ spec:
             - configMapRef:
                 name: scryer-config
           env:
-            - name: DATABASE_PASSWORD
+            - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: scryer-secrets
-                  key: DATABASE_PASSWORD
+                  key: db-password
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
 ---

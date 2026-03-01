@@ -38,20 +38,15 @@ worker:
   simcThreads: 4
   defaultIterations: 10000
 
-redis:
-  enabled: true
-  image: redis:7-alpine
-  resources:
-    requests:
-      memory: 64Mi
-      cpu: 100m
-
-postgresql:
-  enabled: true
-  image: postgres:16-alpine
-  storage: 5Gi
-  database: scryer
+database:
+  host: postgres.databases.svc.cluster.local
+  port: 5432
+  name: scryer
   username: scryer
+
+redis:
+  host: redis.databases.svc.cluster.local
+  port: 6379
 
 reports:
   storage: 5Gi

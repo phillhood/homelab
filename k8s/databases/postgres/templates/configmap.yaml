@@ -72,5 +72,6 @@ data:
     create_db_custom synapse synapse "ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' TEMPLATE template0"
     create_db shychedelic "CONNECTION LIMIT 20"
     create_db mas
+    create_db scryer
 
     echo "Database initialization complete."
