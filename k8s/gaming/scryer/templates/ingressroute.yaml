@@ -4,6 +4,7 @@ metadata:
   name: scryer
 spec:
   entryPoints:
+    - web
     - websecure
   routes:
     - match: Host(`scryer.{{ .Values.global.hobbyDomain }}`) && PathPrefix(`/api`)
