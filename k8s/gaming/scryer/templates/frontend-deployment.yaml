@@ -12,6 +12,8 @@ spec:
       labels:
         app: scryer-frontend
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: kvatch
       containers:
         - name: frontend
           image: {{ .Values.global.registry }}/{{ .Values.frontend.image }}:{{ .Values.frontend.tag }}

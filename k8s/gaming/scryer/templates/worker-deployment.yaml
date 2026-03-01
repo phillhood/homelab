@@ -12,6 +12,8 @@ spec:
       labels:
         app: scryer-worker
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: kvatch
       containers:
         - name: worker
           image: {{ .Values.global.registry }}/{{ .Values.worker.image }}:{{ .Values.worker.tag }}
@@ -24,6 +26,8 @@ spec:
                 secretKeyRef:
                   name: scryer-secrets
                   key: db-password
+            - name: DATABASE_URL
+              value: "postgresql://{{ .Values.database.username }}:$(DB_PASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode=disable"
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
           volumeMounts:

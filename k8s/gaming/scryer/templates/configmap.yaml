@@ -4,7 +4,6 @@ metadata:
   name: scryer-config
 data:
   REDIS_URL: "redis://{{ .Values.redis.host }}:{{ .Values.redis.port }}"
-  DATABASE_URL: "postgresql://{{ .Values.database.username }}:$(DB_PASSWORD)@{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}?sslmode=disable"
   SIMC_THREADS: {{ .Values.worker.simcThreads | quote }}
   DEFAULT_ITERATIONS: {{ .Values.worker.defaultIterations | quote }}
   REPORT_PATH: "/reports"
