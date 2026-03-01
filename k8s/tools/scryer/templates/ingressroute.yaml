@@ -1,0 +1,20 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: scryer
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`scryer.{{ .Values.global.hobbyDomain }}`) && PathPrefix(`/api`)
+      kind: Rule
+      services:
+        - name: scryer-api
+          port: {{ .Values.api.port }}
+    - match: Host(`scryer.{{ .Values.global.hobbyDomain }}`)
+      kind: Rule
+      services:
+        - name: scryer-frontend
+          port: {{ .Values.frontend.port }}
+  tls:
+    secretName: scryer-tls

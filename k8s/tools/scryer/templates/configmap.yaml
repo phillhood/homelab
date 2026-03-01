@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scryer-config
+data:
+  REDIS_URL: "redis://scryer-redis:6379"
+  DATABASE_URL: "postgresql://{{ .Values.postgresql.username }}:$(DATABASE_PASSWORD)@scryer-postgresql:5432/{{ .Values.postgresql.database }}?sslmode=disable"
+  SIMC_THREADS: {{ .Values.worker.simcThreads | quote }}
+  DEFAULT_ITERATIONS: {{ .Values.worker.defaultIterations | quote }}
+  REPORT_PATH: "/reports"
+  REPORT_TTL_HOURS: {{ .Values.reports.ttlHours | quote }}
+  PORT: {{ .Values.api.port | quote }}
+  API_URL: "http://scryer-api:{{ .Values.api.port }}"

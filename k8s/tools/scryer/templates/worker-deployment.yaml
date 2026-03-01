@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scryer-worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app: scryer-worker
+  template:
+    metadata:
+      labels:
+        app: scryer-worker
+    spec:
+      containers:
+        - name: worker
+          image: {{ .Values.global.registry }}/{{ .Values.worker.image }}:{{ .Values.worker.tag }}
+          envFrom:
+            - configMapRef:
+                name: scryer-config
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scryer-secrets
+                  key: DATABASE_PASSWORD
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+          volumeMounts:
+            - name: reports
+              mountPath: /reports
+      volumes:
+        - name: reports
+          persistentVolumeClaim:
+            claimName: scryer-reports
