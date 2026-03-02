@@ -10,3 +10,6 @@ data:
   REPORT_TTL_HOURS: {{ .Values.reports.ttlHours | quote }}
   PORT: {{ .Values.api.port | quote }}
   API_URL: "http://scryer-api:{{ .Values.api.port }}"
+  OIDC_ISSUER: {{ .Values.oidc.issuer }}
+  OIDC_CLIENT_ID: {{ .Values.oidc.clientId }}
+  OIDC_REDIRECT_URI: {{ .Values.oidc.redirectUri }}

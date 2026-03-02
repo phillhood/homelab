@@ -49,3 +49,8 @@ redis:
 reports:
   storage: 5Gi
   ttlHours: 24
+
+oidc:
+  issuer: https://api.shychedelic.com
+  clientId: scryer
+  redirectUri: https://scryer.shychedelic.com/api/auth/callback
