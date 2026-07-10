@@ -1,4 +1,0 @@
-apiVersion: v2
-name: coredns
-version: 1.0.0
-description: CoreDNS configuration for internal domain resolution

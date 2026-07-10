@@ -1,4 +1,0 @@
-apiVersion: v2
-name: discord-bridge
-version: 1.0.0
-description: mautrix-discord Matrix bridge

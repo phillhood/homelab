@@ -1,5 +1,0 @@
-apiVersion: v2
-name: pgadmin
-description: PostgreSQL administration tool
-type: application
-version: 1.0.0

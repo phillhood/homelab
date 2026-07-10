@@ -1,9 +1,0 @@
-dex:
-  enabled: false
-notifications:
-  enabled: false
-server:
-  extraArgs:
-    - --insecure
-  ingress:
-    enabled: false

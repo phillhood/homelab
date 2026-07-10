@@ -1,9 +1,0 @@
-nodeSelector: {}
-
-storage:
-  dataPath: /data/grimoire
-  gameDataPath: /srv/gameservers
-  backupPath: /srv/grimoire-backups
-
-docker:
-  socketPath: /var/run/docker.sock

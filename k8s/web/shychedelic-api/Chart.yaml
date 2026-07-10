@@ -1,4 +1,0 @@
-apiVersion: v2
-name: shychedelic-api
-version: 1.0.0
-description: NestJS auth backend for shychedelic.com

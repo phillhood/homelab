@@ -1,4 +1,0 @@
-apiVersion: v2
-name: wyoming-whisper
-version: 1.0.0
-description: Wyoming faster-whisper speech-to-text service

@@ -1,4 +1,0 @@
-apiVersion: v2
-name: pelican
-description: Ingress proxy for Pelican panel on gameserver
-version: 1.0.0
