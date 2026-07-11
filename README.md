@@ -1,6 +1,108 @@
 # Homelab
 
-Once more, with gusto!
+***v2!***
 
-## v2 Plan
-- [x] Terraform provider, kvatch connection authenticated
+
+### Unncessary Backstory
+
+I learned a lot with my first setup, but it's time to move on. I thought I was too cool for Proxmox - pure bare metal sounded way cooler - and ran k3s + docker across my hodgepodge of devices. 
+
+YOLOd it and had a lot of fun, but took on too much too quickly. Ultimately it was not implemented well (shocker) and it ended up being too rigid as it grew, resulting in me having less patience to experiment. 
+
+Figured it was time for a change, plus my office was getting real hot...
+
+So we go again!
+
+---
+
+
+## Overview
+
+#### Nodes
+
+> TODO: table of devices with specs
+
+#### Services
+
+> TODO: table of technologies with links
+
+#### Network
+
+> TODO: topology diagrams, status indicators
+
+
+## Plan + Goals
+
+
+### Phase 1 - Base setup, single node
+> Goal: learn the basics of proxmox ve, reunite with terraform ✓
+- [x] Install Proxmox VE on initial node
+  - [x] Configure WebUI and SSH
+- [x] Terraform setup
+  - [x] PVE provider, token + ssh
+
+
+### Phase 2 - LXC + VM Templates
+> Goal: play around with vms and containers, record manual process to automate with ansible later ✓
+- [x] Terraform configs
+  - [x] kvatch environment
+- [x] Set up pi-hole module
+  - [x] Create LXC template
+  - [x] Deploy pi-hole
+  - [x] Recover backup configs, IPs, logs
+  - [x] Restore DNS IP in OPNsense
+  - [ ] Backup new black/white lists, regex, local dns
+- [x] Base VM template
+    - [x] test vm deploy for now
+
+
+### Phase 3 - Ansible + add node(s)
+> Goal: learn the proper workflow, foundation to add back my nodes quickly
+- [ ] Setup base/empty stubs
+- [ ] Proxmox host playbooks
+  - [ ] Repos
+  - [ ] Root keys, dns config
+  - [ ] Terraform user, role, token
+  - [ ] LXC template
+  - [ ] VM template
+- [ ] Pi-hole playbooks
+  - [ ] tbd
+
+
+### Phase 4 - Flux
+> Goal: learn another GitOps framework, leaner and more homelab-friendly than ArgoCD
+- [ ] TODO: this task list
+
+
+### Phase 5 - k8s via Talos Linux 
+> Goal: Learn a new way of approaching k8s management, and offset VM overhead! Super overkill outside of work, but what else is the point of homelabs?
+- [ ] TODO: this task list
+
+
+### Phase 6 - FOSS services + add node(s)
+> Goal: Trim down my absurd stack of services from last time, find new ones, fine tune them to perfection
+- [ ] TODO: this task list
+
+
+### Phase ???
+> Goal: come up with more goals, learn more things, find reasons to spend more money on hardware
+- [ ] TODO: this task list
+
+
+## Networking ToDos
+OPNsense router
+- [ ] Update 
+  - [ ] Firmware 
+  - [ ] Legacy DHCP migration
+  - [ ] Update VLANs with switch
+- [ ] Snapshots via API
+  - [ ] Backup to NAS
+  
+
+TPLink managed switch
+- [ ] Update VLANs with router
+- [ ] Snapshots via API
+  - [ ] Backup to NAS
+
+
+
