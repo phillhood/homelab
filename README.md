@@ -1,5 +1,9 @@
 # Homelab
 
+> [!NOTE]
+> Archived - [I've moved on to v2!](/main/README.md)
+> 
+
 My homelab setup for home apps and services, and faffing around with DevOps and Networking
 
 ## Stack
@@ -42,10 +46,14 @@ homelab/
 
 ## Nodes
 
-| Name | Role | IP |
-|------|------|-----|
-| cyrodiil | control-plane | 192.168.1.100 |
-| kvatch | worker | 192.168.1.101 |
+| Name | Role | 
+|------|------|
+| cyrodiil | control-plane |
+| kvatch | worker |
+| bruma | worker |
+| anvil | worker |
+| bravil | playground |
+
 
 More nodes coming soon when I inevitably make poor financial decisions.
 
