@@ -51,7 +51,7 @@ So we go again!
   - [x] Deploy pi-hole
   - [x] Recover backup configs, IPs, logs
   - [x] Restore DNS IP in OPNsense
-  - [ ] Backup new black/white lists, regex, local dns
+  - [x] Backup new black/white lists, regex, local dns
 - [x] Base VM template
     - [x] test vm deploy for now
 
@@ -70,12 +70,12 @@ So we go again!
 
 
 ### Phase 4 - Flux
-> Goal: learn another GitOps framework, leaner and more homelab-friendly than ArgoCD
+> Goal: learn another GitOps framework - leaner and more homelab-friendly than ArgoCD
 - [ ] TODO: this task list
 
 
 ### Phase 5 - k8s via Talos Linux 
-> Goal: Learn a new way of approaching k8s management, and offset VM overhead! Super overkill outside of work, but what else is the point of homelabs?
+> Goal: Learn a new way of approaching k8s management, and offset VM overhead
 - [ ] TODO: this task list
 
 
@@ -91,18 +91,22 @@ So we go again!
 
 ## Networking ToDos
 OPNsense router
-- [ ] Update 
-  - [ ] Firmware 
-  - [ ] Legacy DHCP migration
-  - [ ] Update VLANs with switch
-- [ ] Snapshots via API
-  - [ ] Backup to NAS
+- [x] Update 
+  - [x] Firmware 
+  - [x] Legacy DHCP migration to Dnsmasq
+  - [x] Remove legacy ISC DHCP service
+  - [x] Update VLANs with switch
+  - [x] Manual config backup
+- [ ] Automate backups via API
+  - [ ] Create backup user, scope, group
+  - [ ] Define ansible playbook task
+    - [ ] Setup cron
   
 
-TPLink managed switch
-- [ ] Update VLANs with router
-- [ ] Snapshots via API
-  - [ ] Backup to NAS
+TP-Link managed switch
+- [x] Update firmware
+- [x] Update VLANs with router
+- [x] Backup configs
 
 
 
