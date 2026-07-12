@@ -1,0 +1,10 @@
+all:
+  children:
+    proxmox:
+      hosts:
+        kvatch:
+          ansible_host: 192.168.1.101
+    pihole:
+      hosts:
+        pihole1:
+          ansible_host: 192.168.1.100

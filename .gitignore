@@ -1,6 +1,13 @@
+# Local
+.dev/
+
 # Terraform
 *.tfvars
 *.tfstate*
 .terraform/
 
+# Ansible
+*.retry
+*.agekey
+keys.txt
 
