@@ -1,4 +1,29 @@
 ---
-- name: _set_key.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "_set_key stub"
+- name: "Read current value: {{ cfg_item.key }}"
+  ansible.builtin.command: "pihole-FTL --config {{ cfg_item.key }}"
+  register: _cfg_cur
+  changed_when: false
+  check_mode: false
+
+- name: "Compute comparison forms: {{ cfg_item.key }}"
+  ansible.builtin.set_fact:
+    _cfg_read_form: >-
+      {{ (('[]' if (cfg_item.value | length) == 0
+            else '[ ' ~ (cfg_item.value | join(', ')) ~ ' ]')
+          if (cfg_item.value is sequence and cfg_item.value is not string)
+          else (cfg_item.value | string)) }}
+    _cfg_write_form: >-
+      {{ ((cfg_item.value | to_json)
+          if (cfg_item.value is sequence and cfg_item.value is not string)
+          else (cfg_item.value | string)) }}
+
+- name: "Set {{ cfg_item.key }}"
+  ansible.builtin.command:
+    argv:
+      - pihole-FTL
+      - --config
+      - "{{ cfg_item.key }}"
+      - "{{ _cfg_write_form | trim }}"
+  when: (_cfg_cur.stdout | trim) != (_cfg_read_form | trim)
+  changed_when: true
+  notify: restart pihole dns

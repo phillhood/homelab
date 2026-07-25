@@ -1,10 +1,13 @@
 ---
 pihole_config:
-  dns.upstreams: '["1.1.1.1", "1.0.0.1"]'
-  dns.rateLimit.count: "10000"
-  dns.rateLimit.interval: "10"
-  dns.revServers: '["true,192.168.1.0/24,192.168.1.1,home"]'
-  misc.privacylevel: "0"
+  dns.upstreams:
+    - "1.1.1.1"
+    - "1.0.0.1"
+  dns.rateLimit.count: 10000
+  dns.rateLimit.interval: 10
+  dns.revServers:
+    - "true,192.168.1.0/24,192.168.1.1,home"
+  misc.privacylevel: 0
 
 pihole_local_records:
   - "192.168.1.1 router.home"

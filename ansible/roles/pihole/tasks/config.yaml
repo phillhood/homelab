@@ -1,4 +1,16 @@
 ---
-- name: config.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "config stub"
+- name: Apply Pi-hole settings idempotently
+  ansible.builtin.include_tasks: _set_key.yaml
+  loop: "{{ pihole_config | dict2items }}"
+  loop_control:
+    loop_var: cfg_item
+    label: "{{ cfg_item.key }}"
+
+- name: Apply local DNS records
+  ansible.builtin.include_tasks: _set_key.yaml
+  loop:
+    - key: dns.hosts
+      value: "{{ pihole_local_records }}"
+  loop_control:
+    loop_var: cfg_item
+    label: dns.hosts
