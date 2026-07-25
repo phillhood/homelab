@@ -1,4 +1,56 @@
 ---
-- name: vm_template.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "vm_template stub"
+- name: Check whether the VM template already exists
+  ansible.builtin.command: "qm status {{ vm_template_id }}"
+  register: qm_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Build the cloud-init VM template
+  when: qm_status.rc != 0
+  block:
+    - name: Ensure libguestfs-tools present
+      ansible.builtin.apt:
+        name: libguestfs-tools
+        state: present
+        update_cache: true
+
+    - name: Download the Debian genericcloud image
+      ansible.builtin.get_url:
+        url: "{{ vm_template_image_url }}"
+        dest: "/var/lib/vz/template/iso/{{ vm_template_image_file }}"
+        mode: "0644"
+
+    - name: Bake qemu-guest-agent into the image
+      ansible.builtin.command:
+        cmd: "virt-customize -a /var/lib/vz/template/iso/{{ vm_template_image_file }} --install qemu-guest-agent"
+      environment:
+        LIBGUESTFS_BACKEND: direct
+      changed_when: true
+
+    - name: Create the VM shell
+      ansible.builtin.command: >-
+        qm create {{ vm_template_id }} --name {{ vm_template_name }}
+        --memory {{ vm_template_memory }} --cores {{ vm_template_cores }} --cpu host
+        --net0 virtio,bridge={{ vm_template_bridge }} --scsihw virtio-scsi-single
+        --ostype l26 --agent enabled=1
+      changed_when: true
+
+    - name: Import the disk
+      ansible.builtin.command: >-
+        qm importdisk {{ vm_template_id }}
+        /var/lib/vz/template/iso/{{ vm_template_image_file }} {{ pve_disk_storage }}
+      changed_when: true
+
+    - name: Attach disk, cloud-init drive, boot order, serial console
+      ansible.builtin.command: "{{ item }}"
+      loop:
+        - "qm set {{ vm_template_id }} --scsi0 {{ pve_disk_storage }}:vm-{{ vm_template_id }}-disk-0"
+        - "qm set {{ vm_template_id }} --ide2 {{ pve_disk_storage }}:cloudinit"
+        - "qm set {{ vm_template_id }} --boot order=scsi0"
+        - "qm set {{ vm_template_id }} --serial0 socket --vga serial0"
+      changed_when: true
+
+    - name: Convert the VM into a template
+      ansible.builtin.command: "qm template {{ vm_template_id }}"
+      changed_when: true
