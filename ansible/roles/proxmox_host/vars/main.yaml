@@ -1,0 +1,2 @@
+---
+sops_proxmox_secrets_file: "{{ playbook_dir }}/../inventory/group_vars/proxmox.sops.yaml"

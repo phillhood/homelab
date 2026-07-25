@@ -1,0 +1,4 @@
+---
+- name: ssh_keys.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "ssh_keys stub"

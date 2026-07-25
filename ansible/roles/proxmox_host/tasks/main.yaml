@@ -1,0 +1,16 @@
+---
+- name: Configure APT repositories
+  ansible.builtin.import_tasks: repos.yaml
+  tags: [repos]
+
+- name: Configure host DNS
+  ansible.builtin.import_tasks: dns.yaml
+  tags: [dns]
+
+- name: Configure root SSH keys
+  ansible.builtin.import_tasks: ssh_keys.yaml
+  tags: [ssh-keys]
+
+- name: Configure Terraform service account
+  ansible.builtin.import_tasks: terraform_user.yaml
+  tags: [terraform-user]

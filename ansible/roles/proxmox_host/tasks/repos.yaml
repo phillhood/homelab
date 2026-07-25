@@ -1,0 +1,4 @@
+---
+- name: repos.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "repos stub"

@@ -1,0 +1,4 @@
+---
+- name: terraform_user.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "terraform_user stub"

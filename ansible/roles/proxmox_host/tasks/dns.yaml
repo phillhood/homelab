@@ -1,0 +1,4 @@
+---
+- name: dns.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "dns stub"
