@@ -1,4 +1,15 @@
 ---
-- name: install.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "install stub"
+- name: Check whether Pi-hole is already installed
+  ansible.builtin.stat:
+    path: "{{ pihole_binary }}"
+  register: pihole_stat
+
+- name: Set fresh-install fact
+  ansible.builtin.set_fact:
+    pihole_fresh_install: "{{ not pihole_stat.stat.exists }}"
+
+- name: Install Pi-hole unattended
+  ansible.builtin.shell:
+    cmd: curl -sSL https://install.pi-hole.net | bash /dev/stdin --unattended
+    creates: "{{ pihole_binary }}"
+  when: not pihole_stat.stat.exists
