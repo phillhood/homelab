@@ -7,6 +7,9 @@
       ansible.builtin.include_role:
         name: homelab_backups
         tasks_from: pihole_teleporter
+        apply:
+          tags: [pihole]
+      tags: [pihole]
 
 - name: Back up OPNsense config and rotate
   hosts: opnsense
@@ -16,7 +19,14 @@
       ansible.builtin.include_role:
         name: homelab_backups
         tasks_from: opnsense_config
+        apply:
+          tags: [opnsense]
+      tags: [opnsense]
+
     - name: Prune old backups
       ansible.builtin.include_role:
         name: homelab_backups
         tasks_from: rotate
+        apply:
+          tags: [rotate]
+      tags: [rotate]

@@ -1,4 +1,27 @@
 ---
-- name: pihole_teleporter.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "pihole_teleporter stub"
+- name: Ensure the local Pi-hole backup dir exists
+  ansible.builtin.file:
+    path: "{{ backup_pihole_dir }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+
+- name: Generate a Teleporter archive on the Pi-hole host
+  ansible.builtin.command:
+    cmd: pihole-FTL --teleporter
+    chdir: /tmp
+  register: teleporter_run
+  changed_when: true
+
+- name: Fetch the archive to the control node
+  ansible.builtin.fetch:
+    src: "/tmp/{{ teleporter_run.stdout | trim }}"
+    dest: "{{ backup_pihole_dir }}/"
+    flat: true
+  when: teleporter_run is not skipped
+
+- name: Remove the archive from the Pi-hole host
+  ansible.builtin.file:
+    path: "/tmp/{{ teleporter_run.stdout | trim }}"
+    state: absent
+  when: teleporter_run is not skipped
