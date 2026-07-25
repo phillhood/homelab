@@ -2,7 +2,7 @@
 pve_iso_storage: local
 pve_disk_storage: local-lvm
 
-lxc_template_name: debian-13-standard_13.1-2_amd64.tar.zst
+lxc_template_name: debian-13-standard_13.6-1_amd64.tar.zst
 
 vm_template_id: 9000
 vm_template_name: debian-13-cloudinit
