@@ -1,0 +1,6 @@
+# Managed by Ansible (roles/proxmox_host/tasks/dns.yaml) — do not edit by hand.
+search {{ homelab_domain }}
+nameserver {{ pihole_dns_ip }}
+{% for ns in resolv_fallback_nameservers %}
+nameserver {{ ns }}
+{% endfor %}

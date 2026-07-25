@@ -1,4 +1,9 @@
 ---
-- name: dns.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "dns stub"
+- name: Point host resolver at Pi-hole
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: "0644"
+    backup: true
