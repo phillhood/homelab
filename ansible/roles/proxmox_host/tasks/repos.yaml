@@ -14,7 +14,7 @@
     label: "{{ item.name }} (enabled={{ item.enabled }})"
   notify: pve repos changed
 
-- name: Remove the Phase-1 renamed enterprise repo orphan
+- name: Remove the renamed enterprise repo file
   ansible.builtin.file:
     path: /etc/apt/sources.list.d/pve-enterprise.sources.disabled
     state: absent

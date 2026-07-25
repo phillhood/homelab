@@ -92,7 +92,7 @@
   changed_when: true
   no_log: true
 
-- name: Write the token secret into SOPS (control node)
+- name: Write the token secret into SOPS
   ansible.builtin.command:
     argv:
       - sops

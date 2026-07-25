@@ -5,36 +5,31 @@
   changed_when: false
   check_mode: false
 
-- name: Reduce to failures not expected in an unprivileged container
+- name: Filter out expected failed units
   ansible.builtin.set_fact:
     lxc_unexpected_failed_units: >-
       {{ lxc_failed_units.stdout_lines | map('split') | map('first') | list
          | difference(lxc_expected_failed_units) }}
 
-- name: Assert no unexpected failed units (guards the no-nesting / no-masking decision)
+- name: Assert no unexpected failed units
   ansible.builtin.assert:
     that: lxc_unexpected_failed_units | length == 0
     fail_msg: >-
-      Unexpected failed systemd units: {{ lxc_unexpected_failed_units | join(', ') }}.
-      The cosmetic mount failures in lxc_expected_failed_units are accepted; anything
-      else is new. Investigate before adding nesting or masking mounts — see
-      roles/debian_lxc_base/README.md for why those are intentionally OFF.
-    success_msg: >-
-      No unexpected failed units — minimal container config holding
-      ({{ lxc_expected_failed_units | join(', ') }} fail by design).
+      Unexpected failed units: {{ lxc_unexpected_failed_units | join(', ') }}.
+      See roles/debian_lxc_base/README.md.
+    success_msg: "No unexpected failed units."
 
-- name: Check systemd-sysctl state (the 243/CREDENTIALS canary)
+- name: Check systemd-sysctl state
   ansible.builtin.command: systemctl is-active systemd-sysctl
   register: lxc_sysctl
   changed_when: false
   failed_when: false
   check_mode: false
 
-- name: Assert systemd-sysctl is active (not stuck on credentials)
+- name: Assert systemd-sysctl is active
   ansible.builtin.assert:
     that: lxc_sysctl.stdout == "active"
     fail_msg: >-
-      systemd-sysctl is '{{ lxc_sysctl.stdout }}' (expected 'active'). The
-      systemd-256 credentials issue may now be present — the lxc.generator fix
-      could be warranted. See roles/debian_lxc_base/README.md.
-    success_msg: "systemd-sysctl active — no credentials regression."
+      systemd-sysctl is '{{ lxc_sysctl.stdout }}', expected 'active'.
+      See roles/debian_lxc_base/README.md.
+    success_msg: "systemd-sysctl active."
