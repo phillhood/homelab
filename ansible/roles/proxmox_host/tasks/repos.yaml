@@ -1,4 +1,21 @@
 ---
-- name: repos.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "repos stub"
+- name: Manage Proxmox deb822 repositories
+  ansible.builtin.deb822_repository:
+    name: "{{ item.name }}"
+    types: "{{ item.types }}"
+    uris: "{{ item.uris }}"
+    suites: ["{{ pve_suite }}"]
+    components: "{{ item.components }}"
+    signed_by: "{{ pve_signing_key }}"
+    enabled: "{{ item.enabled }}"
+    state: present
+  loop: "{{ pve_repositories }}"
+  loop_control:
+    label: "{{ item.name }} (enabled={{ item.enabled }})"
+  notify: pve repos changed
+
+- name: Remove the Phase-1 renamed enterprise repo orphan
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/pve-enterprise.sources.disabled
+    state: absent
+  notify: pve repos changed
