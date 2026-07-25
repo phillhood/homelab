@@ -1,0 +1,8 @@
+---
+- name: Ensure LXC template present
+  ansible.builtin.import_tasks: lxc_template.yaml
+  tags: [lxc-template]
+
+- name: Ensure cloud-init VM template present
+  ansible.builtin.import_tasks: vm_template.yaml
+  tags: [vm-template]

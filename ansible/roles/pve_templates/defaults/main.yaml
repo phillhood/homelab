@@ -1,0 +1,13 @@
+---
+pve_iso_storage: local
+pve_disk_storage: local-lvm
+
+lxc_template_name: debian-13-standard_13.1-2_amd64.tar.zst
+
+vm_template_id: 9000
+vm_template_name: debian-13-cloudinit
+vm_template_image_url: "https://cloud.debian.org/images/cloud/trixie/latest/debian-13-genericcloud-amd64.qcow2"
+vm_template_image_file: debian-13-genericcloud-amd64.qcow2
+vm_template_memory: 2048
+vm_template_cores: 2
+vm_template_bridge: vmbr0

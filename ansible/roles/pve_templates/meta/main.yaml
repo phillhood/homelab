@@ -1,0 +1,7 @@
+---
+galaxy_info:
+  role_name: pve_templates
+  description: Build/download Proxmox VE guest templates (LXC + cloud-init VM).
+  license: MIT
+  min_ansible_version: "2.15"
+dependencies: []

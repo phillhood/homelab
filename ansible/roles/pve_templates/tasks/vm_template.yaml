@@ -1,0 +1,4 @@
+---
+- name: vm_template.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "vm_template stub"

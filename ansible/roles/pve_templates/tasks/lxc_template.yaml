@@ -1,0 +1,4 @@
+---
+- name: lxc_template.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "lxc_template stub"
