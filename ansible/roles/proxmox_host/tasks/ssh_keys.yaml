@@ -1,4 +1,11 @@
 ---
-- name: ssh_keys.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "ssh_keys stub"
+- name: Ensure root authorized_keys
+  ansible.posix.authorized_key:
+    user: root
+    key: "{{ item }}"
+    state: present
+    exclusive: false
+    follow: true
+  loop: "{{ root_authorized_keys }}"
+  loop_control:
+    label: "{{ item.split()[1][:16] }}..."

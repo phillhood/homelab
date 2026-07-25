@@ -48,4 +48,4 @@ pve_repositories:
     enabled: true
 
 root_authorized_keys:
-  - "REPLACE_WITH_ssh-ed25519_PUBLIC_KEY_CONTENTS"
+  - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFEFl2SlahE9NSh8lA2dfRY54TrFOLpCL61zU28iL1Jl homelab-infra"
