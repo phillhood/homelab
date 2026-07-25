@@ -1,0 +1,131 @@
+.DEFAULT_GOAL := help
+SHELL := /usr/bin/env bash
+
+ANSIBLE_DIR := ansible
+TF_DIR      := terraform/environments/kvatch
+SITE        := playbooks/site.yaml
+BACKUPS     := playbooks/backups.yaml
+PIHOLE_IP   := 192.168.1.100
+KVATCH_IP   := 192.168.1.101
+
+LIMIT ?=
+TAGS  ?=
+_LIMIT := $(if $(LIMIT),--limit $(LIMIT),)
+_TAGS  := $(if $(TAGS),--tags $(TAGS),)
+A      := cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) $(_LIMIT) $(_TAGS)
+
+.PHONY: help
+help:
+	@echo ""
+	@echo "  Homelab — safe workflow: validate -> backup -> check -> apply -> verify"
+	@echo ""
+	@awk 'BEGIN {FS = ":.*##"} \
+		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5); next } \
+		/^[a-zA-Z0-9_-]+:.*##/ { printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "  Narrow any target:  make check LIMIT=pihole TAGS=config"
+	@echo ""
+
+##@ Validate (never contacts a host)
+
+.PHONY: lint
+lint: ## Syntax-check both playbooks, and lint if ansible-lint is installed
+	@cd $(ANSIBLE_DIR) && for p in $(SITE) $(BACKUPS); do \
+		printf "%-24s " "$$p"; \
+		ansible-playbook $$p --syntax-check >/dev/null 2>&1 && echo "syntax OK" || { echo "SYNTAX FAIL"; exit 1; }; \
+	done
+	@command -v ansible-lint >/dev/null 2>&1 \
+		&& (cd $(ANSIBLE_DIR) && ansible-lint $(SITE) $(BACKUPS)) \
+		|| echo "ansible-lint not installed — skipped (pipx install ansible-lint)"
+
+.PHONY: inventory
+inventory: ## Show the inventory graph
+	@cd $(ANSIBLE_DIR) && ansible-inventory --graph
+
+.PHONY: vars
+vars: ## Show every variable resolved per host
+	@cd $(ANSIBLE_DIR) && ansible-inventory --graph --vars
+
+.PHONY: tags
+tags: ## List the tags available on site.yaml
+	@cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) --list-tags 2>/dev/null | grep -i "TASK TAGS" | sort -u
+
+.PHONY: secrets
+secrets: ## Confirm every *.sops.yaml is encrypted at rest
+	@for f in $(ANSIBLE_DIR)/inventory/group_vars/*.sops.yaml; do \
+		[ -e "$$f" ] || continue; \
+		n=$$(grep -c 'ENC\[' "$$f"); \
+		printf "%-52s %s\n" "$$f" "$$([ $$n -gt 0 ] && echo "encrypted ($$n)" || echo "PLAINTEXT — DO NOT COMMIT")"; \
+	done
+
+##@ Verify (contacts hosts, writes nothing)
+
+.PHONY: ping
+ping: ## Connectivity to every SSH-managed host
+	@cd $(ANSIBLE_DIR) && ansible proxmox:lxc -m ping
+
+.PHONY: check
+check: ## Dry run with diffs — what WOULD change
+	@$(A) --check --diff
+
+.PHONY: verify
+verify: ## Read-only health probes against the real systems
+	@printf "%-32s %s\n" "pihole resolves"        "$$(dig +short @$(PIHOLE_IP) kvatch.home)"
+	@printf "%-32s %s\n" "pihole filters"         "$$(dig +short @$(PIHOLE_IP) doubleclick.net)"
+	@printf "%-32s %s/6\n" "infra dns records"    "$$(for n in router switch ap proxmox kvatch pihole; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
+	@printf "%-32s %s\n" "pmxcfs symlink intact"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'test -L /root/.ssh/authorized_keys && echo yes || echo BROKEN')"
+	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
+	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
+	@printf "%-32s %s\n" "vm template 9000"       "$$(cd $(ANSIBLE_DIR) && ansible proxmox -m shell -a 'qm config 9000 | grep -c template:' 2>/dev/null | tail -1)"
+
+.PHONY: idempotent
+idempotent: ## Converge twice; fail unless the second run changes nothing
+	@cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) $(_LIMIT) $(_TAGS) >/dev/null
+	@out=$$(cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) $(_LIMIT) $(_TAGS) 2>&1 | grep -E "^[a-z0-9_-]+ +: ok="); \
+		echo "$$out"; \
+		if echo "$$out" | grep -qE "changed=[1-9]"; then echo ""; echo "NOT IDEMPOTENT — second run made changes"; exit 1; \
+		else echo ""; echo "IDEMPOTENT"; fi
+
+##@ Apply
+
+.PHONY: apply
+apply: ## Converge the homelab (site.yaml)
+	@$(A)
+
+.PHONY: preflight
+preflight: lint backup check ## The safe path: lint, take a backup, then show what would change
+	@echo ""
+	@echo "Backup taken and diffs shown above. Review, then: make apply"
+
+##@ Backups (your revert path)
+
+.PHONY: backup
+backup: ## Capture Pi-hole Teleporter + OPNsense config.xml
+	@cd $(ANSIBLE_DIR) && ansible-playbook $(BACKUPS)
+
+.PHONY: backup-pihole
+backup-pihole: ## Capture only the Pi-hole Teleporter archive
+	@cd $(ANSIBLE_DIR) && ansible-playbook $(BACKUPS) --tags pihole
+
+.PHONY: backup-opnsense
+backup-opnsense: ## Capture only the OPNsense config.xml
+	@cd $(ANSIBLE_DIR) && ansible-playbook $(BACKUPS) --tags opnsense
+
+.PHONY: backups-list
+backups-list: ## Show captured backups, newest last
+	@find .dev/pihole-backups .dev/opnsense-backups -type f 2>/dev/null \
+		-printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\n' | sort || echo "no backups yet — run: make backup"
+
+##@ Terraform
+
+.PHONY: tf-fmt
+tf-fmt: ## Format all Terraform
+	@terraform -chdir=$(TF_DIR) fmt -recursive ../..
+
+.PHONY: tf-validate
+tf-validate: ## Validate the kvatch environment
+	@terraform -chdir=$(TF_DIR) validate
+
+.PHONY: tf-plan
+tf-plan: ## Show Terraform drift (read-only)
+	@terraform -chdir=$(TF_DIR) plan
