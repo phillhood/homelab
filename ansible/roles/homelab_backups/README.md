@@ -5,8 +5,33 @@ model: Pi-hole's Teleporter bundle and OPNsense's `config.xml`.
 
 ## Bootstrap (one-time, manual)
 
-**OPNsense** — create a scoped `backup` group and user in System → Access, grant it only
-the backup/config privileges, generate an API key + secret for the user, then:
+**OPNsense** — create a scoped `backup` group and user in System → Access, generate an
+API key + secret for the user (the "create and download API keys" action on the user
+row), then store them in SOPS.
+
+The group needs exactly one privilege, and **it is not the one you would expect**:
+
+| Privilege | ACL key | What it actually covers |
+|---|---|---|
+| ✅ **Diagnostics: Configuration History** | `page-diagnostics-configurationhistory` | `ui/core/backup/history*`, **`api/core/backup/*`** |
+| ❌ System: Configuration: Backups | `page-diagnostics-backup-restore` | `diag_backup.php*` — the legacy web page only |
+
+The privilege *named* after backups grants nothing this role uses. The whole
+`/api/core/backup/*` surface is gated behind **Diagnostics: Configuration History**.
+Source: OPNsense `src/opnsense/mvc/app/models/OPNsense/Core/ACL/ACL.xml`.
+
+Diagnosing this is awkward because OPNsense returns `403` both for "authenticated but
+unprivileged" and — in some cases — for paths you cannot reach. Useful discriminators:
+
+- `401` = bad key/secret
+- `302` = no credentials at all
+- `404` = route genuinely does not exist
+- `403` = valid credentials, privilege denied
+
+So a `403` means the credentials are *fine*. Probe an unrelated endpoint you do have
+rights to in order to prove the mechanism works before suspecting the key.
+
+Then:
 
 ```bash
 sops ansible/inventory/group_vars/opnsense.sops.yaml

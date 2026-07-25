@@ -1,4 +1,23 @@
 ---
-- name: opnsense_config.yaml not yet implemented
+- name: Ensure the local OPNsense backup dir exists
+  ansible.builtin.file:
+    path: "{{ backup_opnsense_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: Download config.xml from the OPNsense API
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_host }}/api/core/backup/download/this"
+    method: GET
+    url_username: "{{ opnsense_api_key }}"
+    url_password: "{{ opnsense_api_secret }}"
+    force_basic_auth: true
+    validate_certs: false
+    dest: "{{ backup_opnsense_dir }}/config-{{ ansible_date_time.iso8601_basic_short }}.xml"
+    mode: "0600"
+  no_log: true
+  register: opnsense_dl
+
+- name: Report the API response status
   ansible.builtin.debug:
-    msg: "opnsense_config stub"
+    msg: "OPNsense backup HTTP {{ opnsense_dl.status | default('n/a') }}"
