@@ -1,4 +1,4 @@
 ---
-- name: timezone.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "timezone stub"
+- name: Set the container timezone
+  community.general.timezone:
+    name: "{{ homelab_timezone }}"
