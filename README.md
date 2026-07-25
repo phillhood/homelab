@@ -59,12 +59,12 @@ So we go again!
 ### Phase 3 - Ansible + add node(s)
 > Goal: learn the proper workflow, foundation to add back my nodes quickly
 - [x] Setup base/empty stubs
-- [ ] Proxmox host playbooks
+- [x] Proxmox host playbooks
   - [x] Repos
   - [x] Root keys, dns config
   - [x] Terraform user, role, token
-  - [ ] LXC template
-  - [ ] VM template
+  - [x] LXC template
+  - [x] VM template
 - [ ] Pi-hole playbooks
   - [ ] tbd
 
