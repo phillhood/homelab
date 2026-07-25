@@ -1,4 +1,7 @@
 ---
-- name: packages.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "packages stub"
+- name: Update apt cache and install base packages
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
