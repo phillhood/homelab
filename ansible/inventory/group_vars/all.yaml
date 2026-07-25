@@ -1,0 +1,7 @@
+---
+homelab_domain: home
+homelab_timezone: America/Toronto
+upstream_dns:
+  - 1.1.1.1
+  - 1.0.0.1
+pihole_dns_ip: 192.168.1.100
