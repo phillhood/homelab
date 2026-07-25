@@ -1,6 +1,7 @@
 ---
 galaxy_info:
   role_name: homelab_backups
+  author: Phill Hood
   description: Pull Pi-hole Teleporter + OPNsense config.xml backups into .dev/.
   license: MIT
   min_ansible_version: "2.15"

@@ -10,7 +10,7 @@
   ansible.builtin.command: "pihole-FTL --teleporter /tmp/pihole-teleporter-seed.zip"
   when: pihole_fresh_install | bool and pihole_teleporter_archive | length > 0
   changed_when: true
-  notify: rebuild gravity
+  notify: Rebuild gravity
 
 - name: Remove the Teleporter seed archive
   ansible.builtin.file:

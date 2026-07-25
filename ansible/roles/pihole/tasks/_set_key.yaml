@@ -26,4 +26,4 @@
       - "{{ _cfg_write_form | trim }}"
   when: (_cfg_cur.stdout | trim) != (_cfg_read_form | trim)
   changed_when: true
-  notify: restart pihole dns
+  notify: Restart pihole dns

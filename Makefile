@@ -8,6 +8,8 @@ BACKUPS     := playbooks/backups.yaml
 PIHOLE_IP   := 192.168.1.100
 KVATCH_IP   := 192.168.1.101
 
+SITE_PACKAGES := $(shell python3 -c "import ansible,os;print(os.path.dirname(os.path.dirname(ansible.__file__)))" 2>/dev/null)
+
 LIMIT ?=
 TAGS  ?=
 _LIMIT := $(if $(LIMIT),--limit $(LIMIT),)
@@ -34,9 +36,11 @@ lint: ## Syntax-check both playbooks, and lint if ansible-lint is installed
 		printf "%-24s " "$$p"; \
 		ansible-playbook $$p --syntax-check >/dev/null 2>&1 && echo "syntax OK" || { echo "SYNTAX FAIL"; exit 1; }; \
 	done
-	@command -v ansible-lint >/dev/null 2>&1 \
-		&& (cd $(ANSIBLE_DIR) && ansible-lint $(SITE) $(BACKUPS)) \
-		|| echo "ansible-lint not installed — skipped (pipx install ansible-lint)"
+	@if command -v ansible-lint >/dev/null 2>&1; then \
+		cd $(ANSIBLE_DIR) && ANSIBLE_COLLECTIONS_PATH="$(SITE_PACKAGES)" ansible-lint $(SITE) $(BACKUPS); \
+	else \
+		echo "ansible-lint not installed — skipped (pipx install ansible-lint)"; \
+	fi
 
 .PHONY: inventory
 inventory: ## Show the inventory graph

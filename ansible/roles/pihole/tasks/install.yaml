@@ -10,6 +10,7 @@
 
 - name: Install Pi-hole unattended
   ansible.builtin.shell:
-    cmd: curl -sSL https://install.pi-hole.net | bash /dev/stdin --unattended
+    cmd: set -o pipefail && curl -sSL https://install.pi-hole.net | bash /dev/stdin --unattended
+    executable: /bin/bash
     creates: "{{ pihole_binary }}"
   when: not pihole_stat.stat.exists
