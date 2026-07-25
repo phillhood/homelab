@@ -1,4 +1,34 @@
 ---
-- name: rotate.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "rotate stub"
+- name: Ensure backup dirs exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  loop:
+    - "{{ backup_pihole_dir }}"
+    - "{{ backup_opnsense_dir }}"
+
+- name: Find backups in each target dir
+  ansible.builtin.find:
+    paths: "{{ item }}"
+    patterns: ["*.zip", "*.xml"]
+  register: backup_inventory
+  changed_when: false
+  delegate_to: localhost
+  loop:
+    - "{{ backup_pihole_dir }}"
+    - "{{ backup_opnsense_dir }}"
+
+- name: Prune backups beyond the retention count
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  delegate_to: localhost
+  loop: >-
+    {{ backup_inventory.results
+       | map(attribute='files') | map('sort', attribute='mtime', reverse=true)
+       | map('community.general.json_query', '[' ~ backup_retention ~ ':]')
+       | flatten }}
+  loop_control:
+    label: "{{ item.path }}"
