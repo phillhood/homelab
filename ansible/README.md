@@ -58,7 +58,24 @@ published, the variables already carry meaningful namespaces (`pve_`, `lxc_`, `b
 published or if two roles targeting the same host start sharing variable names — the
 collision risk the rule guards against is real, it just isn't present here.
 
-`ansible-lint` is installed via `pipx`, so it runs in its own virtualenv and cannot see
-the distro's collections by default. The Makefile derives `ANSIBLE_COLLECTIONS_PATH`
-from the installed `ansible` package rather than hardcoding a Python version; without it
-every collection module reports as `unknown-module`.
+## Toolchain
+
+`ansible-core`, `ansible-lint` and `jmespath` are pinned in the repo-root
+`pyproject.toml` and locked in `uv.lock`. Everything runs through `uv run`, wired into
+the Makefile — so a fresh clone gets byte-identical tool versions rather than whatever
+the distro last shipped. For infrastructure code, the toolchain being reproducible
+matters as much as the config being reproducible.
+
+```bash
+make deps     # uv sync + ansible-galaxy collection install
+```
+
+Collections install to `~/.ansible/collections`, the default user path that every
+ansible-core reads — so `ansible-playbook` and `ansible-lint` see the same set.
+
+That last point is the whole reason for this setup. An isolated tool install (`pipx
+install ansible-lint`, or equally `uv tool install`) puts the linter in its own venv with
+its own `ansible-core`, which cannot see collections that live in the distro's
+`site-packages`. Every collection module then reports `unknown-module` and the linter is
+quietly blind to most of the repo. Sharing one environment removes the problem rather
+than working around it.

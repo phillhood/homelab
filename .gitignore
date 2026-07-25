@@ -11,3 +11,6 @@
 *.agekey
 keys.txt
 
+
+# Python
+.venv/

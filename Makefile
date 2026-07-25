@@ -8,13 +8,13 @@ BACKUPS     := playbooks/backups.yaml
 PIHOLE_IP   := 192.168.1.100
 KVATCH_IP   := 192.168.1.101
 
-SITE_PACKAGES := $(shell python3 -c "import ansible,os;print(os.path.dirname(os.path.dirname(ansible.__file__)))" 2>/dev/null)
+UV := uv run --project $(CURDIR)
 
 LIMIT ?=
 TAGS  ?=
 _LIMIT := $(if $(LIMIT),--limit $(LIMIT),)
 _TAGS  := $(if $(TAGS),--tags $(TAGS),)
-A      := cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) $(_LIMIT) $(_TAGS)
+A      := cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) $(_LIMIT) $(_TAGS)
 
 .PHONY: help
 help:
@@ -28,31 +28,36 @@ help:
 	@echo "  Narrow any target:  make check LIMIT=pihole TAGS=config"
 	@echo ""
 
+##@ Setup
+
+.PHONY: deps
+deps: ## Sync the pinned Python toolchain and Ansible collections
+	@uv sync
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-galaxy collection install -r requirements.yaml
+	@$(UV) ansible --version | head -1
+	@$(UV) ansible-lint --version | head -1
+
 ##@ Validate (never contacts a host)
 
 .PHONY: lint
-lint: ## Syntax-check both playbooks, and lint if ansible-lint is installed
+lint: ## Syntax-check both playbooks, then ansible-lint
 	@cd $(ANSIBLE_DIR) && for p in $(SITE) $(BACKUPS); do \
 		printf "%-24s " "$$p"; \
-		ansible-playbook $$p --syntax-check >/dev/null 2>&1 && echo "syntax OK" || { echo "SYNTAX FAIL"; exit 1; }; \
+		$(UV) ansible-playbook $$p --syntax-check >/dev/null 2>&1 && echo "syntax OK" || { echo "SYNTAX FAIL"; exit 1; }; \
 	done
-	@if command -v ansible-lint >/dev/null 2>&1; then \
-		cd $(ANSIBLE_DIR) && ANSIBLE_COLLECTIONS_PATH="$(SITE_PACKAGES)" ansible-lint $(SITE) $(BACKUPS); \
-	else \
-		echo "ansible-lint not installed — skipped (pipx install ansible-lint)"; \
-	fi
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-lint $(SITE) $(BACKUPS)
 
 .PHONY: inventory
 inventory: ## Show the inventory graph
-	@cd $(ANSIBLE_DIR) && ansible-inventory --graph
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-inventory --graph
 
 .PHONY: vars
 vars: ## Show every variable resolved per host
-	@cd $(ANSIBLE_DIR) && ansible-inventory --graph --vars
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-inventory --graph --vars
 
 .PHONY: tags
 tags: ## List the tags available on site.yaml
-	@cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) --list-tags 2>/dev/null | grep -i "TASK TAGS" | sort -u
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) --list-tags 2>/dev/null | grep -i "TASK TAGS" | sort -u
 
 .PHONY: secrets
 secrets: ## Confirm every *.sops.yaml is encrypted at rest
@@ -66,7 +71,7 @@ secrets: ## Confirm every *.sops.yaml is encrypted at rest
 
 .PHONY: ping
 ping: ## Connectivity to every SSH-managed host
-	@cd $(ANSIBLE_DIR) && ansible proxmox:lxc -m ping
+	@cd $(ANSIBLE_DIR) && $(UV) ansible proxmox:lxc -m ping
 
 .PHONY: check
 check: ## Dry run with diffs — what WOULD change
@@ -78,14 +83,14 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pihole filters"         "$$(dig +short @$(PIHOLE_IP) doubleclick.net)"
 	@printf "%-32s %s/6\n" "infra dns records"    "$$(for n in router switch ap proxmox kvatch pihole; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
 	@printf "%-32s %s\n" "pmxcfs symlink intact"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'test -L /root/.ssh/authorized_keys && echo yes || echo BROKEN')"
-	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
-	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
-	@printf "%-32s %s\n" "vm template 9000"       "$$(cd $(ANSIBLE_DIR) && ansible proxmox -m shell -a 'qm config 9000 | grep -c template:' 2>/dev/null | tail -1)"
+	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && $(UV) ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
+	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
+	@printf "%-32s %s\n" "vm template 9000"       "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'qm config 9000 | grep -c template:' 2>/dev/null | tail -1)"
 
 .PHONY: idempotent
 idempotent: ## Converge twice; fail unless the second run changes nothing
-	@cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) $(_LIMIT) $(_TAGS) >/dev/null
-	@out=$$(cd $(ANSIBLE_DIR) && ansible-playbook $(SITE) $(_LIMIT) $(_TAGS) 2>&1 | grep -E "^[a-z0-9_-]+ +: ok="); \
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) $(_LIMIT) $(_TAGS) >/dev/null
+	@out=$$(cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) $(_LIMIT) $(_TAGS) 2>&1 | grep -E "^[a-z0-9_-]+ +: ok="); \
 		echo "$$out"; \
 		if echo "$$out" | grep -qE "changed=[1-9]"; then echo ""; echo "NOT IDEMPOTENT — second run made changes"; exit 1; \
 		else echo ""; echo "IDEMPOTENT"; fi
@@ -105,15 +110,15 @@ preflight: lint backup check ## The safe path: lint, take a backup, then show wh
 
 .PHONY: backup
 backup: ## Capture Pi-hole Teleporter + OPNsense config.xml
-	@cd $(ANSIBLE_DIR) && ansible-playbook $(BACKUPS)
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS)
 
 .PHONY: backup-pihole
 backup-pihole: ## Capture only the Pi-hole Teleporter archive
-	@cd $(ANSIBLE_DIR) && ansible-playbook $(BACKUPS) --tags pihole
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags pihole
 
 .PHONY: backup-opnsense
 backup-opnsense: ## Capture only the OPNsense config.xml
-	@cd $(ANSIBLE_DIR) && ansible-playbook $(BACKUPS) --tags opnsense
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags opnsense
 
 .PHONY: backups-list
 backups-list: ## Show captured backups, newest last
