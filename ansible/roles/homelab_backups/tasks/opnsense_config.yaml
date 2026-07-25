@@ -1,0 +1,4 @@
+---
+- name: opnsense_config.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "opnsense_config stub"

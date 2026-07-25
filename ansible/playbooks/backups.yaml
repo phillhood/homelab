@@ -1,0 +1,22 @@
+---
+- name: Back up Pi-hole via Teleporter
+  hosts: pihole
+  gather_facts: true
+  tasks:
+    - name: Run the Teleporter backup tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: pihole_teleporter
+
+- name: Back up OPNsense config and rotate
+  hosts: opnsense
+  gather_facts: true
+  tasks:
+    - name: Run the OPNsense backup tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: opnsense_config
+    - name: Prune old backups
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: rotate

@@ -1,0 +1,12 @@
+---
+- name: Pi-hole Teleporter backup
+  ansible.builtin.import_tasks: pihole_teleporter.yaml
+  tags: [pihole]
+
+- name: OPNsense config backup
+  ansible.builtin.import_tasks: opnsense_config.yaml
+  tags: [opnsense]
+
+- name: Prune old backups
+  ansible.builtin.import_tasks: rotate.yaml
+  tags: [rotate]

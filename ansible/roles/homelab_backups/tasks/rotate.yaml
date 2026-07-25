@@ -1,0 +1,4 @@
+---
+- name: rotate.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "rotate stub"

@@ -11,3 +11,8 @@ all:
           hosts:
             pihole1:
               ansible_host: 192.168.1.100
+    opnsense:
+      hosts:
+        opnsense1:
+          ansible_host: 192.168.1.1
+          ansible_connection: local

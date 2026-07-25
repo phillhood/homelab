@@ -1,0 +1,4 @@
+---
+- name: pihole_teleporter.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "pihole_teleporter stub"
