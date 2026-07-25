@@ -2,3 +2,8 @@
 base_packages:
   - curl
   - ca-certificates
+
+lxc_expected_failed_units:
+  - dev-mqueue.mount
+  - run-lock.mount
+  - tmp.mount
