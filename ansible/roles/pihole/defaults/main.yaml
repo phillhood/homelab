@@ -1,3 +1,4 @@
 ---
 pihole_reset_password: false
 pihole_teleporter_archive: ""
+pihole_fresh_install: false

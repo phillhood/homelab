@@ -1,4 +1,19 @@
 ---
-- name: gravity.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "gravity stub"
+- name: Copy the Teleporter archive to the host
+  ansible.builtin.copy:
+    src: "{{ pihole_teleporter_archive }}"
+    dest: /tmp/pihole-teleporter-seed.zip
+    mode: "0600"
+  when: pihole_fresh_install | bool and pihole_teleporter_archive | length > 0
+
+- name: Import the Teleporter archive
+  ansible.builtin.command: "pihole-FTL --teleporter /tmp/pihole-teleporter-seed.zip"
+  when: pihole_fresh_install | bool and pihole_teleporter_archive | length > 0
+  changed_when: true
+  notify: rebuild gravity
+
+- name: Remove the Teleporter seed archive
+  ansible.builtin.file:
+    path: /tmp/pihole-teleporter-seed.zip
+    state: absent
+  when: pihole_fresh_install | bool and pihole_teleporter_archive | length > 0
