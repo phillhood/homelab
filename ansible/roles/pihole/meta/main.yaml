@@ -1,0 +1,7 @@
+---
+galaxy_info:
+  role_name: pihole
+  description: Install and configure Pi-hole v6.
+  license: MIT
+  min_ansible_version: "2.15"
+dependencies: []

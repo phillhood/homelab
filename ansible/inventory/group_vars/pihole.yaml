@@ -1,0 +1,17 @@
+---
+pihole_config:
+  dns.upstreams: '["1.1.1.1", "1.0.0.1"]'
+  dns.rateLimit.count: "10000"
+  dns.rateLimit.interval: "10"
+  dns.revServers: '["true,192.168.1.0/24,192.168.1.1,home"]'
+  misc.privacylevel: "0"
+
+pihole_local_records:
+  - "192.168.1.1 router.home"
+  - "192.168.1.2 switch.home"
+  - "192.168.1.5 ap.home"
+  - "192.168.1.101 proxmox.home"
+  - "192.168.1.101 kvatch.home"
+  - "192.168.1.100 pihole.home"
+
+pihole_adlists: []

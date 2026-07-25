@@ -1,0 +1,4 @@
+---
+- name: install.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "install stub"

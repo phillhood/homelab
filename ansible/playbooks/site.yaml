@@ -11,3 +11,9 @@
   gather_facts: true
   roles:
     - debian_lxc_base
+
+- name: Configure Pi-hole
+  hosts: pihole
+  gather_facts: true
+  roles:
+    - pihole

@@ -1,0 +1,4 @@
+---
+- name: _set_key.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "_set_key stub"

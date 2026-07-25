@@ -1,0 +1,4 @@
+---
+- name: gravity.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "gravity stub"

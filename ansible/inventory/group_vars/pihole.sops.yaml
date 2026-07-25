@@ -1,0 +1,16 @@
+pihole_web_password: ENC[AES256_GCM,data:s3/BDyQwRWIdsysaT7fg414=,iv:b+YtFogMEtWvsz0nYSCLQABaLKFIv1uxPWVZfrXB5mk=,tag:Kbu3c2UTkhnGfebmv+gSRQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBLQWxHN0tTMmVSeFZyMFVm
+            bW5IQ1ZkMmJSRXlNMW1mcGEzOUExRUo2R1dzCktLYVRWSFQzWlU3NWI5cDRWQ1Vl
+            enNBdnByNGVKMW9wOVpZMGxuVnZGSDAKLS0tIFMzZWorczZiSHVvYVZISkV2bWxR
+            bnN4OXpsVWQrck92LzZVNnJ3ZFpibGMKM4/YOQapuRhHVKAiUS4SWb/tMV+tgDS7
+            4UtUyIIL2K+xPQxliFObkTr0rvILYuVsrzLcYc3vWaiMSZxW0RhsKg==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1gt9v3qjej3vuykjydqv9amhsjucanjwwtt4w8fkf5thyssrdeuus5ke3rx
+    lastmodified: "2026-07-25T20:32:08Z"
+    mac: ENC[AES256_GCM,data:1q/ycq9FkE8BURqyzjY2ElQ9W6QLH3SeJTkf1SAQT+Xmwisd401xwhJFE7wuKFwmxfococosHE9TJQ/6mruKB++M6tPPmqcFjHPa336poGK08QuDwC+bQUlTl67Se9+MVmo107Kz8jlqv5JcPb2trt6+fnjZIABxMchcjMaM8lA=,iv:1DVPMCqrguQa0d+/4HQGeRBhU2wUUVzARIqUwh9I/vA=,tag:FikW5/ww3nzw62X0xHzbOQ==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.2
