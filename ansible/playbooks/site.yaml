@@ -5,3 +5,9 @@
   roles:
     - proxmox_host
     - pve_templates
+
+- name: Base config for Debian LXCs
+  hosts: lxc
+  gather_facts: true
+  roles:
+    - debian_lxc_base

@@ -1,0 +1,12 @@
+---
+- name: Install base packages
+  ansible.builtin.import_tasks: packages.yaml
+  tags: [packages]
+
+- name: Set timezone
+  ansible.builtin.import_tasks: timezone.yaml
+  tags: [timezone]
+
+- name: Verify container health
+  ansible.builtin.import_tasks: health.yaml
+  tags: [health]

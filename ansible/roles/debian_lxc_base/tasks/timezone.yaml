@@ -1,0 +1,4 @@
+---
+- name: timezone.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "timezone stub"

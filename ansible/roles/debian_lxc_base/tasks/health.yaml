@@ -1,0 +1,4 @@
+---
+- name: health.yaml not yet implemented
+  ansible.builtin.debug:
+    msg: "health stub"

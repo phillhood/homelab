@@ -1,0 +1,5 @@
+---
+ansible_user: root
+base_packages:
+  - curl
+  - ca-certificates
