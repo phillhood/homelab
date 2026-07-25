@@ -1,0 +1,16 @@
+terraform_api_token: ENC[AES256_GCM,data:XIyDXLCHjO6avhsV7zlanLLf7B+Sp9dtal8EhU3VHmU8Ya2Y,iv:LQ226SQygl1QDVmjQJBBy3mPJlB3k3woJ8/Bcb4qv/w=,tag:b7debjQXt+8cJVrdw3pKvQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBwMHgrYUpEK2VlS2I5c0xZ
+            TVJmWC9uTXFIckQ0RHV0Z29Sc1pjd2lZc0VzCnY3S0YyZzJkR2VEb1B1MGRqWWxl
+            ekZ1cGRQNThFQmVTcG9qRGZtMlF2dGcKLS0tIFBNcmdTSkx3dnBYc1VrOWZpeGIr
+            MXFHbnZaN1F0NHZNMVpEMkRKRCtpbEEKZfZlZuG6DTo/Ah3mL2wvWUSlbEEVfUhR
+            b6cs1pESLco91HQhWYzZsB9TGKtxZ5cANy4NPDJ3U6HKk4WWax5f7g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1gt9v3qjej3vuykjydqv9amhsjucanjwwtt4w8fkf5thyssrdeuus5ke3rx
+    lastmodified: "2026-07-25T19:29:23Z"
+    mac: ENC[AES256_GCM,data:iF47nfcuZzdR34DFq5TYfrLBkRyvJdoRv4joxcM7CR4OYD8Zo9hO0JzGOh4FTE+1+1BFGX+dQQXXSyvBHXTg52GERODhd02dZcsfiRQv/roWuP2jlZldWA30j1s2aLGlUdkln2Gq9W9M0DAIWavUICB1Yvn1Mch5y5Ap9mHVcRM=,iv:6u1pz7f64xLSIwgZuoqdEm8unbli0VD7QNfVq0dvY5Y=,tag:jvsbs4sjdpHpx8obdbr3GA==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.2

@@ -1,4 +1,106 @@
 ---
-- name: terraform_user.yaml not yet implemented
-  ansible.builtin.debug:
-    msg: "terraform_user stub"
+- name: List PVE users
+  ansible.builtin.command: pveum user list --output-format json
+  register: pve_users
+  changed_when: false
+  check_mode: false
+
+- name: Ensure Terraform user exists
+  ansible.builtin.command: "pveum user add {{ terraform_user }}"
+  when: terraform_user not in (pve_users.stdout | from_json | map(attribute='userid') | list)
+  changed_when: true
+
+- name: List PVE roles
+  ansible.builtin.command: pveum role list --output-format json
+  register: pve_roles
+  changed_when: false
+  check_mode: false
+
+- name: Compute existing role privs
+  ansible.builtin.set_fact:
+    _tf_role_entry: "{{ pve_roles.stdout | from_json | selectattr('roleid', 'equalto', terraform_role) | list }}"
+
+- name: Ensure Terraform role exists with the exact priv-list
+  ansible.builtin.command: >-
+    pveum role {{ 'add' if (_tf_role_entry | length == 0) else 'modify' }}
+    {{ terraform_role }} --privs "{{ terraform_role_privs | join(',') }}"
+  when: >-
+    (_tf_role_entry | length == 0) or
+    ((_tf_role_entry[0].privs | default('') | split(',') | sort)
+      != (terraform_role_privs | sort))
+  changed_when: true
+
+- name: List PVE ACLs
+  ansible.builtin.command: pveum acl list --output-format json
+  register: pve_acls
+  changed_when: false
+  check_mode: false
+
+- name: Ensure Terraform role is granted at /
+  ansible.builtin.command: "pveum aclmod / --user {{ terraform_user }} --role {{ terraform_role }}"
+  when: >-
+    pve_acls.stdout | from_json
+      | selectattr('path', 'equalto', '/')
+      | selectattr('ugid', 'equalto', terraform_user)
+      | selectattr('roleid', 'equalto', terraform_role)
+      | list | length == 0
+  changed_when: true
+
+- name: Check whether the SOPS secrets file exists
+  ansible.builtin.stat:
+    path: "{{ sops_proxmox_secrets_file }}"
+  delegate_to: localhost
+  run_once: true
+  register: _sops_stat
+
+- name: Bootstrap an encrypted SOPS secrets file
+  when: not _sops_stat.stat.exists
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Write placeholder plaintext
+      ansible.builtin.copy:
+        dest: "{{ sops_proxmox_secrets_file }}"
+        content: "terraform_api_token: PLACEHOLDER\n"
+        mode: "0644"
+    - name: Encrypt in place
+      ansible.builtin.command:
+        argv: [sops, --encrypt, --in-place, "{{ sops_proxmox_secrets_file }}"]
+      changed_when: true
+
+- name: List Terraform user tokens
+  ansible.builtin.command: "pveum user token list {{ terraform_user }} --output-format json"
+  register: pve_tokens
+  changed_when: false
+  check_mode: false
+
+- name: Set token-present fact
+  ansible.builtin.set_fact:
+    _tf_token_present: "{{ terraform_token_id in (pve_tokens.stdout | from_json | map(attribute='tokenid') | list) }}"
+
+- name: Remove existing token when rotating
+  ansible.builtin.command: "pveum user token remove {{ terraform_user }} {{ terraform_token_id }}"
+  when: _tf_token_present and rotate_terraform_token | bool
+  changed_when: true
+
+- name: Create the Terraform API token
+  ansible.builtin.command: >-
+    pveum user token add {{ terraform_user }} {{ terraform_token_id }}
+    --privsep 0 --output-format json
+  register: tf_token_add
+  when: (not _tf_token_present) or (rotate_terraform_token | bool)
+  changed_when: true
+  no_log: true
+
+- name: Write the token secret into SOPS (control node)
+  ansible.builtin.command:
+    argv:
+      - sops
+      - set
+      - "{{ sops_proxmox_secrets_file }}"
+      - '["terraform_api_token"]'
+      - '"{{ (tf_token_add.stdout | from_json).value }}"'
+  delegate_to: localhost
+  when: tf_token_add is not skipped
+  changed_when: true
+  no_log: true
