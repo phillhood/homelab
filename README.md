@@ -65,8 +65,8 @@ So we go again!
   - [x] Terraform user, role, token
   - [x] LXC template
   - [x] VM template
-- [ ] Pi-hole playbooks
-  - [ ] tbd
+- [x] Pi-hole playbooks
+  - [x] install, config, gravity, password
 
 
 ### Phase 4 - Flux
