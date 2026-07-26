@@ -113,7 +113,7 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "postgres tcp closed"   "$$(ssh -o BatchMode=yes root@$(FORGE_IP) 'ss -lnt | grep -q :5432 && echo OPEN-BAD || echo closed')"
 	@printf "%-32s %s\n" "forgejo"               "$$(ssh -o BatchMode=yes root@$(FORGE_IP) 'systemctl is-active forgejo')"
 	@printf "%-32s %s\n" "forgejo health"        "$$(curl -s -o /dev/null -w '%{http_code}' https://git.$(LAB_DOMAIN)/api/healthz)"
-	@printf "%-32s %s\n" "museek health"         "$$(curl -s -o /dev/null -w '%{http_code}' http://$(MUSIC_IP):8080/healthz)"
+	@printf "%-32s %s\n" "museek health"         "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'docker inspect museek' >/dev/null 2>&1 && curl -s -o /dev/null -w '%{http_code}' http://$(MUSIC_IP):8080/healthz || echo gated)"
 
 .PHONY: idempotent
 idempotent: ## Converge twice; fail unless the second run changes nothing
