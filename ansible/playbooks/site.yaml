@@ -20,3 +20,6 @@
 
 - name: Import the music NAS plays
   ansible.builtin.import_playbook: music.yaml
+
+- name: Import the tier0 plays
+  ansible.builtin.import_playbook: tier0.yaml

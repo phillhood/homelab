@@ -1,0 +1,11 @@
+{
+	email {{ caddy_acme_email }}
+}
+
+*.{{ lab_domain }} {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+
+	respond "tier0 proxy ok" 200
+}

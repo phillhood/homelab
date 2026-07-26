@@ -1,6 +1,7 @@
 ---
 lab_domain: lab.shychedelic.com
 caddy_version: v2.11.4
+caddy_sha256: "02d058c1bcd1d85700b953666dad2a28a99bc03224549ab952ef062a419ab8e4"
 caddy_download_url: >-
   https://caddyserver.com/api/download?os=linux&arch=amd64&p=github.com/caddy-dns/cloudflare
 caddy_user: caddy

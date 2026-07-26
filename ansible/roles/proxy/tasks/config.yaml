@@ -1,0 +1,28 @@
+---
+- name: Write the Cloudflare credential env file
+  ansible.builtin.copy:
+    content: "CLOUDFLARE_API_TOKEN={{ cloudflare_api_token }}\n"
+    dest: "{{ caddy_config_dir }}/caddy.env"
+    owner: root
+    group: "{{ caddy_user }}"
+    mode: "0640"
+  no_log: true
+  notify: Reload caddy
+
+- name: Render the Caddyfile
+  ansible.builtin.template:
+    src: Caddyfile.j2
+    dest: "{{ caddy_config_dir }}/Caddyfile"
+    owner: root
+    group: "{{ caddy_user }}"
+    mode: "0640"
+    validate: >-
+      /usr/local/bin/caddy validate --config %s --adapter caddyfile
+      --envfile {{ caddy_config_dir }}/caddy.env
+  notify: Reload caddy
+
+- name: Enable and start caddy
+  ansible.builtin.systemd_service:
+    name: caddy
+    enabled: true
+    state: started

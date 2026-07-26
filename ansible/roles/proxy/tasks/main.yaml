@@ -1,0 +1,8 @@
+---
+- name: Install Caddy
+  ansible.builtin.import_tasks: install.yaml
+  tags: [install, caddy]
+
+- name: Configure Caddy
+  ansible.builtin.import_tasks: config.yaml
+  tags: [config, caddy]
