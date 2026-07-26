@@ -35,6 +35,19 @@
           tags: [forgejo]
       tags: [forgejo]
 
+- name: Back up the Terraform state
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  tasks:
+    - name: Run the Terraform state tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: terraform_state
+        apply:
+          tags: [terraform]
+      tags: [terraform]
+
 - name: Back up OPNsense config and rotate
   hosts: opnsense
   gather_facts: true
