@@ -24,6 +24,7 @@
     owner: root
     group: root
     mode: "0644"
+    force: true
 
 - name: Add the Docker apt repository
   ansible.builtin.apt_repository:
