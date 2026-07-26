@@ -31,6 +31,5 @@
 
 - name: Wait for the disk to appear
   ansible.builtin.wait_for:
-    path: "{{ music_disk_partition }}"
+    path: "{{ music_disk_by_id }}"
     timeout: 30
-  when: music_disk_partition is defined
