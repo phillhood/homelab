@@ -154,26 +154,20 @@ host's `/tmp` immediately after.
 
 ## Music: two series that do different jobs
 
-`--tags music` writes a **manifest** — path, size, mtime for every file, plus the service
-config archive. It tells you what you had. It does not hold a single byte of audio.
+`--tags music` writes a **manifest** — path, size, mtime — plus the service config
+archive. It tells you what you had; it holds no audio.
 
 `--tags music-content` holds the files. It runs on `kvatch` and shells out to
-`/usr/local/sbin/music-backup`, installed by the `music_storage` role, which drives a
-restic repository at `/var/backups/restic/music`. This role does not reimplement the restic
-calls — it asserts the script is present and runs it, so the daily timer and the on-demand
-run are the same code. Design and measured restore figures are in
+`/usr/local/sbin/music-backup`, installed by `music_storage`, which drives a restic
+repository. This role asserts that script exists and runs it — it does not reimplement the
+restic calls, so the daily timer and the on-demand run are the same code. See
 `roles/music_storage/README.md`.
 
-`music-content` is therefore the one series here whose output does **not** land in `.dev/`,
-and it is not covered by `backup_prune_targets` — restic does its own retention
-(`--keep-daily 7 --keep-weekly 4 --keep-monthly 6`) inside the repository.
-
-**`museek.db` moved out of `config-*.tar.gz` into that repository.** This task used to
-archive it straight from `.state/museek/`, which is a plain copy of a live SQLite file and
-not crash-safe. It is data rather than configuration, and the content backup captures it
-with `sqlite3 .backup` plus an integrity check. Restoring museek's job history now means
-reaching for the restic snapshot, not the config archive — that is expected, not a missing
-file.
+- `music-content` is the one series whose output does **not** land in `.dev/`, and it is
+  deliberately absent from `backup_prune_targets` — restic does its own retention.
+- **`museek.db` moved out of `config-*.tar.gz` into that repository.** This task used to
+  copy it straight from a live SQLite file. Restoring museek's job history means the restic
+  snapshot, not the config archive — expected, not a missing file.
 
 ## Verifying rotation still works
 
@@ -242,14 +236,12 @@ in `terraform/modules/proxmox-lxc`, `terraform.tfstate` starts carrying it in cl
 `config.xml`. Re-check with `python3 -c` over the state rather than grepping for the key
 name — the field is always *present*, which is what makes a grep misleading.
 
-The restic repository holding the music content is encrypted, with its password in
-`group_vars/proxmox.sops.yaml` and deployed to `/etc/music-backup/repo-password` (`0600`)
-under `no_log: true`. Encryption is **not** the reason the rendered `docker-compose.yml` is
-kept out of it — the rule below is applied there identically to the archive series, because
-the file is regenerable and archiving it recovers nothing. The repository password lives on
-the same host as the repository, so an attacker holding `kvatch` root holds both; the
-encryption earns its keep if a disk or a copy of the repository leaves the host, not
-against local compromise.
+The restic repository holding the music content is encrypted, its password in
+`group_vars/proxmox.sops.yaml` and deployed `0600` under `no_log: true`. Encryption is not
+why the rendered `docker-compose.yml` is kept out of it — the rule below applies there
+identically, because the file is regenerable and archiving it recovers nothing. The
+password sits on the same host as the repository, so encryption earns its keep only if a
+copy leaves that host.
 
 The music config archive (`.dev/music-backups/config-*.tar.gz`) does contain secrets, and
 the rule governing it is narrower than "no credentials in backups".

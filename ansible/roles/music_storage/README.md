@@ -15,109 +15,43 @@ Host-side role for the music SSD. Runs on `kvatch`, not in the container.
 - `backup.yaml` — restic, the repository, `/usr/local/sbin/music-backup`, and the timer
   that runs it. Tagged `musicbackup`.
 
-## The content backup
+## Content backup
 
-`make backup-music` captures a *manifest* — path, size, mtime. It tells you what you lost.
-This is the one that holds the files. restic repository at `/var/backups/restic/music`,
-built and driven by `backup.yaml`.
-
-**It runs on `kvatch`, not in CT 101, and that is the whole reason it is simple.**
-`/mnt/music` is mounted on the host and bind-mounted into the container, so the host can
-read all 613 files directly. `sqlite3` is already installed here. CT 101 has no `sudo`, so
-anything running inside it needs `become_method: su` — none of which applies to a job that
-never enters the container.
-
-The repository is deliberately on `pve-root` (nvme1n1) while the library is on nvme0n1.
-**Same host, different physical disk.** That is the failure this protects against — the
-library disk dying — and it is explicitly *not* protection against losing `kvatch` itself.
-An off-site copy is still outstanding; see `.dev/docs/backlog.md`.
-
-### One implementation, two triggers
-
-The role templates `/usr/local/sbin/music-backup` and a `music-backup.timer` that fires
-daily at 03:30 with a 30-minute randomised delay. `make backup-music-content` runs the
-*same script* through `homelab_backups/tasks/music_content.yaml` rather than
-reimplementing the restic calls in Ansible. There is one place where the backup is
-defined, so the scheduled run and the on-demand run cannot drift apart.
-
-The Ansible side asserts the script exists and refuses to continue if it does not, rather
-than silently reporting success on a host that was never provisioned.
-
-### museek.db must be copied with `.backup`, not `cp`
-
-`museek.db` is live SQLite — museek writes to it while the backup runs. A plain copy of an
-open SQLite file is not crash-safe: it can capture a torn page mid-transaction, and the
-result looks like a file until you open it. The script uses `sqlite3 .backup`, which takes
-a read lock and produces a consistent image, then runs `pragma integrity_check` and
-**fails the whole run** if it is not `ok`. A backup that silently stores a corrupt database
-is worse than no backup, because it is trusted.
-
-This is why `museek.db` is no longer in `homelab_backups`' `config-*.tar.gz` — that task
-copied it directly. It is data, not configuration, and it now lives in the snapshot where
-it can be captured properly.
-
-### Reaching into the container for slskd
-
-slskd's config and databases sit on **CT 101's own disk**, not the bind mount, so the host
-cannot see them — the container's LV is mounted in the container's mount namespace. The
-script uses `pct exec 101 -- tar czf -` and stages the result. The same namespace boundary
-is why `fstrim` needs `nsenter`; see `.dev/docs/backlog.md`.
-
-**The rendered `docker-compose.yml` is excluded**, for the reason
-`homelab_backups/README.md` sets out at length: it is byte-for-byte regenerable from
-`music_stack/templates/docker-compose.yml.j2` plus vars already sops-encrypted in git, and
-it carries six credentials in cleartext. Archiving it recovers nothing and duplicates
-secrets. `slskd.yml` is kept and is stock — every credential line in it is a comment, since
-slskd is configured through those compose environment variables.
-
-The exclusion is enforced twice. The `--exclude` keeps the file out, and then the script
-**re-reads its own archive** and aborts if the file is present anyway. Verified by running
-a copy with the `--exclude` stripped out: it failed with
-
-```
-ERROR: opt/music-stack/docker-compose.yml reached the archive — it carries sops-managed secrets in the clear
-```
-
-and exited before reaching `restic backup`, leaving the snapshot count unchanged. A
-tripwire that has never been seen to fire is not known to work.
-
-### Verifying it
-
-`restic check` runs on every backup. That proves the repository is internally consistent;
-it does not prove the files come back. Measured on 2026-07-26, first build:
-
-| | |
-|---|---|
-| Snapshot | 8.201 GiB, 619 files, 9 s |
-| Full restore | 8.201 GiB in **5.6 s** |
-| `sha256sum` of all 613 library files, original vs restored | **identical** |
-| Two snapshots on disk | 16.4 GiB logical, **8.0 G** stored |
-| Compression ratio | 1.00x — FLAC is already compressed |
-
-Re-prove restorability rather than trusting `restic check`:
+restic repository at `/var/backups/restic/music` on `kvatch`, plus a daily timer. Built by
+`backup.yaml`; the script it installs is the single implementation, and
+`homelab_backups` runs that same script rather than reimplementing it.
 
 ```bash
-make music-restore DEST=/var/tmp/restore-test    # then diff sha256 against /mnt/music
+make backup-music-content                      # run now
+make music-snapshots                           # what is held
+make music-restore DEST=/var/tmp/restore-test  # add SNAPSHOT=<id> for an older one
 ```
 
-`make music-snapshots` lists what is held.
+`make backup-music` is a different thing — a manifest of path/size/mtime, not the files.
 
-### Known gap: slskd's own databases are hot-copied
+Variables worth setting live in `defaults/main.yaml`: `music_backup_repo`,
+`music_backup_excludes`, `music_backup_stack_excludes`, the three `keep_*` retention
+counts, and `music_backup_on_calendar`.
 
-`tar` captures `slskd/data/*.db` — transfers, search, events, messaging, shares — while
-slskd is running, which is the same defect `.backup` fixes for museek. It is accepted
-rather than fixed: those files are regenerable operational state (slskd re-indexes shares
-and rebuilds caches on start), they total ~530 KB, and `sqlite3` is not installed in CT
-101. `museek.db` got the careful treatment because it holds job history that exists
-nowhere else. If slskd's state ever becomes load-bearing, install `sqlite3` in the
-container and give it the same `.backup` path.
+**Requires** `restic_repo_password`, from `group_vars/proxmox.sops.yaml`.
 
-### Concurrency
+### Invariants
 
-The script takes an exclusive `flock` on `/var/lock/music-backup.lock` and exits 0 with a
-message if another run holds it, so a manual run during the timer's window does not
-produce two backups fighting over the staging directory. Verified by starting two at once;
-the second exited immediately.
+- **Never let the rendered `docker-compose.yml` into the stack archive.** It carries six
+  sops-managed credentials in cleartext and is regenerable from the template. Enforced
+  twice — `--exclude`, then the script re-reads its own archive and aborts. Keep both.
+- **Copy `museek.db` with `sqlite3 .backup`, never `cp`.** It is live SQLite; a plain copy
+  can capture a torn page and still look like a file. The run must fail when
+  `pragma integrity_check` is not `ok`.
+- **Keep the repository off `/mnt/music`.** It sits on pve-root (nvme1n1) precisely because
+  the library is on nvme0n1; same disk means it protects nothing.
+- Retention is restic's own, inside the repository — this series is deliberately absent
+  from `backup_prune_targets` in `homelab_backups`.
+- Guard shell checks with `if`, not `cmd && fail` — under `set -euo pipefail` the latter
+  misfires both ways.
+- slskd's `data/*.db` are tarred hot, knowingly; see `.dev/docs/backlog.md`.
+
+Rationale, measurements and the restore drill: `.dev/docs/ansible/music_storage.md`.
 
 ## Thunderbolt, not USB
 
