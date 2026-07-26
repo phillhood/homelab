@@ -5,3 +5,9 @@ music_share_name: music
 music_smb_user: phill
 music_smb_workgroup: WORKGROUP
 music_smb_reset_password: false
+music_syncthing_user: syncthing
+music_syncthing_home: /var/lib/syncthing
+music_syncthing_config_dir: "{{ music_syncthing_home }}/.local/state/syncthing"
+music_syncthing_gui_port: 8384
+music_syncthing_folder_id: music-library
+music_syncthing_folder_label: Music Library

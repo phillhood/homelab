@@ -6,3 +6,7 @@
 - name: Configure Samba
   ansible.builtin.import_tasks: samba.yaml
   tags: [samba, share]
+
+- name: Configure Syncthing
+  ansible.builtin.import_tasks: syncthing.yaml
+  tags: [syncthing, share]
