@@ -1,4 +1,16 @@
 ---
+- name: Refuse to render a Caddyfile with missing values
+  ansible.builtin.assert:
+    that:
+      - caddy_acme_email | default('') | length > 0
+      - forge_backend | default('') | length > 0
+      - registry_backend | default('') | length > 0
+    fail_msg: >-
+      caddy_acme_email, forge_backend and registry_backend must all be set in
+      inventory/group_vars/proxy.yaml. Empty values render a Caddyfile that passes
+      validation and then serves the catch-all for every vhost.
+    quiet: true
+
 - name: Write the Cloudflare credential env file
   ansible.builtin.copy:
     content: "CLOUDFLARE_API_TOKEN={{ cloudflare_api_token }}\n"

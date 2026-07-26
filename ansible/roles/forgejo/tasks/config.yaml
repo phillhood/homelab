@@ -1,4 +1,13 @@
 ---
+- name: Refuse to render app.ini without a root URL
+  ansible.builtin.assert:
+    that: forgejo_root_url | default('') | length > 0
+    fail_msg: >-
+      forgejo_root_url is not set. Forgejo bakes ROOT_URL into every clone URL and
+      every image reference in its OCI registry, so an empty one is not recoverable
+      by editing it later. Set it in inventory/group_vars/forge.yaml.
+    quiet: true
+
 - name: Render app.ini
   ansible.builtin.template:
     src: app.ini.j2

@@ -11,6 +11,16 @@
       sops ansible/inventory/group_vars/music.sops.yaml
     success_msg: "Soulseek credentials configured."
 
+- name: Assert museek has a MusicBrainz contact
+  ansible.builtin.assert:
+    that: museek_musicbrainz_contact | default('') | length > 0
+    fail_msg: >-
+      music_app_image is set but museek_musicbrainz_contact is empty. MusicBrainz
+      rate-limits or blocks anonymous clients. Set it in
+      inventory/group_vars/music.yaml.
+    success_msg: "MusicBrainz contact configured."
+  when: music_app_image | length > 0
+
 - name: Create the stack directory
   ansible.builtin.file:
     path: "{{ music_stack_dir }}"
