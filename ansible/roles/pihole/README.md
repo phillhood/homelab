@@ -1,137 +1,71 @@
 # pihole
 
-Installs and configures Pi-hole v6 on a Debian LXC, layered on `debian_lxc_base`.
+Pi-hole v6 on a Debian LXC, layered on `debian_lxc_base`. The only resolver on the LAN.
 
-## Config model (capture-then-codify)
+## Usage
 
-- **Source of truth** captured from the live host into `.dev/pihole-capture/`.
-- **Settings** (upstreams, reverse servers, rate limit, privacy, local DNS records)
-  applied idempotently with `pihole-FTL --config <key> <value>` (read-compare-set).
-- **Gravity / adlists** seeded from a Teleporter archive on fresh installs; refresh
-  via `pihole -g`.
-- **Password** set with `pihole setpassword` from `pihole.sops.yaml` (`no_log`).
-
-## The read/write format asymmetry
-
-`pihole-FTL --config` does not round-trip. It **reads** space-padded and unquoted but
-**writes** JSON:
-
-| | Form |
+| Tag | Does |
 |---|---|
-| read | `[ 1.1.1.1, 1.0.0.1 ]` |
-| write | `["1.1.1.1","1.0.0.1"]` |
-| empty | `[]` both ways |
+| `install` | unattended installer, if `/usr/local/bin/pihole` is absent |
+| `gravity` | seeds gravity from a Teleporter archive, fresh installs only |
+| `config` | applies `pihole_config` and `pihole_local_records`, renders the lab wildcard |
+| `password` | sets the web password |
+| `pihole` | all four |
 
-So a naive read-vs-write-value comparison never matches, and every run would re-set
-every list key and restart DNS. `_set_key.yaml` therefore **constructs** the expected
-read-form from the desired value rather than parsing the actual one.
-
-Parsing is not an option: `dns.revServers`' single element contains commas
-(`true,192.168.1.0/24,192.168.1.1,home`), making a one-element list indistinguishable
-from a four-element one.
-
-Because of this, `pihole_config` holds **native YAML types** (lists stay lists, numbers
-stay numbers) — both forms are derived from them.
-
-### Booleans are a third form, not a variant of the generic one
-
-`pihole-FTL` **reads** a boolean back lowercase (`true`/`false`), but Jinja's `| string`
-filter renders a Python/YAML boolean as `True`/`False` — capitalized. Left to the
-generic fallback, the read-form comparison would never match a boolean key, so every
-converge would re-`--config` it and restart DNS, forever. `_set_key.yaml` therefore
-branches on `cfg_item.value is boolean` **before** the generic string fallback, in
-**both** `_cfg_read_form` and `_cfg_write_form` — the same "construct the expected
-read-form" pattern as the list case above, just for a different type. `misc.etc_dnsmasq_d`
-(added in the tier0 build) was the first boolean key this role ever set; without the
-`is boolean` branch it would have been the first key that never reported idempotent.
-
-## dns.hosts holds infra records that nothing else provides
-
-Static-IP infrastructure never requests a DHCP lease, so nothing auto-registers it.
-Those names live only here. Every entry in `pihole_local_records` is load-bearing:
-dropping any one of them silently breaks name resolution for that host — this list has
-already grown twice since the role was written, so treat the file itself as the count,
-not a number restated here.
-
-## Teleporter
-
-- **Export:** bare `pihole-FTL --teleporter` writes `pi-hole_<host>_teleporter_<ts>.zip`
-  into the working directory.
-- **Import:** `pihole-FTL --teleporter <file>`. There is no `import` subcommand — a
-  stray word there is read as the filename.
-- The archive carries `pihole.toml`, `hosts`, `dhcp.leases`, `gravity.db` and
-  `pihole-FTL.db`.
-
-Seeding is opt-in and only runs on a fresh install. `pihole_teleporter_archive` stays
-empty by default because the captured archive lives under gitignored `.dev/` and is
-timestamped, so it would not survive a clone. Pass it during a rebuild:
+Settings are applied read-compare-set with `pihole-FTL --config <key> <value>`. Gravity and
+adlists come from a Teleporter archive; there is no CLI for adlists in v6.
 
 ```bash
+# force a password reset — it is not queryable, so it is otherwise only written on install
+ansible-playbook playbooks/site.yaml --limit pihole --tags password \
+  -e pihole_reset_password=true
+
+# seed a rebuild from a captured archive
 ansible-playbook playbooks/site.yaml --limit pihole \
   -e pihole_teleporter_archive=/abs/path/to/pi-hole_....zip
 ```
 
-## Adlists
+## Variables
 
-`dns.adlists` is **not** a `pihole.toml` key, and there is no `pihole adlist` CLI —
-v6 keeps adlists in `gravity.db`. They arrive with the Teleporter seed, and this role
-never enforces them. If explicit enforcement is ever needed it has to go through the
-HTTP API.
+| Variable | Default | Notes |
+|---|---|---|
+| `pihole_config` | `group_vars/pihole.yaml` | native YAML types — lists stay lists, numbers stay numbers |
+| `pihole_local_records` | `group_vars/pihole.yaml` | every entry is load-bearing; see invariants |
+| `pihole_reset_password` | `false` | |
+| `pihole_teleporter_archive` | `""` | opt-in, fresh install only |
+| `pihole_fresh_install` | `false` | `install.yaml` sets it, so `--tags gravity` works standalone |
 
-## Re-run semantics
+**Requires** `pihole_web_password` from `pihole.sops.yaml`.
 
-Idempotent except a deliberate `pihole -g`. Force a password reset with
-`-e pihole_reset_password=true` — the password is not queryable, so it is only written
-on a fresh install or on that explicit flag.
+## Invariants
 
-`pihole_fresh_install` defaults to `false` so that `--tags gravity` or `--tags password`
-work standalone; `install.yaml` overrides it when that tag runs.
-
-## The web password goes in on stdin, and an empty one would disable auth
-
-`password.yaml` calls `pihole setpassword` with **no argument** and supplies the value twice
-on `stdin:`, because reading `/usr/local/bin/pihole` shows `SetWebPassword` prompts twice
-(password, then confirm) when given none. Passing it as `argv` instead leaves the plaintext
-in `/proc/<pid>/cmdline` for the life of the process, which `no_log: true` does nothing
-about — `no_log` hides Ansible's output, not the OS process table. Same fix as `music_share`.
-
-**An `assert` guards against an empty value, and it is load-bearing.** From the same source:
-
-```bash
-read -s -r -p "Enter New Password (Blank for no password): " PASSWORD
-if [ "${PASSWORD}" == "" ]; then
-    setFTLConfigValue "webserver.api.password" ""
-    echo -e "  ${TICK} Password Removed"
-    exit 0
-fi
-```
-
-A blank first line **removes the password and exits 0** — web authentication silently
-disabled, play reports success. Never drop that assert.
-
-### This is mitigation, not elimination
-
-`SetWebPassword` finishes by calling `setFTLConfigValue`, which is
-
-```bash
-pihole-FTL --config "${1}" "${2}"
-```
-
-so the plaintext still reaches argv, inside Pi-hole's own short-lived subprocess rather than
-the one Ansible spawns. Removing our exposure is the part within our control; closing the
-rest needs an upstream change. There is no hash-setting path to use instead — `pihole-FTL`
-ships no BALLOON hash generator (`--perf` is a benchmark, not a generator), and
-`webserver.api.pwhash` expects a hash we cannot compute locally.
-
-**Do not run `pihole setpassword --help` to check usage.** There is no help flag, so it sets
-the password to the literal string `--help`. Read `/usr/local/bin/pihole` instead.
-
-## Cache gotcha
-
-After changing gravity or config, `pihole restartdns` before testing or a stale answer
-is served.
+- **Never drop the empty-password assert in `password.yaml`.** `pihole setpassword` treats a
+  blank first line on stdin as *remove the password* — it disables web authentication and
+  exits 0, so the play would report success while leaving the interface open.
+- **The password goes in on stdin, never as `argv`.** As an argument it sits in
+  `/proc/<pid>/cmdline` for the life of the process, and `no_log` does nothing about the OS
+  process table. This is mitigation, not elimination: Pi-hole's own `setFTLConfigValue`
+  still passes it to `pihole-FTL` in argv, inside its own short-lived subprocess.
+- **`pihole_config` must hold native YAML types.** `pihole-FTL --config` does not round-trip
+  — it reads space-padded and unquoted (`[ 1.1.1.1, 1.0.0.1 ]`) but writes JSON
+  (`["1.1.1.1","1.0.0.1"]`), and booleans read back lowercase while Jinja's `| string`
+  renders them capitalised. `_set_key.yaml` constructs the expected *read* form from the
+  desired value instead of parsing the actual one, and branches on booleans before the
+  generic string fallback. Get either wrong and every converge re-sets the key and restarts
+  DNS, forever.
+- **Every entry in `pihole_local_records` is load-bearing.** Static-IP infrastructure never
+  requests a DHCP lease, so nothing auto-registers it — those names exist only here, and
+  dropping one silently breaks resolution for that host.
+- **Do not run `pihole setpassword --help`.** There is no help flag, so it sets the password
+  to the literal string `--help`. Read `/usr/local/bin/pihole` instead.
+- Teleporter export is bare `--teleporter`; import is `--teleporter <file>`. There is no
+  `import` subcommand, and a stray word there is read as the filename.
+- After changing gravity or config, `pihole restartdns` before testing or a stale answer is
+  served.
 
 ```bash
 dig @192.168.1.100 doubleclick.net +short                # -> 0.0.0.0  (blocking)
 dig @192.168.1.100 kvatch.{{ homelab_domain }} +short    # -> 192.168.1.101  (local record)
 ```
+
+Rationale, the format-asymmetry derivation and the installer source: `.dev/docs/ansible/pihole.md`.
