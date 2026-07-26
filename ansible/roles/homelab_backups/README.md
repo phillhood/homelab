@@ -114,6 +114,39 @@ in the listing; that is not package data.
 archive never crosses the network or lands in `.dev/` even briefly. See
 Sensitivity below for why.
 
+### Push mirrors must use SSH, or the archive carries a live GitHub token
+
+This is not enforced by anything here — it is a choice made in Forgejo's web UI,
+and the wrong choice silently reverses the `app.ini` fix above.
+
+An **HTTPS** push mirror stores its credential in the repository's own git config
+as `url = https://<user>:<token>@github.com/...`, mode `0644`, and `repos/` is in
+the dump. Measured on 2026-07-26: after configuring one HTTPS mirror, a fresh
+archive contained the PAT in cleartext at `repos/shychedelic/museek.git/config`.
+Forgejo sanitises the credential for *display* (`GetPushMirrorRemoteAddress` sets
+`u.User = nil`) so the UI looks clean while the on-disk copy is not.
+
+An **SSH** push mirror has no such copy. Forgejo generates an Ed25519 keypair,
+encrypts the private half into `push_mirror.private_key` via its `keying` module,
+and never reveals it. The git remote becomes `ssh://git@github.com/...` with
+nothing embedded. Verified: 427 bytes, no PEM header, and a fresh archive
+contains no `https://…@github.com` anywhere.
+
+That encrypted-in-the-database property only helps *because* `app.ini` is stripped
+— `SECRET_KEY` and the ciphertext are then never in the same archive. The two
+fixes are load-bearing together.
+
+Set the remote URL in SSH form, tick **Use SSH authentication**, leave username and
+password empty, then add Forgejo's public key to the target repo as a **deploy key
+with write access** (repo Settings → Deploy keys — *not* account-level SSH keys,
+which would scope it to every repo the account owns).
+
+To re-check after any mirror change:
+
+```bash
+grep -rlE "https://[^@/[:space:]]+@github\.com" <extracted archive>   # must find nothing
+```
+
 The dump runs as `git` (no `sudo` on this host, hence `become_method: su`) and
 the `.zip` is fetched to `.dev/forgejo-backups/`, then deleted from the forge
 host's `/tmp` immediately after.
