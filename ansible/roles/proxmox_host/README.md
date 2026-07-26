@@ -1,89 +1,60 @@
 # proxmox_host
 
-Brings a bare Proxmox VE node to Terraform-ready state, and carries the one
-maintenance task that has to run against the hypervisor itself rather than any
-guest: thin-pool reclaim.
+Brings a bare Proxmox VE node to Terraform-ready state, and carries the one maintenance task
+that has to run against the hypervisor itself rather than a guest. Everything here is scoped
+to `hosts: proxmox`; this role never touches anything inside an LXC or VM.
 
-## What it does
+## Usage
 
-- **`repos.yaml`** — replaces the enterprise APT repositories with the no-subscription
-  ones via `deb822_repository`, and removes the renamed-but-still-present
-  `pve-enterprise.sources.disabled` file so it can't confuse a future `apt` run.
-- **`dns.yaml`** — points the host's own resolver at Pi-hole.
-- **`ssh_keys.yaml`** — ensures the operator's public keys are present in
-  `root`'s `authorized_keys` (`exclusive: false`, so it only adds, never prunes
-  keys it doesn't know about).
-- **`terraform_user.yaml`** — idempotently creates the `pveum` service account,
-  role and ACL grant Terraform authenticates as, bootstraps an encrypted
-  `proxmox.sops.yaml` if one doesn't exist yet, and issues (or rotates, via
-  `rotate_terraform_token: true`) its API token. The token secret is written
-  straight into SOPS with `sops set` and the tasks that touch it are `no_log: true`
-  — it is never visible in playbook output.
-- **`fstrim.yaml`** — reclaims thin-pool blocks from every *running* container's
-  LV. Tagged `[fstrim, never]`; see below for why it needs its own task at all.
-
-Every task here is scoped to the Proxmox host (`hosts: proxmox`), not the guests —
-this role never touches anything inside an LXC or VM.
-
-## Thin-pool reclaim needs its own task because nothing else does this job
-
-The pool's discard mode is already `passdown` — this was never an LVM
-configuration problem. The gap is that **nothing in the normal stack ever tells
-the thin pool that a running container's deleted blocks are free**, and three
-plausible-looking fixes all fail for different reasons:
-
-1. **`fstrim` run *inside* an unprivileged LXC** fails outright:
-   `fstrim: /: FITRIM ioctl failed: Operation not permitted`. An unprivileged
-   container cannot issue the ioctl against its own root filesystem, discard
-   mode or not.
-
-2. **`fstrim` run against the container's rootfs path *on the host***
-   (e.g. `fstrim /var/lib/vz/...` or wherever `pct`'s mount point resolves to)
-   trims the **host's** own filesystem, not the container's. The container's LV
-   is mounted inside the container's own mount namespace; from the host's
-   mount namespace, the path the container sees as `/` is a different,
-   unrelated mount (or nothing at all, for a running container) — the ioctl
-   succeeds but reclaims the wrong filesystem's free space.
-
-3. **The host's `fstrim.timer`** (systemd's stock periodic trim) only walks
-   mount points visible in the *host's* namespace. A running container's
-   rootfs is never one of them, so the timer silently never reclaims any
-   container's thin-pool blocks, ever, no matter how long it's been enabled.
-
-The only thing that actually works is **entering the container's own mount
-namespace before trimming**: resolve the container's init PID
-(`lxc-info -n <vmid> -p -H`) and run `nsenter -t <pid> -m -- fstrim /` from the
-host. That's exactly what `fstrim.yaml` does, filtering `pct list` to rows with
-status `running` first (a stopped container has no init PID to enter, and
-`nsenter` fails closed with `invalid PID argument` on any malformed value rather
-than falling through to host PID 1).
-
-### Why it's tagged `never` and doesn't run by default
-
-`fstrim` is a maintenance action, not part of the steady-state config this
-role otherwise brings a host to — it has no idempotent "already trimmed"
-state to converge toward the way the other tasks do, and running it
-unconditionally on every `site.yaml` converge would add meaningful I/O load
-for no benefit on hosts that don't need it yet. Ansible's built-in `never`
-tag keeps it out of every ordinary run; it only executes when named
-explicitly:
+| Tag | Does |
+|---|---|
+| `repos` | swaps the enterprise APT repos for no-subscription via `deb822_repository` |
+| `dns` | points the host resolver at Pi-hole |
+| `ssh-keys` | operator public keys into root's `authorized_keys` (`exclusive: false`) |
+| `terraform-user` | the `pveum` account, role and ACL, plus its API token |
+| `fstrim` | thin-pool reclaim. Tagged `never` — only runs when named |
+| `proxmox_host` | everything except `fstrim` |
 
 ```bash
-ansible-playbook playbooks/site.yaml --limit kvatch --tags fstrim
+ansible-playbook playbooks/site.yaml --limit kvatch --tags fstrim   # maintenance, on demand
+ansible-playbook playbooks/site.yaml --limit kvatch \
+  -e rotate_terraform_token=true                                    # rotate the API token
 ```
 
-`make check LIMIT=kvatch` (no `--tags fstrim`) shows zero fstrim-related tasks
-in its output — confirmed empirically, not just asserted from the tag
-semantics.
+## Variables
 
-### Measured result the first time this ran
+| Variable | Default | Notes |
+|---|---|---|
+| `terraform_user` | `terraform@pve` | |
+| `terraform_role` | `Terraform` | |
+| `terraform_role_privs` | see `group_vars/proxmox.yaml` | the exact priv-list, enforced |
+| `rotate_terraform_token` | `false` | `true` removes and reissues |
+| `pve_repositories`, `pve_suite`, `pve_signing_key` | `group_vars/proxmox.yaml` | |
+| `root_authorized_keys` | `group_vars/proxmox.yaml` | |
+| `resolv_fallback_nameservers` | `[1.1.1.1]` | |
 
-Every running container reclaimed real space; CT 100 (the pihole container,
-which had accumulated the most cruft) dropped from **59.17% to 40.17%**
-thin-pool `data_percent`. Every other running container also dropped by a
-smaller amount, confirming the mechanism works fleet-wide and isn't specific
-to whichever container happened to be tested. Reproduce the measurement with:
+The Terraform token secret is written straight into `proxmox.sops.yaml` with `sops set`, and
+the tasks that touch it are `no_log`. The role bootstraps an encrypted secrets file if none
+exists.
 
-```bash
-ssh root@192.168.1.101 'lvs --noheadings -o lv_name,data_percent pve | grep vm-'
-```
+## Invariants
+
+- **`fstrim` must keep `[fstrim, never]` and nothing else.** Naming *any* tag on a
+  `never`-tagged task activates it, so adding a role tag here would make
+  `--tags proxmox_host` run thin-pool reclaim across every container.
+- **Reclaim only works by entering the container's mount namespace.** `nsenter -t <pid> -m --
+  fstrim /`, with the pid from `lxc-info -n <vmid> -p -H`. Three plausible alternatives all
+  fail: `fstrim` inside an unprivileged LXC gets `FITRIM ioctl failed: Operation not
+  permitted`; `fstrim` against the container's rootfs path on the host trims the *host's*
+  filesystem; and the host's `fstrim.timer` only walks mounts visible in the host namespace,
+  so it never reclaims a running container's blocks no matter how long it has been enabled.
+- **`fstrim.yaml` filters `pct list` to `running` first.** A stopped container has no init
+  pid to enter, and `nsenter` fails closed on a malformed value rather than falling through
+  to host pid 1.
+- **`ssh_keys.yaml` uses `exclusive: false`** — it only adds, never prunes keys it does not
+  know about.
+- The Proxmox API token cannot set container feature flags or bind mounts; `terraform@pve`
+  gets a 403 on both. That is why those go through `pct set` in `music_storage` rather than
+  Terraform.
+
+Rationale and the measured reclaim result: `.dev/docs/ansible/proxmox_host.md`.
