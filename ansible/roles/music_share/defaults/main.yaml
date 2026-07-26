@@ -4,3 +4,4 @@ music_gid: 1500
 music_share_name: music
 music_smb_user: phill
 music_smb_workgroup: WORKGROUP
+music_smb_reset_password: false

@@ -29,13 +29,14 @@
   check_mode: false
 
 - name: Set the Samba password
-  ansible.builtin.shell:
-    cmd: >-
-      set -o pipefail &&
-      printf '%s\n%s\n' '{{ music_smb_password }}' '{{ music_smb_password }}'
-      | smbpasswd -s -a {{ music_smb_user }}
-    executable: /bin/bash
-  when: music_pdbedit.rc != 0
+  ansible.builtin.command:
+    argv:
+      - smbpasswd
+      - -s
+      - -a
+      - "{{ music_smb_user }}"
+    stdin: "{{ music_smb_password }}\n{{ music_smb_password }}\n"
+  when: music_pdbedit.rc != 0 or music_smb_reset_password | bool
   changed_when: true
   no_log: true
 
