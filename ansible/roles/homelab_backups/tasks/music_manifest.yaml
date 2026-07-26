@@ -20,6 +20,8 @@
     path:
       - /etc/samba/smb.conf
       - "{{ music_syncthing_config_dir | default('/var/lib/syncthing/.local/state/syncthing') }}/config.xml"
+      - "{{ music_syncthing_config_dir | default('/var/lib/syncthing/.local/state/syncthing') }}/key.pem"
+      - "{{ music_syncthing_config_dir | default('/var/lib/syncthing/.local/state/syncthing') }}/cert.pem"
       - "{{ music_container_mount }}/.state/museek/museek.db"
     dest: /tmp/music-config.tar.gz
     format: gz

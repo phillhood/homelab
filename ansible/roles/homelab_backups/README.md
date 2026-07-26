@@ -103,10 +103,14 @@ committed. If it ever needs to go offsite, `age`-encrypt it first.
 The music config archive (`.dev/music-backups/config-*.tar.gz`) does contain secrets, and
 the rule governing it is narrower than "no credentials in backups".
 
-**The rule is: never duplicate a sops-managed secret in cleartext.** Syncthing's
-`config.xml` carries its own credentials — a bcrypt GUI password hash and a plaintext
-REST `<apikey>` — and is kept anyway, because that state is irreplaceable and exists
-nowhere else. It is the same trade already accepted for OPNsense's `config.xml` above.
+**The rule is: never duplicate a sops-managed secret in cleartext.** The archive holds
+Syncthing's identity and config, not just its config: `config.xml` carries its own
+credentials — a bcrypt GUI password hash and a plaintext REST `<apikey>` — and `key.pem`
+(with `cert.pem`) is the device's private key, the thing that makes its device ID
+(`Q6WY5F5-…`) reproducible. All three are kept anyway, because that state is irreplaceable
+and exists nowhere else — restoring `config.xml` onto a rebuilt container without `key.pem`
+generates a new keypair and a new device ID, and every paired client rejects it until it is
+re-paired by hand. It is the same trade already accepted for OPNsense's `config.xml` above.
 The rendered `docker-compose.yml` is excluded because it fails the rule twice over: it is
 byte-for-byte regenerable from `music_stack/templates/docker-compose.yml.j2` plus vars
 already sops-encrypted in git, so archiving it recovers nothing, and doing so would put
