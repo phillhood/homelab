@@ -14,3 +14,7 @@
 - name: Configure Terraform service account
   ansible.builtin.import_tasks: terraform_user.yaml
   tags: [terraform-user]
+
+- name: Reclaim thin-pool blocks
+  ansible.builtin.import_tasks: fstrim.yaml
+  tags: [fstrim, never]

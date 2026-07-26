@@ -1,0 +1,19 @@
+---
+- name: List running containers
+  ansible.builtin.command: pct list
+  register: pct_running
+  changed_when: false
+  check_mode: false
+
+- name: Reclaim thin-pool blocks from each running container
+  ansible.builtin.shell: >-
+    set -o pipefail;
+    pid=$(lxc-info -n {{ item }} -p -H) &&
+    nsenter -t "$pid" -m -- fstrim /
+  args:
+    executable: /bin/bash
+  loop: >-
+    {{ pct_running.stdout_lines[1:]
+       | map('split') | selectattr('1', 'eq', 'running')
+       | map(attribute=0) | list }}
+  changed_when: true
