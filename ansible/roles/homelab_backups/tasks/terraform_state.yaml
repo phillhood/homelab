@@ -1,0 +1,87 @@
+---
+- name: Ensure the local Terraform backup dir exists
+  ansible.builtin.file:
+    path: "{{ backup_terraform_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: Confirm the Terraform state file exists
+  ansible.builtin.stat:
+    path: "{{ backup_terraform_state }}"
+  register: tfstate
+
+- name: Fail if the state file is missing
+  ansible.builtin.assert:
+    that: tfstate.stat.exists
+    fail_msg: >-
+      {{ backup_terraform_state }} not found. Either the local backend has moved
+      or terraform has never run in this environment.
+
+- name: Copy the state file
+  ansible.builtin.copy:
+    src: "{{ backup_terraform_state }}"
+    dest: "{{ backup_terraform_dir }}/terraform-{{ ansible_date_time.iso8601_basic_short }}.tfstate"
+    mode: "0600"
+    remote_src: true
+
+- name: Copy Terraform's own previous-state file
+  ansible.builtin.copy:
+    src: "{{ backup_terraform_state }}.backup"
+    dest: "{{ backup_terraform_dir }}/terraform-{{ ansible_date_time.iso8601_basic_short }}.tfstate.backup"
+    mode: "0600"
+    remote_src: true
+  when: (backup_terraform_state ~ '.backup') is exists
+
+- name: Derive the container import commands from the state
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -c
+      - |
+        import json, sys
+        state = json.load(open(sys.argv[1]))
+        for res in state.get("resources", []):
+            if res.get("type") != "proxmox_virtual_environment_container":
+                continue
+            module = res.get("module", "")
+            addr = f"{module + '.' if module else ''}{res['type']}.{res['name']}"
+            for inst in res.get("instances", []):
+                attr = inst.get("attributes", {})
+                print(f"terraform import '{addr}' {attr.get('node_name')}/{attr.get('vm_id')}")
+      - "{{ backup_terraform_state }}"
+  register: tf_imports
+  changed_when: false
+  check_mode: false
+
+- name: Write the recovery script alongside the snapshot
+  ansible.builtin.copy:
+    content: |
+      #!/usr/bin/env bash
+      # Rebuild Terraform state for terraform/environments/kvatch after losing
+      # terraform.tfstate.
+      #
+      # Generated: {{ ansible_date_time.iso8601 }}
+      # From state serial: {{ (lookup('file', backup_terraform_state) | from_json).serial }}
+      #
+      # Restoring the .tfstate snapshot from this directory is the first choice and
+      # needs none of this. These imports are the fallback when no snapshot is
+      # usable: they re-attach the existing containers to a fresh state file so
+      # terraform stops trying to create VMIDs that already exist.
+      #
+      # Run from terraform/environments/kvatch. Verify with a plan afterwards —
+      # "No changes" means the state matches reality.
+      set -euo pipefail
+      {% for line in tf_imports.stdout_lines %}
+      {{ line }}
+      {% endfor %}
+      terraform plan
+    dest: "{{ backup_terraform_dir }}/restore-imports-{{ ansible_date_time.iso8601_basic_short }}.sh"
+    mode: "0700"
+
+- name: Report what was captured
+  ansible.builtin.debug:
+    msg: >-
+      Terraform state serial
+      {{ (lookup('file', backup_terraform_state) | from_json).serial }},
+      {{ tf_imports.stdout_lines | length }} container(s) importable,
+      {{ (tfstate.stat.size / 1024) | round(1) }} KB

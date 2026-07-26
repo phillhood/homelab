@@ -3,6 +3,8 @@ backup_pihole_dir: "{{ playbook_dir }}/../../.dev/pihole-backups"
 backup_opnsense_dir: "{{ playbook_dir }}/../../.dev/opnsense-backups"
 backup_music_dir: "{{ playbook_dir }}/../../.dev/music-backups"
 backup_forgejo_dir: "{{ playbook_dir }}/../../.dev/forgejo-backups"
+backup_terraform_dir: "{{ playbook_dir }}/../../.dev/terraform-backups"
+backup_terraform_state: "{{ playbook_dir }}/../../terraform/environments/kvatch/terraform.tfstate"
 backup_retention: 14
 opnsense_host: 192.168.1.1
 
@@ -17,3 +19,9 @@ backup_prune_targets:
     patterns: ["config-*.tar.gz"]
   - path: "{{ backup_forgejo_dir }}"
     patterns: ["forgejo-dump-*.zip"]
+  - path: "{{ backup_terraform_dir }}"
+    patterns: ["terraform-*.tfstate"]
+  - path: "{{ backup_terraform_dir }}"
+    patterns: ["terraform-*.tfstate.backup"]
+  - path: "{{ backup_terraform_dir }}"
+    patterns: ["restore-imports-*.sh"]

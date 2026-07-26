@@ -127,17 +127,58 @@ for weeks. Force it against a low limit and confirm it deletes the oldest:
 ansible-playbook playbooks/backups.yaml --tags rotate -e backup_retention=2
 ```
 
+## Terraform state
+
+`terraform.tfstate` uses a local backend (`terraform/backend.tf`) and is gitignored, so it
+existed in exactly one place on one machine. Losing it does not lose the containers — it
+loses the *mapping* between the config and the five live VMIDs, after which
+`terraform apply` tries to create CT 100–104 and errors because they already exist.
+
+Each run captures three files:
+
+| File | Purpose |
+|---|---|
+| `terraform-<ts>.tfstate` | the state itself — the restore path |
+| `terraform-<ts>.tfstate.backup` | Terraform's own previous-state file, one apply behind |
+| `restore-imports-<ts>.sh` | generated `terraform import` commands, one per container |
+
+The recovery script is **generated from the state at capture time**, not hand-maintained,
+so it cannot drift out of step with the container set. It is the fallback for when no
+snapshot is usable; restoring the `.tfstate` needs none of it.
+
+This play runs on `localhost` with `connection: local`, because unlike every other series
+here the source file is already on the controller.
+
+`make backup-terraform` captures only this series.
+
 ## Restore
 
 - **Pi-hole:** import the Teleporter `.zip` — Settings → Teleporter in the web UI, or
   `pihole-FTL --teleporter <file>` on the host. The `pihole` role can also seed a fresh
   install with `-e pihole_teleporter_archive=/abs/path/to/archive.zip`.
 - **OPNsense:** System → Configuration → Backups → Restore, upload the `config.xml`.
+- **Terraform:** copy the newest `terraform-<ts>.tfstate` to
+  `terraform/environments/kvatch/terraform.tfstate`, then `make tf-plan` — `No changes`
+  confirms it matches reality. If no snapshot is usable, run the matching
+  `restore-imports-<ts>.sh` from `terraform/environments/kvatch` instead, which rebuilds
+  the mapping by importing each existing container.
 
 ## Sensitivity
 
 `config.xml` contains secrets in cleartext. It stays in gitignored `.dev/` and is never
 committed. If it ever needs to go offsite, `age`-encrypt it first.
+
+**The Terraform state carries no secret, and that was measured rather than assumed.** All
+five `initialization.password` fields are empty strings — the module provisions containers
+with SSH keys only, and `ssh_public_keys` are public by definition. So the state passes the
+rule below trivially: it duplicates nothing sops manages, and it is irreplaceable. It is
+still written `0600`, defensively.
+
+That status is **contingent on staying key-only**. The moment anyone sets a root password
+in `terraform/modules/proxmox-lxc`, `terraform.tfstate` starts carrying it in cleartext,
+`backup_retention` multiplies it by 14, and this series needs the same treatment as
+`config.xml`. Re-check with `python3 -c` over the state rather than grepping for the key
+name — the field is always *present*, which is what makes a grep misleading.
 
 The music config archive (`.dev/music-backups/config-*.tar.gz`) does contain secrets, and
 the rule governing it is narrower than "no credentials in backups".

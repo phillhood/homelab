@@ -15,6 +15,10 @@
   ansible.builtin.import_tasks: forgejo_dump.yaml
   tags: [forgejo]
 
+- name: Terraform state backup
+  ansible.builtin.import_tasks: terraform_state.yaml
+  tags: [terraform]
+
 - name: Prune old backups
   ansible.builtin.import_tasks: rotate.yaml
   tags: [rotate]

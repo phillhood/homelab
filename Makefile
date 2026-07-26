@@ -137,7 +137,7 @@ preflight: lint backup check ## The safe path: lint, take a backup, then show wh
 ##@ Backups (your revert path)
 
 .PHONY: backup
-backup: ## Capture Pi-hole Teleporter + OPNsense config.xml
+backup: ## Capture every series: Pi-hole, OPNsense, music, Forgejo, Terraform state
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS)
 
 .PHONY: backup-pihole
@@ -156,9 +156,13 @@ backup-music: ## Capture only the music library manifest
 backup-forgejo: ## Capture only the Forgejo dump
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags forgejo
 
+.PHONY: backup-terraform
+backup-terraform: ## Capture only the Terraform state + its recovery script
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags terraform
+
 .PHONY: backups-list
 backups-list: ## Show captured backups, newest last
-	@find .dev/pihole-backups .dev/opnsense-backups .dev/music-backups .dev/forgejo-backups -type f 2>/dev/null \
+	@find .dev/pihole-backups .dev/opnsense-backups .dev/music-backups .dev/forgejo-backups .dev/terraform-backups -type f 2>/dev/null \
 		-printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\n' | sort || echo "no backups yet — run: make backup"
 
 ##@ Terraform
