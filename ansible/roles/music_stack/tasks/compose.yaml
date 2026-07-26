@@ -1,4 +1,16 @@
 ---
+- name: Assert the Soulseek credentials are configured
+  ansible.builtin.assert:
+    that:
+      - slskd_soulseek_username != 'FILL_ME'
+      - slskd_soulseek_password != 'FILL_ME'
+    fail_msg: >-
+      Soulseek credentials in music.sops.yaml are still placeholders. Refusing to deploy.
+      Soulseek claims an unused username on first login, so starting slskd with these
+      would register a live public account on the real network. Set them with:
+      sops ansible/inventory/group_vars/music.sops.yaml
+    success_msg: "Soulseek credentials configured."
+
 - name: Create the stack directory
   ansible.builtin.file:
     path: "{{ music_stack_dir }}"
