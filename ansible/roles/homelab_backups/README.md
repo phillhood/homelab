@@ -54,8 +54,13 @@ ansible-playbook playbooks/backups.yaml --tags opnsense
 ansible-playbook playbooks/backups.yaml --tags rotate
 ```
 
-Writes timestamped backups into `.dev/pihole-backups/` and `.dev/opnsense-backups/`,
-then keeps the newest `backup_retention` (default 14) in each.
+Writes timestamped backups into `.dev/pihole-backups/`, `.dev/opnsense-backups/`, and
+`.dev/music-backups/`. Retention is per *series*, not per directory: `.dev/music-backups/`
+holds two independent series written every run (`manifest-*.tsv.gz` and
+`config-*.tar.gz`), each pruned to the newest `backup_retention` (default 14) on its own —
+so that directory ends up with up to `2 * backup_retention` files, not `backup_retention`.
+`rotate.yaml` prunes per `(directory, pattern)` pair, driven by `backup_prune_targets` in
+`defaults/main.yaml`, for exactly this reason.
 
 **This role is `changed` on every run by design** — a backup that never changes is
 broken. It is the one role where `changed=0` is not the goal.
