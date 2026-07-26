@@ -23,24 +23,45 @@ on an undefined `rc` rather than reporting the block as skipped.
 - To rebuild the VM template, destroy the old one first: `qm destroy 9000` (Terraform
   clones are full copies, so existing guests are unaffected), then re-run the role.
 
-### The LXC pin is coupled to Terraform — read before bumping
+### The LXC pin was coupled to Terraform — that coupling is now broken
 
-`pveam` only serves the current point release. On 2026-07-25 the pin moved
-`13.1-2` → `13.6-1` because `13.1-2` had aged out of the catalog and a fresh node
-could no longer download it.
+`pveam` only ever serves the current point release. On 2026-07-25 the pin moved
+`13.1-2` → `13.6-1` because `13.1-2` had aged out of the catalog and a fresh node could no
+longer download it.
 
-`terraform/environments/kvatch/pihole.tf` still references `13.1-2`, deliberately.
-Changing `template_file_id` on an existing container **forces replacement** — verified
-with `terraform plan`, which reported `1 to add, 1 to destroy` against the running
-Pi-hole. Since CT 100 serves DNS for the whole network, that is not a passive edit.
+That used to be a live problem. Changing `template_file_id` on an existing container
+**forces replacement** — measured as `1 to add, 1 to destroy` against the running Pi-hole —
+so the environment files were left pinned to `13.1-2` while this role installed `13.6-1`.
+That divergence meant a **fresh node rebuild would fail**: the role would install `13.6-1`
+while `pihole.tf` asked for a tarball that no longer exists upstream.
 
-Consequences to keep in mind:
+**Resolved 2026-07-26** by adding `operating_system[0].template_file_id` to the module's
+`ignore_changes` — see `terraform/modules/proxmox-lxc/README.md` for the measurements. All
+five environment files now reference `13.6-1` and `terraform plan` reports **No changes**.
 
-- **Existing node:** safe. `13.1-2` is still on disk, so Terraform stays satisfied even
-  though the tarball is no longer downloadable.
-- **Fresh node rebuild:** this role installs `13.6-1`, but `pihole.tf` asks for `13.1-2`,
-  which cannot be fetched — the Pi-hole deploy would fail at the Terraform layer.
+The earlier plan recorded here — rebuild Pi-hole onto the newer template, restoring gravity
+from a Teleporter export — is **no longer necessary** and should not be attempted for this
+reason. Read `template_file_id` as *the template to use if this container is ever created*,
+not a record of what it was built from.
 
-Resolving that means deliberately rebuilding Pi-hole onto the newer template: take a
-Teleporter export first (`homelab_backups`), update `pihole.tf`, apply, then restore
-gravity and settings from the archive.
+### This role never prunes, so old templates accumulate
+
+`lxc_template.yaml` downloads `lxc_template_name` when absent and does nothing else. It has
+no `state: absent` path, so every point-release bump leaves the previous tarball on disk
+(~124 MB each) until removed by hand.
+
+Removing an old one is safe once nothing references it, and this is worth checking rather
+than assuming:
+
+```bash
+rg 'debian-13-standard' terraform/environments/*/*.tf   # nothing should name the old one
+ssh root@192.168.1.101 'pveam list local'
+ssh root@192.168.1.101 'pveam remove local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst'
+```
+
+Nothing at runtime needs it — `pct config` holds no reference to the source template, and a
+container's rootfs is an independent LV populated once at creation. Terraform state still
+carries the old value for pre-existing containers and cannot refresh it, which is inert.
+
+**Removal is one-way.** `pveam available` no longer lists superseded point releases, so a
+deleted old template cannot be re-downloaded.
