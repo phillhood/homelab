@@ -145,6 +145,13 @@ bypasses it, so manual management from the host works normally.
 
 If the container sees `nobody:nogroup`, the host-side ownership is what to fix.
 
+`music_host_gid: 101500` here is the 100000-shifted form of the container-side
+`music_gid` (defined in `inventory/group_vars/music.yaml`, defaulted again in
+`music_stack` and `music_share`), not a value this role derives from it. **The two are
+not wired together** — this role does not reference `music_gid` at all. Changing one
+without the other leaves the host tree owned by a GID that no longer maps to `music`
+inside the container.
+
 ## Run order on first build
 
 The bind mount needs both the host directory and the container to exist:
