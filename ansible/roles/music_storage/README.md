@@ -187,10 +187,60 @@ message when CT 101 does not exist yet, so a full run stays green before Terrafo
 
 ## fstab options
 
-`defaults,noatime,nofail,x-systemd.device-timeout=15`
+`defaults,noatime,nofail,x-systemd.device-timeout={{ music_device_timeout }}` — 60 by default.
 
-`nofail` and the short device timeout are not optional on a hot-pluggable external disk —
-without them an unplugged enclosure drops `kvatch` into emergency mode at boot instead of
-booting. On Thunderbolt this matters more than it would on USB, because the disk is also
-absent whenever enrollment has not been applied, not only when the cable is out.
-`noatime` avoids a metadata write per file read.
+`nofail` is not optional on a hot-pluggable external disk — without it an unplugged
+enclosure drops `kvatch` into emergency mode at boot instead of booting, and this host
+serves the household's DNS. On Thunderbolt this matters more than it would on USB, because
+the disk is also absent whenever enrollment has not been applied, not only when the cable
+is out. `noatime` avoids a metadata write per file read.
+
+The timeout was raised from 15 s to 60 s once CT 101 stopped depending on a fast boot
+(below). `boltd` is `Type=dbus` and `static`, so it cannot be enabled to run earlier — it
+is activated on demand, and how quickly it authorises the tunnel on a cold boot is a race
+nobody controls. Waiting longer is now free.
+
+## CT 101 refuses to start unless the disk is really mounted
+
+`nofail` means a missing disk is **silent**: the host boots clean, `/mnt/music` is an empty
+directory, and nothing is marked failed. Without a guard, CT 101 then starts against that
+empty directory — museek writes into `kvatch`'s root filesystem, and Syncthing, which is
+Send Only from the NAS, sees an empty library. That is the worst failure shape in this
+design, because everything looks healthy.
+
+`container_mount.yaml` therefore drops in
+`/etc/systemd/system/pve-container@101.service.d/require-music-mount.conf`:
+
+```ini
+[Unit]
+RequiresMountsFor=/mnt/music
+
+[Service]
+ExecStartPre=/usr/bin/mountpoint -q /mnt/music
+```
+
+Mount present, container starts normally. Mount absent, the container **refuses to start**
+and says why:
+
+```
+Active: failed (Result: exit-code)
+Process: ExecStartPre=/usr/bin/mountpoint -q /mnt/music (code=exited, status=32)
+```
+
+Both `systemctl start` and `pct start` are blocked — PVE's tooling shells out to systemd, so
+there is no bypass. Recovery is `pct start 101` once the disk is back.
+
+### `RequiresMountsFor` alone does NOT block — do not remove the ExecStartPre
+
+This was measured, not assumed, and the obvious "simplification" is wrong.
+
+`RequiresMountsFor` expands into `Requires=` and `After=` on `mnt-music.mount`, and
+`systemctl show` confirms both are present. It still does not prevent the start. Tested
+against a standalone probe unit with the mount stopped **and masked**, with and without
+`DefaultDependencies=no`: `systemctl start` returned **exit 0** every time. The journal
+shows the container starting first and the mount being pulled in a second later.
+
+`RequiresMountsFor` is kept because it is the correct ordering declaration and it usefully
+*repairs* the common case — if the device is present but simply unmounted, starting the
+container mounts it first. `ExecStartPre` is what actually enforces the invariant. Removing
+it restores the silent-failure bug while leaving a line that looks like it prevents it.

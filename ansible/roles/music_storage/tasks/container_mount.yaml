@@ -53,3 +53,31 @@
   notify:
     - Restart the music container
     - Wait for the music container to accept connections
+
+- name: Create the container unit drop-in directory
+  ansible.builtin.file:
+    path: "/etc/systemd/system/pve-container@{{ music_container_id }}.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Require the music mount before the container may start
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      RequiresMountsFor={{ music_host_mount }}
+
+      [Service]
+      ExecStartPre=/usr/bin/mountpoint -q {{ music_host_mount }}
+    dest: >-
+      /etc/systemd/system/pve-container@{{ music_container_id }}.service.d/require-music-mount.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: music_ct_dropin
+
+- name: Reload systemd so the drop-in takes effect
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  changed_when: false

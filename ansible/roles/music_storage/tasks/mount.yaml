@@ -31,7 +31,7 @@
     path: "{{ music_host_mount }}"
     src: "UUID={{ music_disk_uuid }}"
     fstype: ext4
-    opts: defaults,noatime,nofail,x-systemd.device-timeout=15
+    opts: "defaults,noatime,nofail,x-systemd.device-timeout={{ music_device_timeout }}"
     dump: "0"
     passno: "2"
     state: mounted
