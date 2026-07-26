@@ -19,4 +19,6 @@
     - downloads
     - downloads/incomplete
     - downloads/complete
+    - .state
+    - .state/museek
     - .meta
