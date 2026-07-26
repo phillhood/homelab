@@ -10,7 +10,7 @@
       - music_backup_script_stat.stat.exists
     fail_msg: >-
       {{ music_backup_script }} is missing. It is installed by the
-      music_storage role — run `make apply`, or the musicbackup tag, first.
+      music_storage role — run `make apply`, or the music-backup tag, first.
     quiet: true
 
 - name: Back up the music content

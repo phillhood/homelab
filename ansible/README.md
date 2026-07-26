@@ -49,6 +49,12 @@ simplification and is not.
 
 - Role names use underscores. `tasks/main.yaml` is a thin tagged dispatcher, so
   `--tags <concern>` runs one slice.
+- Every role carries a tag matching its own name, so `--tags forgejo` or
+  `--tags proxmox_host` runs that role and nothing else. Multi-word *concern* tags are
+  hyphenated (`bind-mount`, `ssh-keys`, `music-backup`); role tags keep the role's
+  underscores. **Never put a role tag on a `never`-tagged task** — naming any tag on a
+  `never` task activates it, so `fstrim` carries only `[fstrim, never]`. A role tag there
+  would make `--tags proxmox_host` trigger thin-pool reclaim across every container.
 - **No explanatory comments in config.** Task names state what the task does; rationale
   goes in documentation. That applies to task names, play names and assert messages too —
   no parenthetical asides.
@@ -86,9 +92,19 @@ upstream-documented install method.
 **`var-naming[no-role-prefix]`** — the rule wants every role variable prefixed with the
 full role name (`debian_lxc_base_base_packages`). These roles are private and never
 published, the variables already carry meaningful namespaces (`pve_`, `lxc_`, `backup_`,
-`pihole_`), and the prefixed forms read materially worse. Revisit this if a role is ever
-published or if two roles targeting the same host start sharing variable names — the
-collision risk the rule guards against is real, it just isn't present here.
+`zot_`, `caddy_`), and the prefixed forms read materially worse.
+
+The collision this rule guards against does exist here: `music_share` and `music_stack`
+both run on `music1` and both declare `music_gid` and `music_container_mount`. That is
+deliberate, and it is why `inventory/group_vars/music_common.yaml` exists — the group var
+is the shared truth for both sides of the bind mount, and the role defaults are
+standalone-run fallbacks that it overrides. The sharing is centralised and visible rather
+than accidental, which is the property the rule is a proxy for.
+
+Revisit if a role is ever published, or if two roles ever pick *different* names for the
+same value — that happened once, with `backup_music_script` against `music_backup_script`,
+and a role prefix would not have caught it either. The real guard is one definition per
+value, which the Conventions section above states directly.
 
 ## Toolchain
 

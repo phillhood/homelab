@@ -10,6 +10,7 @@ slskd_soulseek_username: ENC[AES256_GCM,data:cSx+1rK5wB8PIHe0mMw8hH8=,iv:YqQnkjq
 slskd_soulseek_password: ENC[AES256_GCM,data:nA/cKj2q2S/Dv0vdgLxGWazgUI9X2LXh,iv:ckNsTZq1bgfYiWllETQ9/ksU8qNU8IS+LiyAjYfYAVU=,tag:/RfJRH0V/gSLcExz0m4usw==,type:str]
 museek_discord_token: ENC[AES256_GCM,data:8WtrqvkZErVZzu/4kDxkyDelAnd4x876+/IGiIOu2baN4RQODcsS07mryfLSXQhffqtlL5j1RgDD8bxSIjNT3nfYH9FAJBQA,iv:xVXNq2yUmeBSMIDFgjNbZxReH70iqXPFnMWeqRi4PIY=,tag:3PswMH9TlBKWfZmjWOz4+A==,type:str]
 museek_discord_guild_id: ENC[AES256_GCM,data:txgvJj4CAaQsjJomZgrBMsm7mA==,iv:P6k0hJvV20s2ap/0WwFnn9JCSe16vYScz0FhPFpyB24=,tag:fH02B31CCzGXPluSaV4taQ==,type:str]
+museek_discord_channel_id: ENC[AES256_GCM,data:HKywG7SFcG7ibHXIPoxFlxhkHw==,iv:UfiBVwLbEm3AEV9HoGG+wIQ6a+eILQ6vJvGrnGbUX9k=,tag:AR1q0FO2Lqns97r8qmULQQ==,type:str]
 sops:
     age:
         - enc: |
@@ -21,7 +22,7 @@ sops:
             wy1O/JWTETKk2gzKxpkqzminkCQGIXDFuFfP4Dkl2ohXnQi58iiqtg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1gt9v3qjej3vuykjydqv9amhsjucanjwwtt4w8fkf5thyssrdeuus5ke3rx
-    lastmodified: "2026-07-26T11:42:57Z"
-    mac: ENC[AES256_GCM,data:TNRLIdvazE2KGQFa0QgH8BKQNYVihlukrFY4E925zw5ZRlPqf/Vi/tyAiHcSYofoCe+ORdXS1/djS8YuH2PgLwKnfbS1StWfaoC/UD63eX5iOffxjjeBdD5uQs6qvwMp7TaRPJNE3m0QcCkrxiwJF7f069Sf0y2CNbU7Oe7H0Cs=,iv:i/PlEUtYbikozkoSTmHHZdk1kbxNNp6Oh1kOUhl47Pc=,tag:sQ08YRXeJ5WjSREWhtjnTQ==,type:str]
+    lastmodified: "2026-07-26T15:51:48Z"
+    mac: ENC[AES256_GCM,data:famDCU1uQuJ5IKnIPmOD42H7/Wj0wEk22rSiamwEA4MfU7x1nWQr3ESePXO4Kbj//KmIb7thtON4+45bCiUsUkqK3xeWFOuuhovQBiBXBrR1PZpROL+/dI7ir1gWTOrV3R6oyqS1qqwjLhtLAS3SDtANhygteDx/XaqqEXsYE7E=,iv:HYGmgbjHVrWpdy1iaXGmW2MHKR3RuMuT3idToUGmi00=,tag:TEVsrcs9rwCoGERiscwaxQ==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.2

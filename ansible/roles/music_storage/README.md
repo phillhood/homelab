@@ -12,10 +12,10 @@ container.
 - `mount.yaml` — fstab entry by UUID, then mount.
 - `layout.yaml` — `library/`, `downloads/{incomplete,complete}/`, `.state/museek/`, `.meta/`, owned
   `100000:101500`, mode `2775`.
-- `container_mount.yaml` — `pct set` for `features` and `mp0`. Tagged `bindmount`,
+- `container_mount.yaml` — `pct set` for `features` and `mp0`. Tagged `bind-mount`,
   deliberately outside the `storage` tag.
 - `backup.yaml` — restic, the repository, `/usr/local/sbin/music-backup`, and the timer
-  that runs it. Tagged `musicbackup`.
+  that runs it. Tagged `music-backup`.
 
 ## Content backup
 
@@ -217,7 +217,7 @@ The bind mount needs both the host directory and the container to exist:
 ```bash
 ansible-playbook playbooks/music.yaml --tags storage   # TB enroll + disk + layout
 terraform -chdir=terraform/environments/kvatch apply   # create CT 101
-ansible-playbook playbooks/music.yaml --tags bindmount # attach, reboot CT
+ansible-playbook playbooks/music.yaml --tags bind-mount # attach, reboot CT
 ansible-playbook playbooks/music.yaml                  # everything
 ```
 

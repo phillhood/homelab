@@ -8,7 +8,7 @@
   ansible.builtin.debug:
     msg: >-
       CT {{ music_container_id }} not present. Run terraform apply,
-      then re-run with --tags bindmount.
+      then re-run with --tags bind-mount.
   when: not music_ct_conf_stat.stat.exists
 
 - name: Read the container config

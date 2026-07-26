@@ -9,7 +9,7 @@
 
 - name: Mount the music disk
   ansible.builtin.import_tasks: mount.yaml
-  tags: [hostmount, storage]
+  tags: [host-mount, storage]
 
 - name: Create the storage layout
   ansible.builtin.import_tasks: layout.yaml
@@ -17,8 +17,8 @@
 
 - name: Attach the container bind mount
   ansible.builtin.import_tasks: container_mount.yaml
-  tags: [bindmount]
+  tags: [bind-mount]
 
 - name: Install the content backup
   ansible.builtin.import_tasks: backup.yaml
-  tags: [musicbackup, storage]
+  tags: [music-backup, storage]

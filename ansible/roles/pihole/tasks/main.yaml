@@ -1,16 +1,16 @@
 ---
 - name: Install Pi-hole
   ansible.builtin.import_tasks: install.yaml
-  tags: [install]
+  tags: [install, pihole]
 
 - name: Seed gravity from Teleporter
   ansible.builtin.import_tasks: gravity.yaml
-  tags: [gravity]
+  tags: [gravity, pihole]
 
 - name: Apply Pi-hole configuration
   ansible.builtin.import_tasks: config.yaml
-  tags: [config]
+  tags: [config, pihole]
 
 - name: Set the web password
   ansible.builtin.import_tasks: password.yaml
-  tags: [password]
+  tags: [password, pihole]
