@@ -22,6 +22,7 @@ below), never here.
   not needed.
 - **No mount-unit masking.** Failed `dev-mqueue`/`run-lock`/`tmp` units are cosmetic;
   `/tmp` is writable. Masking `tmp.mount` breaks the Pi-hole installer's `/tmp` staging.
+  See "The nesting exception" below — CT 101 does not exhibit these at all.
 
 If `health.yaml` ever fails, revisit these — the asserts are the tripwire.
 
@@ -59,20 +60,25 @@ Docker, which needs `nesting=1` and `keyctl=1`. Those flags are set by
 `music_storage/tasks/container_mount.yaml` via `pct set`, not by this role and not by
 Terraform — the API token gets a 403 on feature flags.
 
-**Nesting eliminates the three failed mount units — it does not merely shift them.**
-Measured on identical Debian 13 templates on the same host:
+**Observed**, same Debian 13 template, same host:
 
 | Container | Features | Failed units |
 |---|---|---|
 | CT 100 `pihole` | none | 3 — `dev-mqueue.mount`, `run-lock.mount`, `tmp.mount` |
 | CT 101 `music` | `nesting=1,keyctl=1` | 0 |
 
-So `music` needs **no** `lxc_expected_failed_units` override. The role's default
-allowlist is a superset of what this container actually fails, and the assert still
-bites on anything new. This also qualifies the "no mount-unit masking" negative above:
-those failures are a consequence of running without nesting, not an inherent property
-of unprivileged LXC.
+**Not established: which flag is responsible.** Both were enabled together, so this is
+one paired observation with two variables changed at once. It does not show that
+`nesting=1` alone is sufficient, and the negatives above should not be read as
+overturned. To isolate it: `pct set 101 -features nesting=1`, reboot, re-check. Nobody
+has done that.
 
-If a future nesting container does fail a different set, override
-`lxc_expected_failed_units` per group in `inventory/group_vars/`, never in this role's
-defaults — widening the baseline would blind every container at once.
+What follows regardless of the cause: `music` needs **no** `lxc_expected_failed_units`
+override. The role's default allowlist is a superset of what this container actually
+fails, and a superset does not weaken the assert — `health.yaml` diffs the *actually
+failing* units against the allowlist, so entries that never fire suppress nothing and
+any genuinely new failure still trips it.
+
+If a future container does fail a different set, override `lxc_expected_failed_units`
+per group in `inventory/group_vars/`, never in this role's defaults — widening the
+baseline would blind every container at once.
