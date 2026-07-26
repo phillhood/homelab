@@ -6,3 +6,5 @@ music_app_image: ""
 music_slskd_image: slskd/slskd:0.26.0
 music_slskd_web_port: 5030
 music_slskd_listen_port: 2235
+music_museek_port: 8080
+museek_musicbrainz_contact: ""

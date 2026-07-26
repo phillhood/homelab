@@ -1,0 +1,39 @@
+---
+- name: Create the stack directory
+  ansible.builtin.file:
+    path: "{{ music_stack_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the slskd config directory
+  ansible.builtin.file:
+    path: "{{ music_stack_dir }}/slskd"
+    state: directory
+    owner: "{{ music_gid }}"
+    group: "{{ music_gid }}"
+    mode: "2775"
+
+- name: Deploy the compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ music_stack_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0640"
+  no_log: true
+  notify: Recreate the music stack
+
+- name: Bring the stack up
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ music_stack_dir }}/docker-compose.yml"
+      - up
+      - -d
+      - --remove-orphans
+  register: music_compose_up
+  changed_when: "'Started' in music_compose_up.stderr or 'Created' in music_compose_up.stderr"
