@@ -84,6 +84,34 @@ removed from the Pi-hole host after fetching, so `/tmp` doesn't accumulate.
 Export is bare `--teleporter`; **import is `--teleporter <file>`** — there is no
 `import` subcommand.
 
+## Forgejo dump
+
+`forgejo dump --skip-package-data` produces one zip holding the database
+(`forgejo-db.sql`, dumped straight from the socket-only PostgreSQL instance —
+`forgejo dump` reads the connection details, including the `/var/run/postgresql`
+socket path, straight out of `app.ini`), the repository tree (`repos/`), and
+everything under `APP_DATA_PATH` (`data/`) — avatars, indexers, queues, and the
+two files Forgejo self-provisions on first start that live nowhere in SOPS:
+
+- `data/ssh/gitea.rsa` — the SSH host key served on `:2222`. Lose it on a
+  rebuild and every client that has ever cloned over SSH gets a
+  host-key-changed warning.
+- `data/jwt/private.pem` — the OAuth2 RS256 signing key. Lose it and every
+  issued token is invalidated.
+
+Confirmed by listing the archive contents (`unzip -l`) rather than trusting the
+docs: both files are present, no extra steps needed.
+
+`--skip-package-data` only drops the container registry's blob store — the
+images it holds are rebuildable from source, and source is what the rest of
+the dump preserves, so excluding them keeps every archive small for no lost
+recovery value. An empty `data/tmp/package-upload/` staging directory shows up
+in the listing; that is not package data.
+
+The dump runs as `git` (no `sudo` on this host, hence `become_method: su`) and
+the `.zip` is fetched to `.dev/forgejo-backups/`, then deleted from the forge
+host's `/tmp` immediately after.
+
 ## Verifying rotation still works
 
 Retention only prunes once there are more backups than the limit, so it can sit unproven

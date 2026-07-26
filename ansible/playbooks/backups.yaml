@@ -23,6 +23,18 @@
           tags: [music]
       tags: [music]
 
+- name: Back up the Forgejo dump
+  hosts: forge
+  gather_facts: true
+  tasks:
+    - name: Run the Forgejo dump tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: forgejo_dump
+        apply:
+          tags: [forgejo]
+      tags: [forgejo]
+
 - name: Back up OPNsense config and rotate
   hosts: opnsense
   gather_facts: true

@@ -11,6 +11,10 @@
   ansible.builtin.import_tasks: music_manifest.yaml
   tags: [music]
 
+- name: Forgejo dump backup
+  ansible.builtin.import_tasks: forgejo_dump.yaml
+  tags: [forgejo]
+
 - name: Prune old backups
   ansible.builtin.import_tasks: rotate.yaml
   tags: [rotate]

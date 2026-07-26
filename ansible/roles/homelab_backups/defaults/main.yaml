@@ -2,6 +2,7 @@
 backup_pihole_dir: "{{ playbook_dir }}/../../.dev/pihole-backups"
 backup_opnsense_dir: "{{ playbook_dir }}/../../.dev/opnsense-backups"
 backup_music_dir: "{{ playbook_dir }}/../../.dev/music-backups"
+backup_forgejo_dir: "{{ playbook_dir }}/../../.dev/forgejo-backups"
 backup_retention: 14
 opnsense_host: 192.168.1.1
 
@@ -14,3 +15,5 @@ backup_prune_targets:
     patterns: ["manifest-*.tsv.gz"]
   - path: "{{ backup_music_dir }}"
     patterns: ["config-*.tar.gz"]
+  - path: "{{ backup_forgejo_dir }}"
+    patterns: ["forgejo-dump-*.zip"]

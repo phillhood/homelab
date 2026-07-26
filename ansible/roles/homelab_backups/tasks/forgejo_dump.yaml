@@ -1,0 +1,43 @@
+---
+- name: Ensure the local Forgejo backup dir exists
+  ansible.builtin.file:
+    path: "{{ backup_forgejo_dir }}"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+
+- name: Build the dump filename
+  ansible.builtin.set_fact:
+    forgejo_dump_name: "forgejo-dump-{{ ansible_date_time.iso8601_basic_short }}.zip"
+
+- name: Dump Forgejo without package data
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/forgejo
+      - dump
+      - --skip-package-data
+      - --file
+      - "/tmp/{{ forgejo_dump_name }}"
+      - --config
+      - "{{ forgejo_config_dir }}/app.ini"
+    chdir: /tmp
+  become: true
+  become_method: ansible.builtin.su
+  become_user: "{{ forgejo_user }}"
+  environment:
+    GITEA_WORK_DIR: "{{ forgejo_home }}"
+  register: forgejo_dump_run
+  changed_when: true
+
+- name: Fetch the dump to the control node
+  ansible.builtin.fetch:
+    src: "/tmp/{{ forgejo_dump_name }}"
+    dest: "{{ backup_forgejo_dir }}/"
+    flat: true
+  when: forgejo_dump_run is not skipped
+
+- name: Remove the dump from the forge host
+  ansible.builtin.file:
+    path: "/tmp/{{ forgejo_dump_name }}"
+    state: absent
+  when: forgejo_dump_run is not skipped
