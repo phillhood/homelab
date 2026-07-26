@@ -54,15 +54,16 @@ make rollback CT=104  # DESTRUCTIVE: stop, roll back, restart
 
 `apt dist-upgrade` has no undo, so an LVM snapshot is the only real way back from one. The
 music container cannot be snapshotted at all — it holds a host-path bind mount — so its
-contents are protected by a restic repository instead. The procedure is in
-`ansible/roles/debian_lxc_base/README.md`.
+contents are protected by a restic repository instead. Follow the per-container procedure in
+the notes rather than doing it from memory.
 
 ## Documentation
 
-Secrets live in `*.sops.yaml` and are decrypted at run time. Every role README carries an
-`## Invariants` list — read it before changing that role, since each entry is a trap that
-cost real time to find. `ansible/README.md` covers the playbook and role layout.
+Secrets live in `*.sops.yaml` and are decrypted at run time by the inventory plugin.
+`make secrets` confirms every file is encrypted before you commit anything.
 
-Everything else about this particular lab — hardware, network topology, the service
-inventory, the roadmap, the conventions the repo is written to, and the decision notes behind
-each role — is kept locally and backed up rather than committed.
+Documentation is not committed. Each role has a set of notes covering what it does, how to
+run it, the variables worth setting and an **Invariants** list — read a role's invariants
+before changing it, since each one is a trap that cost real time to find. The same applies
+to the hardware, network topology, service inventory, roadmap, and the conventions this repo
+is written to. All of it is kept locally and backed up.

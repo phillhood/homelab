@@ -10,7 +10,7 @@
     that: music_disk_stat.stat.exists
     fail_msg: >-
       {{ music_disk_by_id }} not found. Is the enclosure attached to
-      {{ inventory_hostname }}? See roles/music_storage/README.md.
+      {{ inventory_hostname }}? See the role notes.
     success_msg: "Music disk present."
 
 - name: Read the existing filesystem signature

@@ -79,5 +79,5 @@
     msg: >-
       {{ inventory_hostname }} wants a reboot. This role will not perform one.
       Rebooting CT 100 takes all LAN DNS down for 10-20s, because DHCP option 6
-      advertises 192.168.1.100 alone. See roles/debian_lxc_base/README.md.
+      advertises 192.168.1.100 alone. See the role notes.
   when: lxc_reboot_required.stat.exists

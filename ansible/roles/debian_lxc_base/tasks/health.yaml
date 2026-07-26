@@ -16,7 +16,7 @@
     that: lxc_unexpected_failed_units | length == 0
     fail_msg: >-
       Unexpected failed units: {{ lxc_unexpected_failed_units | join(', ') }}.
-      See roles/debian_lxc_base/README.md.
+      See the role notes.
     success_msg: "No unexpected failed units."
 
 - name: Check systemd-sysctl state
@@ -31,5 +31,5 @@
     that: lxc_sysctl.stdout == "active"
     fail_msg: >-
       systemd-sysctl is '{{ lxc_sysctl.stdout }}', expected 'active'.
-      See roles/debian_lxc_base/README.md.
+      See the role notes.
     success_msg: "systemd-sysctl active."

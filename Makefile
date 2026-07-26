@@ -217,7 +217,7 @@ snapshot: ## Snapshot a container before upgrading it (CT=104 [SNAP=preupgrade])
 		echo "  There is NO snapshot revert path for this container. Use vzdump"; \
 		echo "  (which skips bind mounts) or an app-level backup, and be aware"; \
 		echo "  that anything not reproduced by Ansible is unprotected."; \
-		echo "  See ansible/roles/debian_lxc_base/README.md."; \
+		echo "  See the debian_lxc_base role notes."; \
 		echo ""; \
 		exit 1; \
 	fi; \
