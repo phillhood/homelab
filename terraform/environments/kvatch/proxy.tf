@@ -4,7 +4,7 @@ module "proxy" {
   node_name        = "kvatch"
   vm_id            = 104
   hostname         = "proxy"
-  template_file_id = "local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst"
+  template_file_id = "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst"
   os_type          = "debian"
 
   ip_address = "192.168.1.105/24"

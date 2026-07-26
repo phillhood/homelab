@@ -165,6 +165,56 @@ backups-list: ## Show captured backups, newest last
 	@find .dev/pihole-backups .dev/opnsense-backups .dev/music-backups .dev/forgejo-backups .dev/terraform-backups -type f 2>/dev/null \
 		-printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\n' | sort || echo "no backups yet — run: make backup"
 
+##@ Snapshots (the revert path for guest OS upgrades)
+
+KVATCH_SSH := ssh -o BatchMode=yes root@$(KVATCH_IP)
+SNAP       ?= preupgrade
+_CT_NAME    = name=$$($(KVATCH_SSH) "pct config $(CT) 2>/dev/null | sed -n 's/^hostname: //p'"); \
+              test -n "$$name" || { echo "  CT '$(CT)' not found on $(KVATCH_IP) — run: make snapshots"; exit 1; }
+_NEED_CT    = @test -n "$(CT)" || { echo "  usage: make $@ CT=<vmid> [SNAP=$(SNAP)]"; echo ""; \
+              $(MAKE) --no-print-directory snapshots; exit 1; }
+
+.PHONY: snapshots
+snapshots: ## Show every container, its snapshots, and thin-pool headroom
+	@$(KVATCH_SSH) 'for id in $$(pct list | tail -n +2 | awk "{print \$$1}"); do \
+		printf "  CT %-5s %s\n" "$$id" "$$(pct config $$id | sed -n "s/^hostname: //p")"; \
+		pct listsnapshot $$id 2>/dev/null | sed "s/^/        /"; \
+	done; \
+	printf "\n  thin pool  %s\n" "$$(lvs --noheadings -o data_percent,metadata_percent pve/data | tr -s " ")"'
+
+.PHONY: snapshot
+snapshot: ## Snapshot a container before upgrading it (CT=104 [SNAP=preupgrade])
+	$(_NEED_CT)
+	@$(_CT_NAME); \
+	echo "  CT $(CT) ($$name) -> snapshot '$(SNAP)'"; \
+	$(KVATCH_SSH) "pct snapshot $(CT) $(SNAP)" && \
+	echo "  taken. revert with: make rollback CT=$(CT) SNAP=$(SNAP)"
+
+.PHONY: unsnapshot
+unsnapshot: ## Drop a snapshot once the upgrade is verified (CT=104 [SNAP=preupgrade])
+	$(_NEED_CT)
+	@$(_CT_NAME); \
+	echo "  CT $(CT) ($$name) -> dropping '$(SNAP)'. The revert path goes away."; \
+	$(KVATCH_SSH) "pct delsnapshot $(CT) $(SNAP)" && echo "  dropped."
+
+.PHONY: rollback
+rollback: ## DESTRUCTIVE: stop, roll back to snapshot, restart (CT=104 [SNAP=preupgrade])
+	$(_NEED_CT)
+	@$(_CT_NAME); \
+	echo ""; \
+	echo "  This STOPS CT $(CT) ($$name), DISCARDS every change since '$(SNAP)',"; \
+	echo "  and starts it again. Rollback cannot run against a live container."; \
+	if [ "$(CT)" = "100" ]; then \
+		echo ""; \
+		echo "  CT 100 is Pi-hole. DHCP advertises 192.168.1.100 as the only resolver,"; \
+		echo "  so ALL LAN DNS fails for the duration."; \
+	fi; \
+	echo ""; \
+	read -r -p "  Type the hostname ($$name) to confirm: " ans; \
+	test "$$ans" = "$$name" || { echo "  aborted — nothing changed."; exit 1; }; \
+	$(KVATCH_SSH) "pct stop $(CT) && pct rollback $(CT) $(SNAP) && pct start $(CT)" && \
+	echo "  rolled back. Give services a moment, then: make verify"
+
 ##@ Terraform
 
 .PHONY: tf-fmt

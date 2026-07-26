@@ -3,6 +3,10 @@
   ansible.builtin.import_tasks: packages.yaml
   tags: [packages]
 
+- name: Upgrade all packages
+  ansible.builtin.import_tasks: upgrade.yaml
+  tags: [upgrade, never]
+
 - name: Set timezone
   ansible.builtin.import_tasks: timezone.yaml
   tags: [timezone]

@@ -1,0 +1,84 @@
+---
+- name: Record the OS version before upgrading
+  ansible.builtin.slurp:
+    src: /etc/debian_version
+  register: lxc_version_before
+
+- name: Collect pending upgrades
+  ansible.builtin.command: apt-get --simulate --quiet dist-upgrade
+  register: lxc_pending
+  changed_when: false
+  check_mode: false
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Report what will change
+  ansible.builtin.debug:
+    msg: >-
+      {{ inventory_hostname }} at Debian
+      {{ lxc_version_before.content | b64decode | trim }} —
+      {{ lxc_pending.stdout_lines | select('match', '^Inst ') | list | length }}
+      package(s) to upgrade
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    upgrade: dist
+    update_cache: true
+    autoremove: true
+  register: lxc_upgrade
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Find systemd enablement symlinks whose unit no longer exists
+  ansible.builtin.command:
+    argv: [find, /etc/systemd/system, -path, "*.wants/*", -xtype, l]
+  register: lxc_dangling_units
+  changed_when: false
+  check_mode: false
+
+- name: Remove the stale enablement symlinks
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: "{{ lxc_dangling_units.stdout_lines }}"
+  notify:
+    - Reload systemd after removing stale units
+    - Reset failed units
+
+- name: Clear the failed state now, before anything reports on unit health
+  ansible.builtin.meta: flush_handlers
+
+- name: Record the OS version after upgrading
+  ansible.builtin.slurp:
+    src: /etc/debian_version
+  register: lxc_version_after
+
+- name: Check whether a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: lxc_reboot_required
+
+- name: Collect the services the upgrade left needing a restart
+  ansible.builtin.command: needrestart -b -r l
+  register: lxc_needrestart
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Report the outcome
+  ansible.builtin.debug:
+    msg: >-
+      {{ inventory_hostname }}:
+      {{ lxc_version_before.content | b64decode | trim }} ->
+      {{ lxc_version_after.content | b64decode | trim }}.
+      Reboot required: {{ lxc_reboot_required.stat.exists }}.
+      {{ 'needrestart not installed — install it for service-level detail'
+         if lxc_needrestart.rc != 0 else lxc_needrestart.stdout | default('') }}
+
+- name: Restate that a reboot is a separate, deliberate decision
+  ansible.builtin.debug:
+    msg: >-
+      {{ inventory_hostname }} wants a reboot. This role will not perform one.
+      Rebooting CT 100 takes all LAN DNS down for 10-20s, because DHCP option 6
+      advertises 192.168.1.100 alone. See roles/debian_lxc_base/README.md.
+  when: lxc_reboot_required.stat.exists
