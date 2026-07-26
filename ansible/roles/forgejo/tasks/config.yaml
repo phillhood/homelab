@@ -9,6 +9,9 @@
   no_log: true
   notify: Restart forgejo
 
+- name: Apply the restart now, not at end of play
+  ansible.builtin.meta: flush_handlers
+
 - name: Enable and start forgejo
   ansible.builtin.systemd_service:
     name: forgejo

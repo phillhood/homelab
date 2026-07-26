@@ -67,28 +67,26 @@ subcommand is the same one), store them in `forge.sops.yaml` as `forgejo_jwt_sec
 `forgejo_lfs_jwt_secret`, and template them into `app.ini` so Forgejo never has a reason
 to write to its own config file after install.
 
-## Postgres peer auth silently ignores `app.ini`'s `PASSWD`
+## Why Forgejo is the one consumer that needs the `postgresql` role's password-auth escape hatch
 
-The `postgresql` role's default `pg_hba.conf` (Debian package default, untouched by
-Task 5) authenticates local Unix-socket connections with `peer`: the connecting OS
-user's name must equal the Postgres role name, and no password is checked at all.
-Forgejo's `app.ini` connects to the socket as Postgres role `forgejo` while the OS
-process runs as `forgejo_user` (`git` — required, since the SSH clone URL is
-`git@forge.home`, and renaming the service account would break that). `git != forgejo`,
-so `peer` auth rejects the connection outright with `FATAL: Peer authentication failed
-for user "forgejo"`, regardless of whether `PASSWD` in `app.ini` is correct — peer auth
-does not look at it.
+The `postgresql` role defaults every local (Unix-socket) connection to `peer` auth —
+see that role's README for why `peer` is the stronger primitive and stays the default
+everywhere except where it's structurally impossible to use. Forgejo is that exception.
+`peer` requires the connecting OS username to equal the Postgres role name; Forgejo's
+`app.ini` connects to the socket as Postgres role `forgejo`, but the OS process runs as
+`forgejo_user` (`git`), and that can't be changed to match — the SSH clone URL is
+`ssh://git@forge.home:2222/...`, so `git` is load-bearing as the OS/service account
+name, not an arbitrary choice. `git != forgejo`, so `peer` rejected the connection
+outright with `FATAL: Peer authentication failed for user "forgejo"`, regardless of
+whether `PASSWD` in `app.ini` was correct — `peer` never looks at it.
 
 The `app.ini` template in this role includes a `PASSWD` field for exactly the reason
 that field exists on every other Postgres client config: it assumes password auth over
-the socket, which the stock Debian `pg_hba.conf` does not provide for anything but the
-`postgres` superuser (whose entry stays `peer`, unchanged, since that's what
-`become_user: postgres` + `su` needs). The `postgresql` role now rewrites the catch-all
-`local all all peer` line to `local all all scram-sha-256` (see
-`ansible/roles/postgresql/tasks/install.yaml`), which is what actually makes the
-`PASSWD` value in this role's `app.ini` meaningful. See that role's README for the
-before/after `pg_hba.conf` detail; documented there rather than duplicated here because
-the fix lives in that role's task file, not this one's.
+the socket. The `postgresql` role now adds one line to `pg_hba.conf`, specific to the
+`forgejo`/`forgejo` database/role pair, ahead of the unchanged `local all all peer`
+catch-all (see `ansible/roles/postgresql/tasks/install.yaml` and that role's README) —
+narrow enough that no other consumer of that role, present or future, loses `peer` by
+default.
 
 ## The admin-account idempotency guard
 
@@ -115,6 +113,35 @@ way the systemd unit does (`forgejo.service.j2` already sets it) — without it,
 does not reliably find `app.ini`'s companion runtime state under `forgejo_home`.
 `tasks/admin.yaml` sets `environment: { GITEA_WORK_DIR: "{{ forgejo_home }}" }` on both
 tasks for this reason.
+
+## A version bump can reintroduce the `app.ini` crash-loop
+
+The `JWT_SECRET`/`LFS_JWT_SECRET` issue above is not a one-time quirk of v16.0.1 — it's
+what Forgejo does *in general* when it wants to persist a generated value into a config
+key that isn't set yet, and `app.ini` is deliberately not writable by the service
+account. A future release can introduce another self-provisioned key the same way
+without warning (changelogs don't reliably call this out). Before bumping
+`forgejo_version`, check whether the new release adds any newly auto-generated
+`app.ini` keys, and if so pre-generate and template them the same way as the four
+secrets here — don't find out via a crash-loop on the next converge. This matters more
+on this host than it would elsewhere: `forge1` is the lab's recovery tool, so a broken
+converge here isn't just "one service down," it's "the tool meant to fix everything
+else is itself down."
+
+## `forgejo admin user create --password` puts the admin password on the target's process table
+
+`tasks/admin.yaml`'s "Create the admin account" task passes `--password
+{{ forgejo_admin_password }}` as a CLI argument. Ansible's `no_log: true` on that task
+keeps the value out of playbook output, logs, and `-v` verbosity — but it does nothing
+about the OS itself: for the brief moment the `forgejo admin user create` process runs
+under `become_user: git`, the plaintext password is visible to anything reading
+`/proc/<pid>/cmdline` on `forge1` (e.g. `ps aux` run by another process on that host
+during that window). This is inherent to Forgejo's CLI, which has no
+`--password-stdin`/`--password-file` equivalent for this subcommand as of v16.0.1 —
+there is no workaround available inside this role, only awareness. It's a narrow
+window (one `admin.yaml` run, first install only, guarded by the same idempotency check
+that skips this task on every subsequent converge — see below), but it's real, and
+worth knowing if `forge1` is ever shared with a less-trusted process.
 
 ## Verifying `git.{{ lab_domain }}` before the vhost existed
 

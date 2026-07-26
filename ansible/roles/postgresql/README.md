@@ -106,25 +106,27 @@ is `no_log: true`, so it never appears in playbook output. It comes from a
 `openssl rand -base64 32 | tr -d '\n/+=' | head -c 32` and encrypted directly via sops
 from stdin — the plaintext never touches disk.
 
-## Local socket auth is `scram-sha-256`, not the Debian-default `peer`, for anything but `postgres`
+## `peer` is the default everywhere, and stays that way — password auth is opt-in, per database
 
 `postgresql-{{ postgresql_version }}`'s postinst writes a `pg_hba.conf` where every
-local (Unix-socket) connection authenticates via `peer`: the connecting OS username must
-equal the Postgres role name, full stop — no password is ever checked. That is fine for
-this role's own `become_user: postgres` tasks (OS user `postgres` connecting as role
-`postgres`), but breaks the moment an application connects as its own dedicated role
-under a *different* OS account. Forgejo (the first, and so far only, consumer of this
-role) is exactly that case: its `app.ini` connects to Postgres role `forgejo` over the
-socket, but the OS process runs as `git` (required — the SSH clone URL is
-`git@forge.home`, so the service account can't be renamed to match). `peer` auth
-rejected that outright with `FATAL: Peer authentication failed for user "forgejo"`,
-regardless of the password configured on either side — `peer` doesn't look at it.
+local (Unix-socket) connection authenticates via `peer`: the connecting OS username
+must equal the Postgres role name, full stop — no password is ever checked, nothing is
+ever typed or stored to prove identity. That is the **stronger** primitive of the two
+this role can offer — a kernel-verified UID, not a shared secret that can leak, get
+logged, or be brute-forced — and it is `tasks/install.yaml`'s default for every local
+connection, including this role's own `become_user: postgres` tasks.
 
-`tasks/install.yaml` now rewrites just the catch-all line —
-`local   all   all   peer` → `local   all   all   scram-sha-256` — leaving
-`local   all   postgres   peer` untouched (matched first, so `become_user: postgres`
-keeps working exactly as before). This is what makes the `PASSWD` field in a consuming
-role's `app.ini`-equivalent config actually mean something: without this change, no
-password-based client can ever authenticate over the socket here, no matter what
-password it's configured with. Any future service added to this role inherits the same
-fix automatically — it's in the generic `install.yaml`, not scoped to Forgejo.
+`peer` cannot work, by construction, when the OS account running a consuming
+application does not (and, for its own reasons, cannot) match the Postgres role name it
+authenticates as. When that happens, `tasks/install.yaml` adds one targeted line ahead
+of the generic `local all all peer` catch-all — `local {{ postgresql_db }}
+{{ postgresql_user }} scram-sha-256` — that opts only that specific database/role pair
+into password auth, and only when `postgresql_db`/`postgresql_user` are actually set.
+Every other local connection, including any future consumer of this role that doesn't
+hit this mismatch, keeps `peer` and needs no password at all — `postgresql_password`
+defaulting to `""` is safe precisely because `peer` never reads it.
+
+Concretely, for the one consumer that exists today, see `forgejo/README.md`'s note on
+why its OS account and Postgres role can't be the same name. This role stays agnostic
+to *why* a given instance needs the escape hatch — it just offers it, narrowly, per
+database.

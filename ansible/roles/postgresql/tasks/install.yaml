@@ -18,17 +18,29 @@
     mode: "0640"
   notify: Restart postgresql
 
-- name: Require a password over the socket for non-postgres roles
+- name: Require a password over the socket for this instance's own database
   ansible.builtin.lineinfile:
     path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
-    regexp: "^local\\s+all\\s+all\\s+peer\\s*$"
-    line: "local   all             all                                     scram-sha-256"
+    regexp: "^local\\s+{{ postgresql_db }}\\s+{{ postgresql_user }}\\s+\\S+\\s*$"
+    line: "local   {{ postgresql_db }}   {{ postgresql_user }}   scram-sha-256"
+    insertbefore: "^local\\s+all\\s+all\\s+\\S+\\s*$"
     owner: postgres
     group: postgres
     mode: "0640"
-  notify: Restart postgresql
+  when: postgresql_db != "" and postgresql_user != ""
+  notify: Reload postgresql
 
-- name: Restart postgresql now, not at end of play
+- name: Keep peer as the default for every other local connection
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    regexp: "^local\\s+all\\s+all\\s+\\S+\\s*$"
+    line: "local   all             all                                     peer"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Reload postgresql
+
+- name: Apply the restart or reload now, not at end of play
   ansible.builtin.meta: flush_handlers
 
 - name: Enable and start postgresql
