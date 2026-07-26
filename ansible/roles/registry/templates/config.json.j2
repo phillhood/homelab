@@ -1,0 +1,37 @@
+{
+  "distSpecVersion": "1.1.1",
+  "storage": {
+    "rootDirectory": "{{ zot_data_dir }}",
+    "gc": true,
+    "gcDelay": "1h",
+    "dedupe": true
+  },
+  "http": {
+    "address": "0.0.0.0",
+    "port": "{{ zot_port }}"
+  },
+  "log": {
+    "level": "info"
+  },
+  "extensions": {
+    "sync": {
+      "enable": true,
+      "registries": [
+{% for up in zot_upstreams %}
+        {
+          "urls": ["{{ up.url }}"],
+          "onDemand": true,
+          "tlsVerify": true,
+          "content": [ { "prefix": "**", "destination": "/{{ up.host }}" } ]
+        },
+{% endfor %}
+        {
+          "urls": ["{{ zot_dockerhub_url }}"],
+          "onDemand": true,
+          "tlsVerify": true,
+          "content": [ { "prefix": "**" } ]
+        }
+      ]
+    }
+  }
+}

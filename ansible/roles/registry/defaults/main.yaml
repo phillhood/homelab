@@ -1,0 +1,7 @@
+---
+zot_user: zot
+zot_config_dir: /etc/zot
+zot_data_dir: /var/lib/zot
+zot_port: 5000
+zot_upstreams: []
+zot_dockerhub_url: https://registry-1.docker.io

@@ -1,0 +1,5 @@
+---
+- name: Restart zot
+  ansible.builtin.systemd_service:
+    name: zot
+    state: restarted

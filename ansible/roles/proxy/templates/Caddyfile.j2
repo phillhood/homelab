@@ -7,5 +7,12 @@
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 	}
 
-	respond "tier0 proxy ok" 200
+	@registry host registry.{{ lab_domain }}
+	handle @registry {
+		reverse_proxy {{ registry_backend }}
+	}
+
+	handle {
+		respond "tier0 proxy ok" 200
+	}
 }

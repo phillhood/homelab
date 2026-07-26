@@ -1,0 +1,57 @@
+---
+- name: Create the zot group
+  ansible.builtin.group:
+    name: "{{ zot_user }}"
+    system: true
+    state: present
+
+- name: Create the zot user
+  ansible.builtin.user:
+    name: "{{ zot_user }}"
+    group: "{{ zot_user }}"
+    home: "{{ zot_data_dir }}"
+    shell: /usr/sbin/nologin
+    system: true
+    create_home: true
+    state: present
+
+- name: Create the zot config directory
+  ansible.builtin.file:
+    path: "{{ zot_config_dir }}"
+    state: directory
+    owner: root
+    group: "{{ zot_user }}"
+    mode: "0750"
+
+- name: Create the zot data directory
+  ansible.builtin.file:
+    path: "{{ zot_data_dir }}"
+    state: directory
+    owner: "{{ zot_user }}"
+    group: "{{ zot_user }}"
+    mode: "0750"
+
+- name: Fetch the Zot binary
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/project-zot/zot/releases/download/{{ zot_version }}/zot-linux-amd64
+    dest: /usr/local/bin/zot
+    checksum: "sha256:{{ zot_sha256 }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart zot
+
+- name: Install the zot systemd unit
+  ansible.builtin.template:
+    src: zot.service.j2
+    dest: /etc/systemd/system/zot.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart zot
+
+- name: Reload systemd so it tracks the zot unit
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  changed_when: false

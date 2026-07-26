@@ -1,0 +1,15 @@
+---
+- name: Render the zot config
+  ansible.builtin.template:
+    src: config.json.j2
+    dest: "{{ zot_config_dir }}/config.json"
+    owner: root
+    group: "{{ zot_user }}"
+    mode: "0640"
+  notify: Restart zot
+
+- name: Enable and start zot
+  ansible.builtin.systemd_service:
+    name: zot
+    enabled: true
+    state: started

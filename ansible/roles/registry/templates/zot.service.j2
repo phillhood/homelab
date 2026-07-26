@@ -1,0 +1,19 @@
+[Unit]
+Description=Zot OCI registry
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User={{ zot_user }}
+Group={{ zot_user }}
+ExecStart=/usr/local/bin/zot serve {{ zot_config_dir }}/config.json
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=1048576
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths={{ zot_data_dir }}
+
+[Install]
+WantedBy=multi-user.target

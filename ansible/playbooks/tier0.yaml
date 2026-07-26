@@ -1,4 +1,10 @@
 ---
+- name: Configure the upstream image cache
+  hosts: registry
+  gather_facts: true
+  roles:
+    - registry
+
 - name: Configure the reverse proxy
   hosts: proxy
   gather_facts: true
