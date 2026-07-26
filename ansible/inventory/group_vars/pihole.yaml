@@ -8,6 +8,7 @@ pihole_config:
   dns.revServers:
     - "true,192.168.1.0/24,192.168.1.1,home"
   misc.privacylevel: 0
+  misc.etc_dnsmasq_d: true
 
 pihole_local_records:
   - "192.168.1.1 router.home"
@@ -17,5 +18,11 @@ pihole_local_records:
   - "192.168.1.101 kvatch.home"
   - "192.168.1.100 pihole.home"
   - "192.168.1.102 music.home"
+  - "192.168.1.103 forge.home"
+  - "192.168.1.104 registry.home"
+  - "192.168.1.105 proxy.home"
 
 pihole_adlists: []
+
+pihole_lab_domain: lab.shychedelic.com
+pihole_lab_proxy_ip: 192.168.1.105

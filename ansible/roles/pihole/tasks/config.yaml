@@ -14,3 +14,12 @@
   loop_control:
     loop_var: cfg_item
     label: dns.hosts
+
+- name: Render the lab wildcard dnsmasq config
+  ansible.builtin.template:
+    src: 10-lab.conf.j2
+    dest: /etc/dnsmasq.d/10-lab.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart pihole dns

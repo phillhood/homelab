@@ -11,11 +11,13 @@
       {{ (('[]' if (cfg_item.value | length) == 0
             else '[ ' ~ (cfg_item.value | join(', ')) ~ ' ]')
           if (cfg_item.value is sequence and cfg_item.value is not string)
-          else (cfg_item.value | string)) }}
+          else ((cfg_item.value | string | lower) if (cfg_item.value is boolean)
+                else (cfg_item.value | string))) }}
     _cfg_write_form: >-
       {{ ((cfg_item.value | to_json)
           if (cfg_item.value is sequence and cfg_item.value is not string)
-          else (cfg_item.value | string)) }}
+          else ((cfg_item.value | string | lower) if (cfg_item.value is boolean)
+                else (cfg_item.value | string))) }}
 
 - name: "Set {{ cfg_item.key }}"
   ansible.builtin.command:
