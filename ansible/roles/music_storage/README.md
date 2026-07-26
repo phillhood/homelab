@@ -126,6 +126,13 @@ Proxmox reserves bind mounts and container feature flags for `root@pam`. The sco
 would be code for a call that always gets refused, so both settings go through
 `pct set` over SSH instead.
 
+The Terraform side needs a matching guard, or the provider undoes what this role just
+did. `terraform/modules/proxmox-lxc` carries an `ignore_changes` for `features` and
+`mount_point` for exactly this reason — without it, the next `terraform apply` sees
+attributes the configuration does not declare and plans to remove them, and removing
+`mount_point` forces a replacement of CT 101. See `terraform/modules/proxmox-lxc/README.md`
+for the measured plan output.
+
 ## Why the mount point is 2775 in two places
 
 `mount.yaml` creates `/mnt/music` with mode `2775` and `layout.yaml` sets the same path

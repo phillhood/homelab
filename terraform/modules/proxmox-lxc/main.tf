@@ -18,7 +18,6 @@ resource "proxmox_virtual_environment_container" "this" {
     ignore_changes = [
       features,
       mount_point,
-      network_interface,
     ]
   }
 
