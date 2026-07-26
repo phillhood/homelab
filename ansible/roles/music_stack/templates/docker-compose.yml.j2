@@ -75,6 +75,8 @@ services:
       MUSEEK_DISCORD_MUSEEK_TOKEN: {{ museek_api_token | to_json }}
       MUSEEK_DISCORD_DISCORD_TOKEN: {{ museek_discord_token | to_json }}
       MUSEEK_DISCORD_GUILD_ID: {{ museek_discord_guild_id | to_json }}
+    networks:
+      - music
 {% endif %}
 
 networks:

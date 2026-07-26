@@ -97,8 +97,10 @@ the process dies before it ever binds its HTTP listener and `/healthz` never com
 This is an image defect, not a compose or permission-model problem on this side, and it
 is being fixed upstream (a writable/owned `WORKDIR`, or dropping the implicit `env_file`
 lookup) and will ship as `0.1.1`. Deploying it here again is then a one-line change —
-set `music_app_image` (and `music_discord_image`, which has no blocker of its own) back
-to their registry tags and converge — not a rebuild of any of the wiring described above.
+set `music_app_image` (and `music_discord_image`) back to their registry tags and
+converge — not a rebuild of any of the wiring described above. `museek-discord` declares
+`networks: [music]`, matching `slskd` and `museek` exactly, so it can reach museek by
+service name (`http://museek:8080`) rather than landing on compose's `default` network.
 
 **Bind mounts are mandatory, never named volumes**, for whenever it is redeployed — a
 named volume initialises from the museek image's uid 10001 and becomes unwritable under
