@@ -32,7 +32,7 @@
       - "{{ music_container_features }}"
   when:
     - music_ct_conf_stat.stat.exists
-    - "'features: ' ~ music_container_features not in music_ct_conf_text"
+    - "('features: ' ~ music_container_features) not in music_ct_conf_text.splitlines()"
   changed_when: true
   notify: Restart the music container
 
@@ -46,6 +46,6 @@
       - "{{ music_host_mount }},mp={{ music_container_mount }}"
   when:
     - music_ct_conf_stat.stat.exists
-    - "'mp0: ' ~ music_host_mount ~ ',mp=' ~ music_container_mount not in music_ct_conf_text"
+    - "('mp0: ' ~ music_host_mount ~ ',mp=' ~ music_container_mount) not in music_ct_conf_text.splitlines()"
   changed_when: true
   notify: Restart the music container
