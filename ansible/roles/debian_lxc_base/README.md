@@ -97,7 +97,7 @@ container rather than freezing it.
 - Both `command` tasks in `health.yaml` need `check_mode: false`, or `--check` skips them
   and the asserts fail on an undefined `stdout`.
 - Drop snapshots once an upgrade is verified. They grow as blocks diverge on thin storage
-  and there is no pool-exhaustion alerting (`.dev/docs/backlog.md`).
+  and there is no pool-exhaustion alerting (the local backlog).
 
 Prove the health assert still bites by dropping one unit from the allowlist:
 
@@ -112,5 +112,5 @@ has become vacuous.
 Debian 13 ships no `/etc/timezone` — check with `readlink -f /etc/localtime`, not
 `cat /etc/timezone`.
 
-Rationale, the intentionally-disabled container features, and the nesting observation:
-`.dev/docs/ansible/debian_lxc_base.md`.
+Rationale, the intentionally-disabled container features, and the nesting observation are in
+the local notes for this role.

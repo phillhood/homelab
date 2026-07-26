@@ -48,4 +48,4 @@ Terraform clones are full copies, so existing guests are unaffected — then re-
   template — `pct config` holds no reference and a container's rootfs is an independent LV
   populated once at creation.
 
-Rationale and the template-pin history: `.dev/docs/ansible/pve_templates.md`.
+Rationale and the template-pin history are in the local notes for this role.

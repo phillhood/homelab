@@ -97,4 +97,4 @@ Global discovery and relaying are left on so the Mac syncs away from home. Forwa
   `become_method: ansible.builtin.su` **and** `become_flags: "-s /bin/sh"`, because that
   account is `nologin`.
 
-Rationale and the macOS vfs settings: `.dev/docs/ansible/music_share.md`.
+Rationale and the macOS vfs settings are in the local notes for this role.

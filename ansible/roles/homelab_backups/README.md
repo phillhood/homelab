@@ -107,5 +107,5 @@ Rotation sits unproven until there are more backups than the limit. Force it:
 ansible-playbook playbooks/backups.yaml --tags rotate -e backup_retention=2
 ```
 
-Rationale, measurements and the per-file sensitivity analysis:
-`.dev/docs/ansible/homelab_backups.md`.
+Rationale, measurements and the per-file sensitivity analysis are in the local notes for
+this role.

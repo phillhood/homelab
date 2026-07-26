@@ -116,7 +116,7 @@ sides of the bind mount move together. `music_host_gid` derives as `100000 + mus
   from `backup_prune_targets` in `homelab_backups`.
 - Guard shell checks with `if`, not `cmd && fail` — under `set -euo pipefail` the latter
   misfires both ways.
-- slskd's `data/*.db` are tarred hot, knowingly; see `.dev/docs/backlog.md`.
+- slskd's `data/*.db` are tarred hot, knowingly; see the local backlog.
 
 After any change to this role, or any enclosure firmware update:
 
@@ -124,4 +124,4 @@ After any change to this role, or any enclosure firmware update:
 ssh root@192.168.1.101 'boltctl list | grep -E "status|stored"; findmnt /mnt/music'
 ```
 
-Rationale, measurements and the restore drill: `.dev/docs/ansible/music_storage.md`.
+Rationale, measurements and the restore drill are in the local notes for this role.

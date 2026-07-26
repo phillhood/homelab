@@ -57,28 +57,12 @@ music container cannot be snapshotted at all — it holds a host-path bind mount
 contents are protected by a restic repository instead. The procedure is in
 `ansible/roles/debian_lxc_base/README.md`.
 
-## Conventions
-
-- **Secrets live in `*.sops.yaml`**, decrypted at run time. The rule is *would leaking this
-  let someone in?* — public keys and device IDs are not secrets. `make secrets` confirms
-  every file is encrypted at rest.
-- **One definition per value.** Role `defaults/` owns the role's own values; `group_vars/`
-  carries only what is environment-specific. A value in both means editing the default
-  silently does nothing.
-- **No explanatory comments in config.** Task names say what a task does; reasoning lives in
-  documentation. That includes play names and assert messages.
-- **Every role README has an `## Invariants` list.** Read it before changing that role — each
-  entry is a trap that cost real time to find, and several describe a change that looks like
-  a simplification and is not.
-- The toolchain is pinned in `pyproject.toml` and `uv.lock`, the collections in
-  `ansible/requirements.yaml`, so a fresh clone gets the same versions.
-
-`ansible/README.md` covers the playbook and role layout in full.
-
 ## Documentation
 
-Usage documentation lives with the code it describes and is committed.
+Secrets live in `*.sops.yaml` and are decrypted at run time. Every role README carries an
+`## Invariants` list — read it before changing that role, since each entry is a trap that
+cost real time to find. `ansible/README.md` covers the playbook and role layout.
 
-Everything specific to this particular lab — hardware, network topology, the service
-inventory, the roadmap, and the decision notes behind each role — is kept locally and backed
-up rather than committed.
+Everything else about this particular lab — hardware, network topology, the service
+inventory, the roadmap, the conventions the repo is written to, and the decision notes behind
+each role — is kept locally and backed up rather than committed.

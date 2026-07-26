@@ -68,4 +68,5 @@ dig @192.168.1.100 doubleclick.net +short                # -> 0.0.0.0  (blocking
 dig @192.168.1.100 kvatch.{{ homelab_domain }} +short    # -> 192.168.1.101  (local record)
 ```
 
-Rationale, the format-asymmetry derivation and the installer source: `.dev/docs/ansible/pihole.md`.
+Rationale, the format-asymmetry derivation and the installer source are in the local notes
+for this role.

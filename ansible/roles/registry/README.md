@@ -56,4 +56,4 @@ credential anywhere in this role and no entry in `playbooks/backups.yaml` — ev
 ssh root@192.168.1.104 'du -sh /var/lib/zot; du -sh /var/lib/zot/*'
 ```
 
-Rationale and the measurements: `.dev/docs/ansible/registry.md`.
+Rationale and the measurements are in the local notes for this role.

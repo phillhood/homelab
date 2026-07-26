@@ -56,4 +56,4 @@ their own `group_vars` — not a shared database server.
 The one consumer needing the password-auth escape hatch is Forgejo, whose OS account
 (`git`) cannot match its Postgres role name (`forgejo`). See `../forgejo/README.md`.
 
-Rationale and the incidents behind these: `.dev/docs/ansible/postgresql.md`.
+Rationale and the incidents behind these are in the local notes for this role.

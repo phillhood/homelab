@@ -57,4 +57,4 @@ exists.
   gets a 403 on both. That is why those go through `pct set` in `music_storage` rather than
   Terraform.
 
-Rationale and the measured reclaim result: `.dev/docs/ansible/proxmox_host.md`.
+Rationale and the measured reclaim result are in the local notes for this role.

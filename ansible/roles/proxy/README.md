@@ -58,4 +58,4 @@ DNS:Edit on the single parent zone** of `{{ lab_domain }}`.
   valid token, because the token deliberately lacks `User:API Tokens:Read`. That is an
   expected false negative of that one endpoint, not evidence the token is broken.
 
-Rationale and the xcaddy escape hatch: `.dev/docs/ansible/proxy.md`.
+Rationale and the xcaddy escape hatch are in the local notes for this role.

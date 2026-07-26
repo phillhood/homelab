@@ -76,4 +76,4 @@ must use SSH, not HTTPS** — see `homelab_backups/README.md` for why an HTTPS m
 live token into the backup archive.
 
 Rationale, the crash-loop diagnosis and why this is the one consumer needing Postgres
-password auth: `.dev/docs/ansible/forgejo.md`.
+password auth are in the local notes for this role.

@@ -78,5 +78,5 @@ whenever `music_app_image` is set.
 forward (Firewall → NAT → Port Forward, WAN, TCP, `2235` → `192.168.1.102:2235`). Without
 it slskd falls back to indirect connections and download reliability drops noticeably.
 
-Rationale, the SLSKD_UMASK mechanism and the museek 0.1.0 crash-loop:
-`.dev/docs/ansible/music_stack.md`.
+Rationale, the SLSKD_UMASK mechanism and the museek 0.1.0 crash-loop are in the local notes
+for this role.
