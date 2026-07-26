@@ -1,14 +1,18 @@
 # music_stack
 
-Docker Engine plus the slskd compose stack in CT 101.
+Docker Engine plus the slskd / museek compose stack in CT 101.
 
-## Docker in an unprivileged LXC
+## Usage
 
-Needs `nesting=1` and `keyctl=1`, set by `music_storage/tasks/container_mount.yaml` via
-`pct set`. This container is the deliberate exception to the "no nesting" baseline in
-`debian_lxc_base` — see that role's README.
+| Tag | Does |
+|---|---|
+| `docker` | Docker Engine + compose plugin from Docker's own apt repo |
+| `compose` | renders `docker-compose.yml` and brings the stack up |
+| `stack` | both |
 
-Installation succeeding proves nothing. The real test is:
+Docker needs `nesting=1` and `keyctl=1`, set on the container by
+`music_storage/tasks/container_mount.yaml` via `pct set`. Installation succeeding proves
+nothing — the real test is:
 
 ```bash
 ssh root@192.168.1.102 'docker run --rm hello-world'
@@ -17,119 +21,62 @@ ssh root@192.168.1.102 'docker run --rm hello-world'
 If that hangs or errors on cgroups or the keyring, a feature flag is missing or the
 container has not been rebooted since it was set.
 
-## The Docker signing key is fetched with force: true
-
-`get_url` skips the download whenever the destination file already exists, comparing
-nothing about its content. Without `force: true`, an upstream rotation of Docker's
-signing key would leave the stale copy in place at `/etc/apt/keyrings/docker.asc`
-indefinitely, and `apt` would start failing signature verification on the docker-ce
-repository with no automated recovery — the file exists, so the task would keep
-reporting success while apt broke. `force: true` re-fetches the key on every run
-regardless of whether the destination exists, but still only reports `changed` when the
-fetched content actually differs, so idempotent runs stay `changed=0`.
-
-## The image store stays off the SSD
-
-`/var/lib/docker` lives on the container root disk. Keeping it there makes the container
-disposable and the media disk pure data. Verify with:
-
-```bash
-ssh root@192.168.1.102 'findmnt -no TARGET -T /var/lib/docker'   # expect /
-```
-
-## slskd sees the library read-only
-
-`{{ music_container_mount }}/library:/library:ro` — slskd shares the library back to
-Soulseek without ever being able to modify it. This is a load-bearing `:ro`:
-
-```bash
-ssh root@192.168.1.102 'docker exec slskd touch /library/x'   # must fail, read-only
-```
-
-Two promotion paths coexist. Anything grabbed by hand through slskd's web UI lands in
-`downloads/complete/` and is promoted manually over SMB. museek, once deployed, writes
-tagged files straight into `library/` — it has no mode that skips tagging, so
-`MUSEEK_MATCH_THRESHOLD` is the real quality gate rather than a human.
-
-## slskd's incomplete directory is deliberately not mounted
-
-slskd does not auto-create non-default directories. Pointing its incomplete dir at a
-freshly created shared mount can leave it unable to start, after which museek blocks
-forever on `depends_on: service_healthy`. Incomplete downloads therefore stay on slskd's
-own `/app` volume, which it creates itself. `/srv/music/downloads/incomplete/` exists on
-the SSD but is intentionally unused.
-
-## SLSKD_UMASK is an image convention, not a slskd setting
-
-`slskd --help` has no umask option and slskd's own config exposes only
-`transfers.download.destination.permissions.mode`. Both are red herrings — the mechanism
-is the image's `/entrypoint.sh`, which runs `umask "$SLSKD_UMASK"` before exec'ing. The
-image bakes in `0022`; the override to `0002` keeps downloads group-writable.
-
-**Two obvious ways to check this give the wrong answer.** `docker inspect -f
-'{{.State.Pid}}'` returns `tini`, which forks the entrypoint rather than becoming it, and
-`docker exec` never goes through the entrypoint at all — both report `0022` against a
-setting that is working. Use `.dev/scripts/verify-slskd-umask.sh`, which reads the real
-slskd pid from `docker top`.
-
-## museek and museek-discord are deployed from the self-hosted registry
-
-`music_app_image` and `music_discord_image` are set in `inventory/group_vars/music.yaml`
-and pull anonymously from Forgejo's OCI registry. Both default to `""` in this role, and
-the compose template omits the matching service entirely when its variable is empty — so
-clearing one is the supported way to take a service out without editing the template.
-
-Set them to a new tag and converge to roll forward; the whole env surface
-(`MUSEEK_SLSKD_URL`, the shared API key, `MUSEEK_DEST_PATH`, `MUSEEK_UMASK`, Spotify and
-MusicBrainz config, the `/srv/music/.state/museek` bind mount) is already wired.
-
-`museek-discord` declares `networks: [music]`, matching `slskd` and `museek`, so it
-reaches museek by service name (`http://museek:8080`) rather than landing on compose's
-`default` network.
-
-**Bind mounts are mandatory, never named volumes.** A named volume initialises from the
-museek image's uid 10001 and becomes unwritable under the `user: "1500:1500"` override.
-
-The 0.1.0 `.env` crash-loop that held this back, and how it was diagnosed, is in
-`.dev/docs/ansible/music_stack.md`.
-
-## One API key, two names
-
-`museek_slskd_api_key` renders as both museek's `MUSEEK_SLSKD_API_KEY` and slskd's own
-`SLSKD_API_KEY`, so they are equal by construction. Never configure a second key.
-
-## Troubleshooting a failed bring-up
-
-Both compose invocations carry `no_log: true`, because the rendered file holds three
-secrets and a YAML parse error typically echoes the offending line. You lose the
-diagnostic body, not the failure itself. To see what actually went wrong, run it by hand:
+Both compose invocations carry `no_log: true`, because the rendered file holds secrets and a
+YAML parse error echoes the offending line. To see what actually went wrong, run it by hand:
 
 ```bash
 ssh root@192.168.1.102 'cd /opt/music-stack && docker compose up -d'
 ```
 
-## Placeholder credentials are refused, and this is not theoretical
+## Variables
 
-`compose.yaml` asserts the Soulseek credentials are not `FILL_ME` before deploying.
-Soulseek has no separate registration step — the first login with an unused name *claims*
-it. Deploying with placeholders once registered a live public account named `FILL_ME` on
-the real network from this house's IP. It shared nothing and was stopped, but the name
-stays claimed.
+| Variable | Default | Notes |
+|---|---|---|
+| `music_app_image` | `""` | museek. Empty omits the service — this is the deploy gate |
+| `music_discord_image` | `""` | museek-discord, same gate |
+| `music_slskd_image` | `slskd/slskd:0.26.0` | |
+| `music_slskd_listen_port` | `2235` | Soulseek listen port; needs the OPNsense forward |
+| `music_museek_port` | `8080` | |
+| `music_museek_match_threshold` | `"0.6"` | museek's real quality gate |
 
-## Port 2235 needs a manual OPNsense forward
+**Requires** from `music.sops.yaml`: `slskd_soulseek_username`/`_password`,
+`slskd_web_username`/`_password`, `museek_slskd_api_key`, `museek_api_token`,
+`museek_spotify_client_id`/`_secret`, `museek_discord_token`, `museek_discord_guild_id`,
+`museek_discord_channel_id`. Plus `museek_musicbrainz_contact` from `group_vars/music.yaml`
+whenever `music_app_image` is set.
 
-Everything else is LAN-only. `2235/tcp` is the Soulseek listen port and is the only
-external change in this design. Without the forward, slskd falls back to indirect
-connections and download reliability drops noticeably.
+## Invariants
 
-Add it in **Firewall → NAT → Port Forward**: WAN, TCP, destination port `2235`,
-redirect target `192.168.1.102:2235`. Not automated — related to the OPNsense API work
-in the backups role.
+- **Placeholder Soulseek credentials are refused, and this is not theoretical.** Soulseek has
+  no registration step — the first login with an unused name *claims* it. Deploying with
+  placeholders once registered a live public account named `FILL_ME` on the real network from
+  this house's IP. It shared nothing and was stopped, but the name stays claimed.
+- **`music_app_image` and `music_discord_image` empty is a feature, not an unset value.** The
+  compose template omits the matching service entirely, so clearing one is the supported way
+  to take a service out without editing the template. Do not "fix" them with an assert.
+- **Bind mounts, never named volumes.** A named volume initialises from the museek image's
+  uid 10001 and becomes unwritable under the `user: "1500:1500"` override.
+- **The `:ro` on slskd's library mount is load-bearing.** slskd shares the library back to
+  Soulseek without ever being able to modify it. Prove it:
+  `docker exec slskd touch /library/x` must fail.
+- **The Docker signing key is fetched with `force: true` deliberately.** `get_url` otherwise
+  skips the download whenever the destination exists, comparing nothing — so an upstream key
+  rotation would leave the stale copy in place and apt would fail signature verification with
+  no automated recovery. It still only reports `changed` when the content differs, so
+  idempotent runs stay clean.
+- **One API key, two names.** `museek_slskd_api_key` renders as both museek's
+  `MUSEEK_SLSKD_API_KEY` and slskd's own `SLSKD_API_KEY`, so they are equal by construction.
+  Never configure a second key.
+- **slskd's incomplete directory is deliberately not mounted.** slskd does not auto-create
+  non-default directories, and pointing it at a freshly created shared mount can leave it
+  unable to start, after which museek blocks forever on `depends_on: service_healthy`.
+  `/srv/music/downloads/incomplete/` exists on the SSD and is intentionally unused.
+- `/var/lib/docker` stays on the container root disk, keeping the container disposable and
+  the media disk pure data. Verify: `findmnt -no TARGET -T /var/lib/docker` returns `/`.
 
-## k8s trajectory
+`2235/tcp` is the only external exposure in this design and needs a **manual** OPNsense port
+forward (Firewall → NAT → Port Forward, WAN, TCP, `2235` → `192.168.1.102:2235`). Without
+it slskd falls back to indirect connections and download reliability drops noticeably.
 
-Storage and the share stay put; slskd and the app are the migration candidates. They are
-already images — Deployment + Service + NodePort, config in a ConfigMap, secrets via
-SOPS. `csi-driver-smb` lets a pod mount the same Samba share as a PV, so migration is
-"write manifests, point the PVC at the existing share, `docker compose down`". The files
-never move and the share never changes.
+Rationale, the SLSKD_UMASK mechanism and the museek 0.1.0 crash-loop:
+`.dev/docs/ansible/music_stack.md`.
