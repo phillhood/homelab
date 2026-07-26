@@ -49,15 +49,51 @@ make rollback   CT=104            # DESTRUCTIVE: stop, roll back, restart
 **`pct snapshot` works on a running container; `pct rollback` does not.** Reverting costs a
 stop — acceptable, since you would only revert if the service was already broken.
 
+#### CT 101 `music` cannot be snapshotted at all
+
+Measured 2026-07-26: `pct snapshot 101` fails with `snapshot feature is not available`.
+CT 101 is the only guest with an unmanaged volume —
+
+```
+mp0: /mnt/music,mp=/srv/music
+```
+
+— and Proxmox will not snapshot a container holding a host-path bind mount, because there is
+no way to snapshot a host directory. The other four have no `mp` entries and snapshot
+normally; CT 100 was verified by taking and dropping one.
+
+`make snapshot CT=101` now **refuses before attempting**, rather than passing PVE's terse
+error through where it could be mistaken for success. That mistake was made once: the
+snapshot failed, the upgrade was run in the same shell invocation, and `music1` was upgraded
+with no revert path. It came through clean, but the exposure was real.
+
+**What protects CT 101 instead, and what does not:**
+
+| Covered | By |
+|---|---|
+| Syncthing identity — `config.xml`, `key.pem`, `cert.pem` | `make backup-music` |
+| museek's `museek.db` | `make backup-music` (hot copy — see backlog) |
+| The library itself | nothing, but it is on the host SSD and container operations cannot touch it |
+| **slskd's `/app` volume** (`slskd.yml`, its data dir) | **nothing** |
+| The rest of the guest | reproducible by Ansible |
+
+For a genuine pre-upgrade revert point, use `vzdump` on the host — it skips bind mounts, so
+it captures the rootfs only. Note this path has **not** been exercised here, and it
+suspends or stops the container rather than freezing it like a snapshot does.
+
 Snapshots on thin storage grow as blocks diverge, and there is no pool-exhaustion alerting
 (`.dev/docs/backlog.md`). Drop them once the upgrade is verified rather than leaving them.
 
 ### The procedure, per container
 
+**Run these as separate steps and check each one succeeded.** Do not chain the snapshot and
+the upgrade in a single shell invocation — a failed snapshot exits non-zero but will not stop
+a command that follows it on the same line.
+
 ```bash
 make verify > /tmp/verify-before.txt                   # capture the before-state
 make backup-pihole                                    # app-level backup, where relevant
-make snapshot CT=100                                  # the actual revert path
+make snapshot CT=100                                  # STOP HERE if this fails
 cd ansible && uv run --project .. ansible-playbook playbooks/site.yaml \
   --limit pihole1 --tags upgrade
 # verify, then one of:

@@ -186,6 +186,20 @@ snapshots: ## Show every container, its snapshots, and thin-pool headroom
 snapshot: ## Snapshot a container before upgrading it (CT=104 [SNAP=preupgrade])
 	$(_NEED_CT)
 	@$(_CT_NAME); \
+	mp=$$($(KVATCH_SSH) "pct config $(CT) | grep -E '^mp[0-9]+:' || true"); \
+	if [ -n "$$mp" ]; then \
+		echo ""; \
+		echo "  REFUSING: CT $(CT) ($$name) has a bind mount, so Proxmox cannot"; \
+		echo "  snapshot it — it has no way to snapshot a host directory:"; \
+		echo "      $$mp"; \
+		echo ""; \
+		echo "  There is NO snapshot revert path for this container. Use vzdump"; \
+		echo "  (which skips bind mounts) or an app-level backup, and be aware"; \
+		echo "  that anything not reproduced by Ansible is unprotected."; \
+		echo "  See ansible/roles/debian_lxc_base/README.md."; \
+		echo ""; \
+		exit 1; \
+	fi; \
 	echo "  CT $(CT) ($$name) -> snapshot '$(SNAP)'"; \
 	$(KVATCH_SSH) "pct snapshot $(CT) $(SNAP)" && \
 	echo "  taken. revert with: make rollback CT=$(CT) SNAP=$(SNAP)"
