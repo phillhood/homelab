@@ -39,7 +39,7 @@
     owner: root
     group: root
     mode: "0755"
-  notify: Reload caddy
+  notify: Restart caddy
 
 - name: Allow caddy to bind privileged ports
   community.general.capabilities:
@@ -54,6 +54,7 @@
     owner: root
     group: root
     mode: "0644"
+  notify: Restart caddy
 
 - name: Reload systemd so it tracks the caddy unit
   ansible.builtin.systemd_service:

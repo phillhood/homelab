@@ -3,6 +3,7 @@ caddy_user: caddy
 caddy_config_dir: /etc/caddy
 caddy_data_dir: /var/lib/caddy
 caddy_acme_email: ""
+caddy_validate_token: caddyfile-validate-placeholder-token-01
 forge_backend: ""
 registry_backend: ""
 cluster_vip: ""

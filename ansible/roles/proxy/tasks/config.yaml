@@ -16,9 +16,9 @@
     owner: root
     group: "{{ caddy_user }}"
     mode: "0640"
-    validate: >-
-      /usr/local/bin/caddy validate --config %s --adapter caddyfile
-      --envfile {{ caddy_config_dir }}/caddy.env
+    validate: "/usr/local/bin/caddy validate --config %s --adapter caddyfile"
+  environment:
+    CLOUDFLARE_API_TOKEN: "{{ caddy_validate_token }}"
   notify: Reload caddy
 
 - name: Enable and start caddy
