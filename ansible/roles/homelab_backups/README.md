@@ -100,12 +100,23 @@ ansible-playbook playbooks/backups.yaml --tags rotate -e backup_retention=2
 `config.xml` contains secrets in cleartext. It stays in gitignored `.dev/` and is never
 committed. If it ever needs to go offsite, `age`-encrypt it first.
 
-The music config archive (`.dev/music-backups/config-*.tar.gz`) is safe by construction:
-`smb.conf` carries no credentials, `config.xml` is Syncthing's device ID and folder
-pairing state, and `museek.db` is application state, none of it a secret. The rendered
-`docker-compose.yml` is deliberately left out — it is fully derived from
-`music_stack/templates/docker-compose.yml.j2` plus the sops-encrypted vars already in
-git, so backing it up buys no recovery value, and it embeds the slskd credentials in
-plaintext (the deploy task marks it `no_log: true` for exactly this reason). Anything
-added to this archive in future must be checked for credentials first, or it undoes that
-protection.
+The music config archive (`.dev/music-backups/config-*.tar.gz`) does contain secrets, and
+the rule governing it is narrower than "no credentials in backups".
+
+**The rule is: never duplicate a sops-managed secret in cleartext.** Syncthing's
+`config.xml` carries its own credentials — a bcrypt GUI password hash and a plaintext
+REST `<apikey>` — and is kept anyway, because that state is irreplaceable and exists
+nowhere else. It is the same trade already accepted for OPNsense's `config.xml` above.
+The rendered `docker-compose.yml` is excluded because it fails the rule twice over: it is
+byte-for-byte regenerable from `music_stack/templates/docker-compose.yml.j2` plus vars
+already sops-encrypted in git, so archiving it recovers nothing, and doing so would put
+the slskd credentials on disk in the clear beside the encrypted copies — undoing the
+`no_log: true` the deploy task applies for exactly that reason. Retention multiplies the
+exposure by `backup_retention`.
+
+`smb.conf` is also derived, and is kept for a reason that is not "it is harmless": it is
+the file Samba actually runs, deployed behind `validate: testparm -s %s`, so a snapshot
+captures drift a static Jinja template cannot show you. Keep that bar for anything added
+later — irreplaceable state, or drift visibility on a live config. Derived-and-inert
+files do not earn a place, and derived files carrying a sops-managed secret are excluded
+outright.
