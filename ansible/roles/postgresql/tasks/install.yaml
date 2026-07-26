@@ -1,0 +1,25 @@
+---
+- name: Install PostgreSQL and the Ansible driver
+  ansible.builtin.apt:
+    name:
+      - "postgresql-{{ postgresql_version }}"
+      - python3-psycopg2
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Confine PostgreSQL to the Unix socket
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/postgresql.conf"
+    regexp: "^#?listen_addresses\\s*="
+    line: "listen_addresses = '{{ postgresql_listen_addresses }}'"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Restart postgresql
+
+- name: Enable and start postgresql
+  ansible.builtin.systemd_service:
+    name: postgresql
+    enabled: true
+    state: started

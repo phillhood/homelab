@@ -1,0 +1,21 @@
+---
+- name: Create the database role
+  community.postgresql.postgresql_user:
+    name: "{{ postgresql_user }}"
+    password: "{{ postgresql_password }}"
+    state: present
+  become: true
+  become_method: ansible.builtin.su
+  become_user: postgres
+  no_log: true
+
+- name: Create the database
+  community.postgresql.postgresql_db:
+    name: "{{ postgresql_db }}"
+    owner: "{{ postgresql_user }}"
+    encoding: UTF-8
+    template: template0
+    state: present
+  become: true
+  become_method: ansible.builtin.su
+  become_user: postgres

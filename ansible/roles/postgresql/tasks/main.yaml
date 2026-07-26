@@ -1,0 +1,8 @@
+---
+- name: Install PostgreSQL
+  ansible.builtin.import_tasks: install.yaml
+  tags: [install, postgresql]
+
+- name: Create the database and role
+  ansible.builtin.import_tasks: database.yaml
+  tags: [database, postgresql]
