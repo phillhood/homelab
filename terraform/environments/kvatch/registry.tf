@@ -4,7 +4,7 @@ module "registry" {
   node_name        = "kvatch"
   vm_id            = 103
   hostname         = "registry"
-  template_file_id = "local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst"
+  template_file_id = "local:vztmpl/debian-13-standard_13.6-1_amd64.tar.zst"
   os_type          = "debian"
 
   ip_address = "192.168.1.104/24"

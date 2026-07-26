@@ -9,6 +9,109 @@ below), never here.
 - Installs `base_packages` (curl, ca-certificates).
 - Sets the timezone from `homelab_timezone`.
 - **Verifies the negatives** (below) via `health.yaml` asserts.
+- Provides an **opt-in** OS upgrade path (below) that never fires automatically.
+
+## Upgrading a guest's OS
+
+`packages.yaml` uses `state: present`. It installs, it never upgrades — so a container sits
+at whatever point release its template shipped until told otherwise. As of 2026-07-26 all
+five guests reported Debian 13.1 while stable was 13.6, with 67 packages pending on
+`pihole1`, 16 of them from `stable-security`.
+
+`upgrade.yaml` closes that, tagged so it cannot run by accident:
+
+```yaml
+- name: Upgrade all packages
+  ansible.builtin.import_tasks: upgrade.yaml
+  tags: [upgrade, never]
+```
+
+**The `never` tag is load-bearing.** Without it every `make apply` would trigger a
+multi-hundred-package upgrade across the whole fleet mid-converge. Verified with
+`ansible-playbook playbooks/site.yaml --list-tasks`: the upgrade tasks are absent unless
+`--tags upgrade` names them explicitly.
+
+### `apt dist-upgrade` has no undo — the snapshot is the revert path
+
+There is no "downgrade everything". All five guests are on `local-lvm` (lvmthin), so an LVM
+snapshot is the only real way back, and the Makefile wraps it:
+
+```bash
+make snapshots                    # every container, its snapshots, thin-pool headroom
+make snapshot   CT=104            # before upgrading
+make unsnapshot CT=104            # after verifying — drops the revert path
+make rollback   CT=104            # DESTRUCTIVE: stop, roll back, restart
+```
+
+`rollback` requires typing the container's hostname to confirm, and warns explicitly when
+`CT=100`, because rolling Pi-hole back takes all LAN DNS down for the duration.
+
+**`pct snapshot` works on a running container; `pct rollback` does not.** Reverting costs a
+stop — acceptable, since you would only revert if the service was already broken.
+
+Snapshots on thin storage grow as blocks diverge, and there is no pool-exhaustion alerting
+(`.dev/docs/backlog.md`). Drop them once the upgrade is verified rather than leaving them.
+
+### The procedure, per container
+
+```bash
+make verify > /tmp/verify-before.txt                   # capture the before-state
+make backup-pihole                                    # app-level backup, where relevant
+make snapshot CT=100                                  # the actual revert path
+cd ansible && uv run --project .. ansible-playbook playbooks/site.yaml \
+  --limit pihole1 --tags upgrade
+# verify, then one of:
+make unsnapshot CT=100                                # keep the upgrade
+make rollback   CT=100                                # undo it
+```
+
+### Upgrade in this order, not alphabetically
+
+`pihole1` is **last**. It is the only container whose failure removes all LAN DNS, so the
+mechanism gets proved where a mistake is cheap:
+
+`proxy1` → `registry1` → `forge1` → `music1` → `pihole1`
+
+`proxy1` is 1 core / 512 MB with nothing depending on it. `registry1` holds only a
+pull-through cache. By the time Pi-hole is reached the task has run four times.
+
+### The role will not reboot, deliberately
+
+`upgrade.yaml` reports `/var/run/reboot-required` and stops there.
+
+The upgrade itself should be invisible to DNS: `pihole-FTL` is **not** an apt package — the
+Pi-hole installer ships its own systemd unit — so `apt dist-upgrade` will not restart the
+resolver as a side effect. Only the systemd bump really wants a reboot to land fully, and
+that is a 10-20 second outage.
+
+**That outage is total, and this was measured.** OPNsense advertises DHCP option 6 as a
+single value:
+
+```
+type: set   option: 6   value: 192.168.1.100   force: 0
+```
+
+There is no secondary resolver, and OPNsense's own dnsmasq listens on port **53053**, so it
+cannot stand in. Every DHCP client fails lookups for the duration of a CT 100 reboot.
+
+Do not "fix" this by adding a public resolver as a secondary — clients round-robin across
+the list, so ad filtering would leak intermittently instead of failing cleanly. The real
+answer is a second Pi-hole.
+
+### Recreating is not upgrading
+
+A Debian point release is a label for a set of package versions, not a distinct OS.
+`base-files` is the package that writes `/etc/debian_version` (`13.8+deb13u1` →
+`13.8+deb13u6` is exactly 13.1 → 13.6), so `apt dist-upgrade` reaches the same versions a
+fresh template would. Rebuilding a container from a newer template gets you a clean rootfs
+and nothing newer — while costing whatever the guest holds that Ansible does not reproduce.
+See `terraform/modules/proxmox-lxc/README.md`.
+
+### Expect the failed-unit assert to fire after a systemd upgrade
+
+`lxc_expected_failed_units` is the tripwire for exactly this. If the `health` tag fails
+after an upgrade, that is the assert working. Read the units it names and adjust the list
+deliberately — never widen it to silence it.
 
 ## The negatives — intentionally OFF (from Pi-hole LXC build notes)
 
