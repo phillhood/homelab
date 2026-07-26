@@ -29,6 +29,23 @@
   register: forgejo_dump_run
   changed_when: true
 
+- name: Ensure zip is available to strip the rendered app.ini
+  ansible.builtin.apt:
+    name: zip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Strip the rendered app.ini from the dump before it leaves the host
+  ansible.builtin.command:
+    argv:
+      - zip
+      - -d
+      - "/tmp/{{ forgejo_dump_name }}"
+      - app.ini
+  when: forgejo_dump_run is not skipped
+  changed_when: true
+
 - name: Fetch the dump to the control node
   ansible.builtin.fetch:
     src: "/tmp/{{ forgejo_dump_name }}"
