@@ -44,6 +44,7 @@ services:
       MUSEEK_SLSKD_DOWNLOADS_DIR: /downloads
       MUSEEK_SLSKD_API_KEY: {{ museek_slskd_api_key | to_json }}
       MUSEEK_DEST_PATH: /library
+      MUSEEK_MATCH_THRESHOLD: {{ music_museek_match_threshold }}
       MUSEEK_DB_PATH: /data/museek.db
       MUSEEK_STAGING_PATH: /data/staging
       MUSEEK_API_TOKEN: {{ museek_api_token | to_json }}
