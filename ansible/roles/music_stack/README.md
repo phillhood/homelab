@@ -72,29 +72,37 @@ image bakes in `0022`; the override to `0002` keeps downloads group-writable.
 setting that is working. Use `.dev/scripts/verify-slskd-umask.sh`, which reads the real
 slskd pid from `docker top`.
 
-## The custom app is museek, and it deploys but does not start
+## The custom app is museek, and it is wired but deliberately not deployed
 
 `music_app_image` maps to museek's `MUSEEK_IMAGE` and `music_discord_image` maps to the
 discord bot's image; both default to `""` and the compose template omits the matching
-service entirely when its variable is empty. The full env surface is written —
-`MUSEEK_SLSKD_URL`, the shared API key, `MUSEEK_DEST_PATH`, `MUSEEK_UMASK`, Spotify and
-MusicBrainz config, and a `/srv/music/.state/museek` bind mount for its SQLite store.
+service entirely when its variable is empty. **Both are currently set to `""` in
+`inventory/group_vars/music.yaml`, on purpose** — this is not an unfinished state, it is
+the gate doing exactly what it was built for. The full env surface is already written and
+ready to go the moment the image variable is set — `MUSEEK_SLSKD_URL`, the shared API key,
+`MUSEEK_DEST_PATH`, `MUSEEK_UMASK`, Spotify and MusicBrainz config, and a
+`/srv/music/.state/museek` bind mount for its SQLite store — along with the sops secrets
+(`museek_discord_token`, `museek_discord_guild_id`) and `museek_musicbrainz_contact`.
 
-Both images now pull anonymously from the self-hosted registry once `music_app_image` and
-`music_discord_image` are set in `inventory/group_vars/music.yaml`. museek-discord starts
-and logs into Discord — it carries no `user:` override, so it runs as its image's own
-default user. museek does not start: `git.lab.shychedelic.com/shychedelic/museek:0.1.0`
-crash-loops under `user: "1500:1500"` with `PermissionError: [Errno 13] Permission denied:
-'.env'`. Its `Config` (`pydantic_settings`) hardcodes `env_file=".env"`, a relative path
-resolved against the container's `WORKDIR` (`/home/appuser`), which the image bakes as
+The images pull anonymously from the self-hosted registry once `music_app_image` and
+`music_discord_image` are set. That was tried once, and museek-discord came up cleanly and
+logged into Discord — it carries no `user:` override, so it runs as its image's own
+default user — but museek itself does not start:
+`git.lab.shychedelic.com/shychedelic/museek:0.1.0` crash-loops under
+`user: "1500:1500"` with `PermissionError: [Errno 13] Permission denied: '.env'`. Its
+`Config` (`pydantic_settings`) hardcodes `env_file=".env"`, a relative path resolved
+against the container's `WORKDIR` (`/home/appuser`), which the image bakes as
 `drwx------` owned by uid 10001 — uid 1500 cannot even `stat` inside that directory, so
 the process dies before it ever binds its HTTP listener and `/healthz` never comes up.
-This is an image defect, not a compose or permission-model problem on this side; fixing
-it means changing the image (a writable/owned `WORKDIR`, or dropping the implicit
-`env_file` lookup), not adding a bind mount or relaxing the `1500:1500` user.
+This is an image defect, not a compose or permission-model problem on this side, and it
+is being fixed upstream (a writable/owned `WORKDIR`, or dropping the implicit `env_file`
+lookup) and will ship as `0.1.1`. Deploying it here again is then a one-line change —
+set `music_app_image` (and `music_discord_image`, which has no blocker of its own) back
+to their registry tags and converge — not a rebuild of any of the wiring described above.
 
-**Bind mounts are mandatory, never named volumes** — a named volume initialises from the
-museek image's uid 10001 and becomes unwritable under the `user: "1500:1500"` override.
+**Bind mounts are mandatory, never named volumes**, for whenever it is redeployed — a
+named volume initialises from the museek image's uid 10001 and becomes unwritable under
+the `user: "1500:1500"` override.
 
 ## One API key, two names
 
