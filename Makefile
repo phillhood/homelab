@@ -8,6 +8,10 @@ BACKUPS     := playbooks/backups.yaml
 PIHOLE_IP   := 192.168.1.100
 KVATCH_IP   := 192.168.1.101
 MUSIC_IP    := 192.168.1.102
+FORGE_IP    := 192.168.1.103
+REGISTRY_IP := 192.168.1.104
+PROXY_IP    := 192.168.1.105
+LAB_DOMAIN  := lab.shychedelic.com
 
 UV := uv run --project $(CURDIR)
 
@@ -89,7 +93,7 @@ check: ## Dry run with diffs — what WOULD change
 verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pihole resolves"        "$$(dig +short @$(PIHOLE_IP) kvatch.home)"
 	@printf "%-32s %s\n" "pihole filters"         "$$(dig +short @$(PIHOLE_IP) doubleclick.net)"
-	@printf "%-32s %s/6\n" "infra dns records"    "$$(for n in router switch ap proxmox kvatch pihole; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
+	@printf "%-32s %s/9\n" "infra dns records"    "$$(for n in router switch ap proxmox kvatch pihole forge registry proxy; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
 	@printf "%-32s %s\n" "pmxcfs symlink intact"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'test -L /root/.ssh/authorized_keys && echo yes || echo BROKEN')"
 	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && $(UV) ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
 	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
@@ -99,6 +103,17 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "music smb share"        "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'systemctl is-active smbd')"
 	@printf "%-32s %s\n" "music syncthing"        "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'systemctl is-active syncthing@syncthing')"
 	@printf "%-32s %s\n" "music slskd"            "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'docker inspect -f "{{.State.Status}}" slskd 2>/dev/null || echo MISSING')"
+	@printf "%-32s %s\n" "lab wildcard dns"      "$$(dig +short @$(PIHOLE_IP) probe.$(LAB_DOMAIN))"
+	@printf "%-32s %s\n" "caddy"                 "$$(ssh -o BatchMode=yes root@$(PROXY_IP) 'systemctl is-active caddy')"
+	@printf "%-32s %s\n" "cert issuer"           "$$(echo | openssl s_client -connect $(PROXY_IP):443 -servername git.$(LAB_DOMAIN) 2>/dev/null | openssl x509 -noout -issuer | sed 's/.*CN=//')"
+	@printf "%-32s %s\n" "cert expiry"           "$$(echo | openssl s_client -connect $(PROXY_IP):443 -servername git.$(LAB_DOMAIN) 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)"
+	@printf "%-32s %s\n" "zot"                   "$$(ssh -o BatchMode=yes root@$(REGISTRY_IP) 'systemctl is-active zot')"
+	@printf "%-32s %s\n" "registry v2"           "$$(curl -s -o /dev/null -w '%{http_code}' https://registry.$(LAB_DOMAIN)/v2/)"
+	@printf "%-32s %s\n" "postgresql"            "$$(ssh -o BatchMode=yes root@$(FORGE_IP) 'systemctl is-active postgresql')"
+	@printf "%-32s %s\n" "postgres tcp closed"   "$$(ssh -o BatchMode=yes root@$(FORGE_IP) 'ss -lnt | grep -q :5432 && echo OPEN-BAD || echo closed')"
+	@printf "%-32s %s\n" "forgejo"               "$$(ssh -o BatchMode=yes root@$(FORGE_IP) 'systemctl is-active forgejo')"
+	@printf "%-32s %s\n" "forgejo health"        "$$(curl -s -o /dev/null -w '%{http_code}' https://git.$(LAB_DOMAIN)/api/healthz)"
+	@printf "%-32s %s\n" "museek health"         "$$(curl -s -o /dev/null -w '%{http_code}' http://$(MUSIC_IP):8080/healthz)"
 
 .PHONY: idempotent
 idempotent: ## Converge twice; fail unless the second run changes nothing

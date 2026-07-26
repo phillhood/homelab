@@ -33,12 +33,25 @@ from a four-element one.
 Because of this, `pihole_config` holds **native YAML types** (lists stay lists, numbers
 stay numbers) — both forms are derived from them.
 
+### Booleans are a third form, not a variant of the generic one
+
+`pihole-FTL` **reads** a boolean back lowercase (`true`/`false`), but Jinja's `| string`
+filter renders a Python/YAML boolean as `True`/`False` — capitalized. Left to the
+generic fallback, the read-form comparison would never match a boolean key, so every
+converge would re-`--config` it and restart DNS, forever. `_set_key.yaml` therefore
+branches on `cfg_item.value is boolean` **before** the generic string fallback, in
+**both** `_cfg_read_form` and `_cfg_write_form` — the same "construct the expected
+read-form" pattern as the list case above, just for a different type. `misc.etc_dnsmasq_d`
+(added in the tier0 build) was the first boolean key this role ever set; without the
+`is boolean` branch it would have been the first key that never reported idempotent.
+
 ## dns.hosts holds infra records that nothing else provides
 
 Static-IP infrastructure never requests a DHCP lease, so nothing auto-registers it.
-Those names live only here. All six entries in `pihole_local_records` are load-bearing:
-dropping `router.home`, `switch.home` or `ap.home` silently breaks name resolution for
-the router, switch and AP.
+Those names live only here. Every entry in `pihole_local_records` is load-bearing:
+dropping any one of them silently breaks name resolution for that host — this list has
+already grown twice since the role was written, so treat the file itself as the count,
+not a number restated here.
 
 ## Teleporter
 
