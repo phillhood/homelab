@@ -1,0 +1,15 @@
+---
+- name: Create the music group
+  ansible.builtin.group:
+    name: music
+    gid: "{{ music_gid }}"
+    state: present
+
+- name: Create the Samba user
+  ansible.builtin.user:
+    name: "{{ music_smb_user }}"
+    groups: music
+    append: true
+    shell: /usr/sbin/nologin
+    create_home: false
+    state: present

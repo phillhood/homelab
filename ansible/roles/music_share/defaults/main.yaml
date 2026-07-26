@@ -1,0 +1,6 @@
+---
+music_container_mount: /srv/music
+music_gid: 1500
+music_share_name: music
+music_smb_user: phill
+music_smb_workgroup: WORKGROUP

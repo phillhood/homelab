@@ -1,0 +1,46 @@
+---
+- name: Install Samba
+  ansible.builtin.apt:
+    name: samba
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Deploy the Samba configuration
+  ansible.builtin.template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: testparm -s %s
+  notify: Restart smbd
+
+- name: Check whether the Samba user exists in the password db
+  ansible.builtin.command:
+    argv:
+      - pdbedit
+      - -L
+      - -u
+      - "{{ music_smb_user }}"
+  register: music_pdbedit
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Set the Samba password
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail &&
+      printf '%s\n%s\n' '{{ music_smb_password }}' '{{ music_smb_password }}'
+      | smbpasswd -s -a {{ music_smb_user }}
+    executable: /bin/bash
+  when: music_pdbedit.rc != 0
+  changed_when: true
+  no_log: true
+
+- name: Enable and start Samba
+  ansible.builtin.systemd_service:
+    name: smbd
+    enabled: true
+    state: started
