@@ -1,0 +1,10 @@
+---
+music_container_mount: /srv/music
+music_gid: 1500
+music_share_name: music
+music_smb_user: phill
+music_stack_dir: /opt/music-stack
+music_app_image: ""
+music_slskd_listen_port: 50300
+music_syncthing_gui_port: 8384
+music_syncthing_user: syncthing

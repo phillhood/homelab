@@ -16,5 +16,6 @@ pihole_local_records:
   - "192.168.1.101 proxmox.home"
   - "192.168.1.101 kvatch.home"
   - "192.168.1.100 pihole.home"
+  - "192.168.1.102 music.home"
 
 pihole_adlists: []

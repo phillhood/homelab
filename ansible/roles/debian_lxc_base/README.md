@@ -51,3 +51,15 @@ Debian 13 no longer ships `/etc/timezone`. Check the timezone with
 
 Both `command` tasks in `health.yaml` carry `check_mode: false`, because `--check`
 otherwise skips them and the asserts fail on undefined `stdout`.
+
+## The nesting exception
+
+CT 101 `music` is the deliberate exception to the "no nesting" negative above. It runs
+Docker, which needs `nesting=1` and `keyctl=1`. Those flags are set by
+`music_storage/tasks/container_mount.yaml` via `pct set`, not by this role and not by
+Terraform — the API token gets a 403 on feature flags.
+
+Nesting changes which systemd units fail, so `music` overrides
+`lxc_expected_failed_units` in `inventory/group_vars/music.yaml` rather than widening
+the baseline for every container. Any future nesting container does the same: override
+per group, never in this role's defaults.
