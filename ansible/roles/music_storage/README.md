@@ -145,12 +145,20 @@ bypasses it, so manual management from the host works normally.
 
 If the container sees `nobody:nogroup`, the host-side ownership is what to fix.
 
-`music_host_gid: 101500` here is the 100000-shifted form of the container-side
-`music_gid` (defined in `inventory/group_vars/music.yaml`, defaulted again in
-`music_stack` and `music_share`), not a value this role derives from it. **The two are
-not wired together** — this role does not reference `music_gid` at all. Changing one
-without the other leaves the host tree owned by a GID that no longer maps to `music`
-inside the container.
+`music_gid: 1500` lives in `inventory/group_vars/music_common.yaml`, a group both
+`kvatch` and `music1` belong to — `kvatch` cannot see `group_vars/music.yaml`, which
+applies only to the `music` group (CT 101), so the shared constant has to sit one level
+up, in a group that reaches both sides of the bind mount. `music_stack` and `music_share`
+still default their own copy for standalone runs, but on `music1` the `music_common`
+group var wins.
+
+`music_host_gid` here derives from it: `"{{ 100000 + music_gid | int }}"`. The shift is
+not arithmetic for its own sake — it is the same unprivileged-LXC mapping described
+above, applied to whatever GID the container actually uses, so a change to `music_gid`
+changes the host-side ownership target in the same place, in the same run. Change
+`music_gid` in `music_common.yaml` and both sides move together; `music_host_uid` stays
+a plain `100000` because it is the container's `root`, not a shift of anything defined
+in `music_common`.
 
 ## Run order on first build
 
