@@ -9,8 +9,15 @@ Run everything through the repo-root `Makefile` — `make help` lists the target
 
 | Playbook | Purpose | Success signal |
 | --- | --- | --- |
-| `site.yaml` | Converge the homelab | **`changed=0`** on a second run |
-| `backups.yaml` | Capture Pi-hole + OPNsense config | **`changed` every run, by design** |
+| `site.yaml` | Converge the homelab — imports `music.yaml` and `tier0.yaml` | **`changed=0`** on a second run |
+| `music.yaml` | Music NAS: host storage, then share + stack on `music` | imported by `site.yaml`; runnable alone |
+| `tier0.yaml` | `registry` → `proxy` → `forge`, in that order | imported by `site.yaml`; runnable alone |
+| `backups.yaml` | Every backup series — Pi-hole, OPNsense, music, Forgejo, Terraform state | **`changed` every run, by design** |
+
+`music.yaml` and `tier0.yaml` are imported by `site.yaml` rather than being separate entry
+points, so a full converge covers everything. Run them directly to scope work to one area.
+`tier0.yaml`'s play order is deliberate: the registry and proxy exist before the forge that
+sits behind the proxy.
 
 They are separate deliberately. Backups are `changed` on every run — a backup that never
 changes is broken — so folding them into `site.yaml` would destroy its `changed=0`
@@ -20,11 +27,18 @@ signal, which is the property everything else is verified against.
 
 | Role | Group | Notes |
 | --- | --- | --- |
-| `proxmox_host` | `proxmox` | repos, resolver, root keys, Terraform account + SOPS token |
+| `proxmox_host` | `proxmox` | repos, resolver, root keys, Terraform account + SOPS token, thin-pool reclaim |
 | `pve_templates` | `proxmox` | LXC + cloud-init VM templates |
-| `debian_lxc_base` | `lxc` | packages, timezone, health asserts |
+| `debian_lxc_base` | `lxc` | packages, timezone, health asserts, opt-in OS upgrade |
 | `pihole` | `pihole` | install, config, gravity, password |
-| `homelab_backups` | `pihole`, `opnsense` | Teleporter + `config.xml` into `.dev/` |
+| `music_storage` | `proxmox` | Thunderbolt SSD, ext4, host mount, layout, bind mount into CT 101 |
+| `music_share` | `music` | Samba + Syncthing |
+| `music_stack` | `music` | Docker, slskd, museek, museek-discord |
+| `registry` | `registry` | Zot pull-through cache |
+| `proxy` | `proxy` | Caddy, wildcard TLS via Cloudflare DNS-01 |
+| `postgresql` | `forge` | host-agnostic Postgres on a Unix socket |
+| `forgejo` | `forge` | Forgejo + its OCI registry |
+| `homelab_backups` | `pihole`, `music`, `forge`, `opnsense`, `localhost` | every backup series into `.dev/` |
 
 Each role has its own README covering the decisions and traps specific to it. Read those
 before changing a role — several encode findings that cost real time to discover.

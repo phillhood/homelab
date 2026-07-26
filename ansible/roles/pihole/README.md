@@ -86,6 +86,45 @@ on a fresh install or on that explicit flag.
 `pihole_fresh_install` defaults to `false` so that `--tags gravity` or `--tags password`
 work standalone; `install.yaml` overrides it when that tag runs.
 
+## The web password goes in on stdin, and an empty one would disable auth
+
+`password.yaml` calls `pihole setpassword` with **no argument** and supplies the value twice
+on `stdin:`, because reading `/usr/local/bin/pihole` shows `SetWebPassword` prompts twice
+(password, then confirm) when given none. Passing it as `argv` instead leaves the plaintext
+in `/proc/<pid>/cmdline` for the life of the process, which `no_log: true` does nothing
+about — `no_log` hides Ansible's output, not the OS process table. Same fix as `music_share`.
+
+**An `assert` guards against an empty value, and it is load-bearing.** From the same source:
+
+```bash
+read -s -r -p "Enter New Password (Blank for no password): " PASSWORD
+if [ "${PASSWORD}" == "" ]; then
+    setFTLConfigValue "webserver.api.password" ""
+    echo -e "  ${TICK} Password Removed"
+    exit 0
+fi
+```
+
+A blank first line **removes the password and exits 0** — web authentication silently
+disabled, play reports success. Never drop that assert.
+
+### This is mitigation, not elimination
+
+`SetWebPassword` finishes by calling `setFTLConfigValue`, which is
+
+```bash
+pihole-FTL --config "${1}" "${2}"
+```
+
+so the plaintext still reaches argv, inside Pi-hole's own short-lived subprocess rather than
+the one Ansible spawns. Removing our exposure is the part within our control; closing the
+rest needs an upstream change. There is no hash-setting path to use instead — `pihole-FTL`
+ships no BALLOON hash generator (`--perf` is a benchmark, not a generator), and
+`webserver.api.pwhash` expects a hash we cannot compute locally.
+
+**Do not run `pihole setpassword --help` to check usage.** There is no help flag, so it sets
+the password to the literal string `--help`. Read `/usr/local/bin/pihole` instead.
+
 ## Cache gotcha
 
 After changing gravity or config, `pihole restartdns` before testing or a stale answer
