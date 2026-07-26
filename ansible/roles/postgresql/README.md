@@ -36,9 +36,17 @@ system user to authenticate via peer auth over the Unix socket, and Ansible's de
 `become_method` is `sudo`. Left at the default, the task fails with `Module result
 deserialization failed: No start of json char found` — a red herring; the real error
 (`/bin/sh: 1: sudo: not found`) only shows up under `-vvv`, because the failing task
-also has `no_log: true` for the password argument. `ansible/roles/music_share/tasks/
-syncthing.yaml` hit and solved the same problem earlier in this build; this role
-follows the same fix.
+also has `no_log: true` for the password argument.
+
+The actual rule, for the next role that needs `become` on one of these containers:
+`become_method: ansible.builtin.su` is always required, because there is no `sudo`
+anywhere. `become_flags: "-s /bin/sh"` is *additionally* required only when the target
+account's shell is `nologin` — `su` needs to be told what to run the command with in
+that case. `ansible/roles/music_share/tasks/syncthing.yaml` needs both, because its
+service account has `shell: /usr/sbin/nologin`. `postgres` has `/bin/bash`
+(`getent passwd postgres`), so `su` can use it directly and `become_flags` is omitted
+here — that is a difference in the account, not a partial or simplified copy of the
+`syncthing.yaml` fix.
 
 ## The default cluster encoding is `SQL_ASCII`, not `UTF8`
 
@@ -66,7 +74,7 @@ This was not chased further into fixing cluster-wide locale generation (e.g. via
 `debian_lxc_base`) — that would affect every container built from the base image, is a
 bigger decision than this role's scope, and `template0` avoids needing it at all.
 
-## Handler drift after an interrupted run
+## Handler drift after an interrupted run, and why `install.yaml` flushes early
 
 If a play run fails *after* the `listen_addresses` `lineinfile` task has written to
 disk but *before* handlers flush at end-of-play, the notified `Restart postgresql`
@@ -75,8 +83,20 @@ sees the file already matches and does not re-notify the handler — so the serv
 keep running with a stale, already-superseded config indefinitely, even though
 `ansible-playbook` reports clean and `changed=0`. This happened once during this
 role's own development, caused by the `sudo`/`become_method` bug above interrupting an
-early run; recovery was a manual `systemctl restart postgresql`. Worth checking for
-after any run that fails partway through this role.
+early run; recovery was a manual `systemctl restart postgresql`.
+
+Because the setting guarded by that restart is the socket-only security posture, silent
+drift here specifically means "TCP quietly open while Ansible says everything is fine"
+— worse than an ordinary stale-config bug. `install.yaml` therefore has an explicit
+`ansible.builtin.meta: flush_handlers` immediately after the `listen_addresses` task,
+so the restart happens right there instead of waiting for end-of-play. This is not
+redundant with the note above, even though it looks like it at a glance: the note
+describes the failure this project actually hit; the flush is what closes the window
+that caused it, shrinking "notified but not yet restarted" from "the rest of the play"
+down to zero tasks. Do not remove the flush because the note above looks like it
+already covers this — the note is the incident, the flush is the fix. `make verify`
+(added in a later task) is a second, independent check for the same failure mode, not
+a replacement for the flush.
 
 ## Password handling
 
