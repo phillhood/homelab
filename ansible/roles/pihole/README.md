@@ -74,8 +74,9 @@ ansible-playbook playbooks/site.yaml --limit pihole \
 ## Adlists
 
 `dns.adlists` is **not** a `pihole.toml` key, and there is no `pihole adlist` CLI —
-v6 keeps adlists in `gravity.db`. They arrive with the Teleporter seed. If explicit
-enforcement is ever needed, use the HTTP API; `pihole_adlists` is currently unused.
+v6 keeps adlists in `gravity.db`. They arrive with the Teleporter seed, and this role
+never enforces them. If explicit enforcement is ever needed it has to go through the
+HTTP API.
 
 ## Re-run semantics
 

@@ -1,6 +1,8 @@
 # music_storage
 
-Host-side role for the music SSD. Runs on `kvatch`, not in the container.
+Everything about the music disk on the host: the SSD itself, its layout, the bind mount
+into CT 101, and the content backup that protects it. Runs on `kvatch`, not in the
+container.
 
 ## What it does
 
@@ -195,9 +197,10 @@ If the container sees `nobody:nogroup`, the host-side ownership is what to fix.
 `music_gid: 1500` lives in `inventory/group_vars/music_common.yaml`, a group both
 `kvatch` and `music1` belong to — `kvatch` cannot see `group_vars/music.yaml`, which
 applies only to the `music` group (CT 101), so the shared constant has to sit one level
-up, in a group that reaches both sides of the bind mount. `music_stack` and `music_share`
-still default their own copy for standalone runs, but on `music1` the `music_common`
-group var wins.
+up, in a group that reaches both sides of the bind mount. `music_container_mount` and
+`music_stack_dir` are there for the same reason. `music_stack` and `music_share` still
+default their own copy for standalone runs, but on `music1` the `music_common` group var
+wins.
 
 `music_host_gid` here derives from it: `"{{ 100000 + music_gid | int }}"`. The shift is
 not arithmetic for its own sake — it is the same unprivileged-LXC mapping described

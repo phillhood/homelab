@@ -47,8 +47,8 @@ deps: ## Sync the pinned Python toolchain and Ansible collections
 ##@ Validate (never contacts a host)
 
 .PHONY: lint
-lint: ## Syntax-check both playbooks, then ansible-lint
-	@cd $(ANSIBLE_DIR) && for p in $(SITE) $(BACKUPS); do \
+lint: ## Syntax-check every playbook, then ansible-lint
+	@cd $(ANSIBLE_DIR) && for p in playbooks/*.yaml; do \
 		printf "%-24s " "$$p"; \
 		$(UV) ansible-playbook $$p --syntax-check >/dev/null 2>&1 && echo "syntax OK" || { echo "SYNTAX FAIL"; exit 1; }; \
 	done
@@ -70,8 +70,12 @@ vars: ## Show every variable per host — decrypts sops secrets, masked by defau
 	fi
 
 .PHONY: tags
-tags: ## List the tags available on site.yaml
-	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) --list-tags 2>/dev/null | grep -i "TASK TAGS" | sort -u
+tags: ## List the tags available on site.yaml and backups.yaml
+	@for p in $(SITE) $(BACKUPS); do \
+		printf "\n  %s\n" "$$p"; \
+		cd $(CURDIR)/$(ANSIBLE_DIR) && $(UV) ansible-playbook $$p --list-tags 2>/dev/null \
+			| grep -i "TASK TAGS" | sort -u | sed 's/^/  /'; \
+	done
 
 .PHONY: secrets
 secrets: ## Confirm every *.sops.yaml is encrypted at rest

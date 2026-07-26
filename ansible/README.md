@@ -31,25 +31,38 @@ signal, which is the property everything else is verified against.
 | `pve_templates` | `proxmox` | LXC + cloud-init VM templates |
 | `debian_lxc_base` | `lxc` | packages, timezone, health asserts, opt-in OS upgrade |
 | `pihole` | `pihole` | install, config, gravity, password |
-| `music_storage` | `proxmox` | Thunderbolt SSD, ext4, host mount, layout, bind mount into CT 101 |
+| `music_storage` | `proxmox` | Thunderbolt SSD, ext4, host mount, layout, bind mount into CT 101, restic content backup + timer |
 | `music_share` | `music` | Samba + Syncthing |
 | `music_stack` | `music` | Docker, slskd, museek, museek-discord |
 | `registry` | `registry` | Zot pull-through cache |
 | `proxy` | `proxy` | Caddy, wildcard TLS via Cloudflare DNS-01 |
 | `postgresql` | `forge` | host-agnostic Postgres on a Unix socket |
 | `forgejo` | `forge` | Forgejo + its OCI registry |
-| `homelab_backups` | `pihole`, `music`, `forge`, `opnsense`, `localhost` | every backup series into `.dev/` |
+| `homelab_backups` | `pihole`, `music`, `proxmox`, `forge`, `opnsense`, `localhost` | every backup series into `.dev/`, plus the music content run on `kvatch` |
 
-Each role has its own README covering the decisions and traps specific to it. Read those
-before changing a role — several encode findings that cost real time to discover.
+Each role has its own README: what it does, how to run it, the variables worth setting,
+and an **Invariants** list. Read the invariants before changing a role — each one is a
+trap that cost real time to find, and several describe a change that looks like a
+simplification and is not.
 
 ## Conventions
 
 - Role names use underscores. `tasks/main.yaml` is a thin tagged dispatcher, so
   `--tags <concern>` runs one slice.
 - **No explanatory comments in config.** Task names state what the task does; rationale
-  belongs in the role README. That applies to task names, play names and assert
-  messages too — no parenthetical asides.
+  goes in documentation. That applies to task names, play names and assert messages too —
+  no parenthetical asides.
+- **Role READMEs are reference plus invariants, not narrative.** What the role does, how
+  to run it, the variables worth setting, what it requires but does not default, and a
+  terse `## Invariants` list — one line per trap, no measurement stories. Rationale,
+  history and the how-we-found-it write-ups go in `.dev/docs/ansible/<role>.md`.
+  Invariants stay in the README on purpose: `.dev/` is gitignored, and an invariant that
+  does not survive a clone is not protecting anything.
+- Variables live in exactly one layer. Role `defaults/` owns the role's own values;
+  `group_vars/` carries only what is environment-specific — versions, checksums,
+  addresses, identities, secrets — or a genuine override. A value repeated in both means
+  editing the default silently does nothing. The exception is `music_common.yaml`, whose
+  three variables are deliberately shared across the bind mount by `kvatch` and `music1`.
 - Secrets rule: *would leaking this let someone in?* If yes it goes in a `*.sops.yaml`;
   if no it stays plaintext. Public keys and device IDs are not secrets.
 - `vars_plugins_enabled` includes `community.sops.sops`, so any inventory read — including

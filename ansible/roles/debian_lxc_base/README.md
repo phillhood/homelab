@@ -67,15 +67,19 @@ error through where it could be mistaken for success. That mistake was made once
 snapshot failed, the upgrade was run in the same shell invocation, and `music1` was upgraded
 with no revert path. It came through clean, but the exposure was real.
 
-**What protects CT 101 instead, and what does not:**
+**What protects CT 101 instead:**
 
 | Covered | By |
 |---|---|
-| Syncthing identity — `config.xml`, `key.pem`, `cert.pem` | `make backup-music` |
-| museek's `museek.db` | `make backup-music` (hot copy — see backlog) |
-| The library itself | nothing, but it is on the host SSD and container operations cannot touch it |
-| **slskd's `/app` volume** (`slskd.yml`, its data dir) | **nothing** |
+| The library, and everything else under `/mnt/music` | `make backup-music-content` — restic, daily timer, repo on pve-root rather than the library's own disk |
+| museek's `museek.db` | `make backup-music-content` — staged with `sqlite3 .backup` and integrity-checked, not copied |
+| slskd's config and data (`/opt/music-stack`) | `make backup-music-content` — tarred **hot**, and only while CT 101 is running |
+| Syncthing identity — `config.xml`, `key.pem`, `cert.pem` — and `smb.conf` | `make backup-music` |
 | The rest of the guest | reproducible by Ansible |
+
+The content backup covers what a snapshot would have, so the missing snapshot is no
+longer the only thing standing between an upgrade and the library. Its invariants live in
+`roles/music_storage/README.md`.
 
 For a genuine pre-upgrade revert point, use `vzdump` on the host — it skips bind mounts, so
 it captures the rootfs only. Note this path has **not** been exercised here, and it

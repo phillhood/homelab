@@ -1,7 +1,10 @@
 # homelab_backups
 
-Pulls config backups for the two things that don't fit the Ansible-configures-the-guest
-model: Pi-hole's Teleporter bundle and OPNsense's `config.xml`.
+Pulls the backup series for everything the Ansible-configures-the-guest model does not
+reproduce: Pi-hole's Teleporter bundle, OPNsense's `config.xml`, the music manifest and
+service config, the Forgejo dump, and the Terraform state. The music *content* backup is
+the one exception — it runs a script that `music_storage` installs on `kvatch` rather than
+pulling anything to the controller.
 
 ## Bootstrap (one-time, manual)
 
@@ -48,19 +51,26 @@ the canonical store from then on.
 ## Run
 
 ```bash
-ansible-playbook playbooks/backups.yaml              # everything
-ansible-playbook playbooks/backups.yaml --tags pihole
-ansible-playbook playbooks/backups.yaml --tags opnsense
-ansible-playbook playbooks/backups.yaml --tags music-content
-ansible-playbook playbooks/backups.yaml --tags rotate
+make backup                  # every series
+make backup-pihole           # --tags pihole         Teleporter archive
+make backup-opnsense         # --tags opnsense       config.xml
+make backup-music            # --tags music          manifest + service config
+make backup-music-content    # --tags music-content  the files themselves, via restic
+make backup-forgejo          # --tags forgejo        forgejo dump
+make backup-terraform        # --tags terraform      tfstate + recovery script
+                             # --tags rotate         prune, runs last
 ```
 
-Writes timestamped backups into `.dev/pihole-backups/`, `.dev/opnsense-backups/`, and
-`.dev/music-backups/`. Retention is per *series*, not per directory: `.dev/music-backups/`
-holds two independent series written every run (`manifest-*.tsv.gz` and
-`config-*.tar.gz`), each pruned to the newest `backup_retention` (default 14) on its own —
-so that directory ends up with up to `2 * backup_retention` files, not `backup_retention`.
-`rotate.yaml` prunes per `(directory, pattern)` pair, driven by `backup_prune_targets` in
+Writes timestamped backups into `.dev/pihole-backups/`, `.dev/opnsense-backups/`,
+`.dev/music-backups/`, `.dev/forgejo-backups/` and `.dev/terraform-backups/`, all under
+`{{ repo_root }}`. The music *content* series is the exception — it lands in a restic
+repository on `kvatch`, never on the controller, and keeps its own retention.
+
+Retention here is per *series*, not per directory: `.dev/music-backups/` holds two
+independent series written every run (`manifest-*.tsv.gz` and `config-*.tar.gz`), each
+pruned to the newest `backup_retention` (default 14) on its own — so that directory ends
+up with up to `2 * backup_retention` files, not `backup_retention`. `rotate.yaml` prunes
+per `(directory, pattern)` pair, driven by `backup_prune_targets` in
 `defaults/main.yaml`, for exactly this reason.
 
 **This role is `changed` on every run by design** — a backup that never changes is
