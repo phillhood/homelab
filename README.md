@@ -2,15 +2,16 @@
 
 ***v2!***
 
-Proxmox VE on one node, with a cluster planned. Terraform provisions the guests, Ansible
-configures them.
+Proxmox VE cluster: Terraform provisions the guests, Ansible configures them.
+
+Kubernetes cluster planned.
 
 ## Layout
 
 | | |
 |---|---|
 | `ansible/` | configures what Terraform created |
-| `kubernetes/` | cluster manifests — Phase 5, not live yet |
+| `kubernetes/` | cluster manifests — TODO |
 | `terraform/` | provisions guests — containers and VMs |
 
 The layers do not cross: nothing in `ansible/` creates or destroys a guest, and Terraform
@@ -59,11 +60,4 @@ the notes rather than doing it from memory.
 
 ## Documentation
 
-Secrets live in `*.sops.yaml` and are decrypted at run time by the inventory plugin.
-`make secrets` confirms every file is encrypted before you commit anything.
-
-Documentation is not committed. Each role has a set of notes covering what it does, how to
-run it, the variables worth setting and an **Invariants** list — read a role's invariants
-before changing it, since each one is a trap that cost real time to find. The same applies
-to the hardware, network topology, service inventory, roadmap, and the conventions this repo
-is written to. All of it is kept locally and backed up.
+See `Homelab` in Obsidian
