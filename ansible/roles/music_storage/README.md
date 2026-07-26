@@ -6,7 +6,7 @@ Host-side role for the music SSD. Runs on `kvatch`, not in the container.
 
 - `thunderbolt.yaml` — installs `bolt` and enrolls the enclosure. **Runs first**; without
   it there is no block device at all.
-- `disk.yaml` — the one destructive step. Partition + `mkfs.ext4`, behind three guards.
+- `disk.yaml` — the one destructive step. Partition + `mkfs.ext4`, behind four guards.
 - `mount.yaml` — fstab entry by UUID, then mount.
 - `layout.yaml` — `library/`, `downloads/{incomplete,complete}/`, `.state/museek/`, `.meta/`, owned
   `100000:101500`, mode `2775`.
@@ -48,7 +48,7 @@ Because the transport is Thunderbolt rather than USB, three risks in the design 
 §12 table no longer apply: TRIM passes through, SMART needs no `-d sat`, and UAS quirks
 are impossible.
 
-## The three format guards
+## The four format guards
 
 1. The disk is addressed by `/dev/disk/by-id` serial, never `/dev/nvmeXn1` — controller
    numbering is not stable across replugs.
@@ -64,6 +64,21 @@ guard 4 that fail-open path is indistinguishable from `blkid` erroring on a *pre
 filesystem, which on a Thunderbolt-attached disk is not hypothetical. The `stat` on the
 partition device is what separates the two cases: no device means new disk, device
 present plus a read error means stop.
+
+## The mkfs options reproduce the original decisions
+
+`opts: "-L music -m 0 -i {{ music_fs_inode_ratio }} -U {{ music_disk_uuid }}"`.
+
+**`-i 1048576` is the one that cannot be undone.** ext4's inode count is fixed at format
+time — not changeable by `tune2fs`, not by `resize2fs`. The default ratio of one inode per
+16 KiB is tuned for a root filesystem full of small files; on a 2 TB media disk it
+allocates ~122 million inodes costing **29 GiB of inode tables on an empty filesystem**.
+One per MiB gives ~1.9 million inodes for ~488 MiB, still far more than a library of
+FLACs or MP3s will ever need. If this role ever formats a replacement disk without that
+flag, the 29 GiB is silently gone and only another reformat gets it back.
+
+`-U` reuses the UUID already recorded in `host_vars`, so a replacement disk drops in
+without updating fstab, the inventory, or anything else that references it.
 
 Guard 4 has one deliberate cost. If a first-time provision is interrupted between
 `parted` and `mkfs` — partition created, never formatted — a retry now **refuses**,

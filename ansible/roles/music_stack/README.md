@@ -17,6 +17,17 @@ ssh root@192.168.1.102 'docker run --rm hello-world'
 If that hangs or errors on cgroups or the keyring, a feature flag is missing or the
 container has not been rebooted since it was set.
 
+## The Docker signing key is fetched with force: true
+
+`get_url` skips the download whenever the destination file already exists, comparing
+nothing about its content. Without `force: true`, an upstream rotation of Docker's
+signing key would leave the stale copy in place at `/etc/apt/keyrings/docker.asc`
+indefinitely, and `apt` would start failing signature verification on the docker-ce
+repository with no automated recovery — the file exists, so the task would keep
+reporting success while apt broke. `force: true` re-fetches the key on every run
+regardless of whether the destination exists, but still only reports `changed` when the
+fetched content actually differs, so idempotent runs stay `changed=0`.
+
 ## The image store stays off the SSD
 
 `/var/lib/docker` lives on the container root disk. Keeping it there makes the container

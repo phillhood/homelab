@@ -80,5 +80,5 @@
   community.general.filesystem:
     dev: "{{ music_disk_partition }}"
     fstype: ext4
-    opts: "-L {{ music_fs_label }} -m 0"
+    opts: "-L {{ music_fs_label }} -m 0 -i {{ music_fs_inode_ratio }} -U {{ music_disk_uuid }}"
   when: music_do_format | bool

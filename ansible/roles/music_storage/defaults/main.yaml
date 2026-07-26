@@ -1,6 +1,7 @@
 ---
 music_host_mount: /mnt/music
 music_fs_label: music
+music_fs_inode_ratio: 1048576
 music_gid: 1500
 music_host_uid: 100000
 music_host_gid: 101500
