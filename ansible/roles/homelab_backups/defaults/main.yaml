@@ -1,5 +1,6 @@
 ---
 backup_pihole_dir: "{{ playbook_dir }}/../../.dev/pihole-backups"
 backup_opnsense_dir: "{{ playbook_dir }}/../../.dev/opnsense-backups"
+backup_music_dir: "{{ playbook_dir }}/../../.dev/music-backups"
 backup_retention: 14
 opnsense_host: 192.168.1.1

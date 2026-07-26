@@ -8,17 +8,19 @@
   loop:
     - "{{ backup_pihole_dir }}"
     - "{{ backup_opnsense_dir }}"
+    - "{{ backup_music_dir }}"
 
 - name: Find backups in each target dir
   ansible.builtin.find:
     paths: "{{ item }}"
-    patterns: ["*.zip", "*.xml"]
+    patterns: ["*.zip", "*.xml", "*.gz"]
   register: backup_inventory
   changed_when: false
   delegate_to: localhost
   loop:
     - "{{ backup_pihole_dir }}"
     - "{{ backup_opnsense_dir }}"
+    - "{{ backup_music_dir }}"
 
 - name: Prune backups beyond the retention count
   ansible.builtin.file:
