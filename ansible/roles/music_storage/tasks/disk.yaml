@@ -25,6 +25,23 @@
   failed_when: false
   check_mode: false
 
+- name: Check whether the partition device exists
+  ansible.builtin.stat:
+    path: "{{ music_disk_partition }}"
+    follow: true
+  register: music_part_stat
+
+- name: Refuse to format on an unreadable filesystem signature
+  ansible.builtin.assert:
+    that: music_blkid.rc == 0
+    fail_msg: >-
+      blkid failed on {{ music_disk_partition }} (rc={{ music_blkid.rc }}) but the
+      partition device exists. Refusing to format on an unreadable signature.
+    success_msg: "Filesystem signature readable."
+  when:
+    - music_part_stat.stat.exists
+    - music_format_disk | bool
+
 - name: Set filesystem facts
   ansible.builtin.set_fact:
     music_fs_type: >-
