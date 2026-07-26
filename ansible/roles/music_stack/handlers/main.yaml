@@ -11,3 +11,4 @@
       - --force-recreate
       - --remove-orphans
   changed_when: true
+  no_log: true

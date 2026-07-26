@@ -49,3 +49,4 @@
       - --remove-orphans
   register: music_compose_up
   changed_when: "'Started' in music_compose_up.stderr or 'Created' in music_compose_up.stderr"
+  no_log: true

@@ -7,13 +7,12 @@ services:
     environment:
       SLSKD_DOWNLOADS_DIR: /downloads
       SLSKD_SHARED_DIR: /library
-      SLSKD_SLSK_USERNAME: {{ slskd_soulseek_username }}
-      SLSKD_SLSK_PASSWORD: {{ slskd_soulseek_password }}
+      SLSKD_SLSK_USERNAME: {{ slskd_soulseek_username | to_json }}
+      SLSKD_SLSK_PASSWORD: {{ slskd_soulseek_password | to_json }}
       SLSKD_SLSK_LISTEN_PORT: {{ music_slskd_listen_port }}
-      SLSKD_API_KEY: {{ museek_slskd_api_key }}
-      SLSKD_USERNAME: {{ slskd_web_username }}
-      SLSKD_PASSWORD: {{ slskd_web_password }}
-      SLSKD_UMASK: "0002"
+      SLSKD_API_KEY: {{ museek_slskd_api_key | to_json }}
+      SLSKD_USERNAME: {{ slskd_web_username | to_json }}
+      SLSKD_PASSWORD: {{ slskd_web_password | to_json }}
     ports:
       - "{{ music_slskd_web_port }}:5030"
       - "{{ music_slskd_listen_port }}:{{ music_slskd_listen_port }}"
@@ -42,13 +41,13 @@ services:
     environment:
       MUSEEK_SLSKD_URL: http://slskd:5030
       MUSEEK_SLSKD_DOWNLOADS_DIR: /downloads
-      MUSEEK_SLSKD_API_KEY: {{ museek_slskd_api_key }}
+      MUSEEK_SLSKD_API_KEY: {{ museek_slskd_api_key | to_json }}
       MUSEEK_DEST_PATH: /library
       MUSEEK_DB_PATH: /data/museek.db
       MUSEEK_STAGING_PATH: /data/staging
-      MUSEEK_API_TOKEN: {{ museek_api_token }}
-      MUSEEK_SPOTIFY_CLIENT_ID: {{ museek_spotify_client_id }}
-      MUSEEK_SPOTIFY_CLIENT_SECRET: {{ museek_spotify_client_secret }}
+      MUSEEK_API_TOKEN: {{ museek_api_token | to_json }}
+      MUSEEK_SPOTIFY_CLIENT_ID: {{ museek_spotify_client_id | to_json }}
+      MUSEEK_SPOTIFY_CLIENT_SECRET: {{ museek_spotify_client_secret | to_json }}
       MUSEEK_MUSICBRAINZ_CONTACT: {{ museek_musicbrainz_contact }}
       MUSEEK_UMASK: "002"
     ports:
