@@ -17,3 +17,6 @@
   gather_facts: true
   roles:
     - pihole
+
+- name: Import the music NAS plays
+  ansible.builtin.import_playbook: music.yaml
