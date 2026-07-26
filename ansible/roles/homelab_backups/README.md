@@ -99,3 +99,13 @@ ansible-playbook playbooks/backups.yaml --tags rotate -e backup_retention=2
 
 `config.xml` contains secrets in cleartext. It stays in gitignored `.dev/` and is never
 committed. If it ever needs to go offsite, `age`-encrypt it first.
+
+The music config archive (`.dev/music-backups/config-*.tar.gz`) is safe by construction:
+`smb.conf` carries no credentials, `config.xml` is Syncthing's device ID and folder
+pairing state, and `museek.db` is application state, none of it a secret. The rendered
+`docker-compose.yml` is deliberately left out — it is fully derived from
+`music_stack/templates/docker-compose.yml.j2` plus the sops-encrypted vars already in
+git, so backing it up buys no recovery value, and it embeds the slskd credentials in
+plaintext (the deploy task marks it `no_log: true` for exactly this reason). Anything
+added to this archive in future must be checked for credentials first, or it undoes that
+protection.

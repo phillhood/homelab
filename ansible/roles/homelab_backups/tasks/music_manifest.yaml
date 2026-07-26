@@ -20,11 +20,16 @@
     path:
       - /etc/samba/smb.conf
       - "{{ music_syncthing_config_dir | default('/var/lib/syncthing/.local/state/syncthing') }}/config.xml"
-      - "{{ music_stack_dir }}/docker-compose.yml"
       - "{{ music_container_mount }}/.state/museek/museek.db"
     dest: /tmp/music-config.tar.gz
     format: gz
     mode: "0600"
+  register: music_config_archive
+
+- name: Report archive members that were missing
+  ansible.builtin.debug:
+    msg: "Not archived: {{ music_config_archive.missing | default([]) | join(', ') }}"
+  when: music_config_archive.missing | default([]) | length > 0
 
 - name: Fetch the manifest to the control node
   ansible.builtin.fetch:
