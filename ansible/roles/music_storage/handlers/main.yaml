@@ -9,7 +9,7 @@
 
 - name: Wait for the music container to accept connections
   ansible.builtin.wait_for:
-    host: "{{ hostvars['music1'].ansible_host }}"
+    host: "{{ hostvars[groups['music'] | first].ansible_host }}"
     port: 22
     delay: 2
     timeout: 120

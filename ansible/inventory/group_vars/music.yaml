@@ -1,12 +1,4 @@
 ---
-music_share_name: music
-music_smb_user: phill
-music_stack_dir: /opt/music-stack
-music_app_image: git.lab.shychedelic.com/shychedelic/museek:0.1.1
-music_discord_image: git.lab.shychedelic.com/shychedelic/museek-discord:0.1.1
-music_slskd_listen_port: 2235
-music_syncthing_gui_port: 8384
-music_syncthing_user: syncthing
-music_museek_port: 8080
-music_museek_match_threshold: "0.6"
+music_app_image: git.lab.shychedelic.com/shychedelic/museek:0.1.2
+music_discord_image: git.lab.shychedelic.com/shychedelic/museek-discord:0.1.2
 museek_musicbrainz_contact: shy@shychedelic.com

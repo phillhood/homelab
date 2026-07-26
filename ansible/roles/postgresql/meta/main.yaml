@@ -1,8 +1,0 @@
----
-galaxy_info:
-  role_name: postgresql
-  author: Phill Hood
-  description: PostgreSQL server on a Unix socket, with one owned database.
-  license: MIT
-  min_ansible_version: "2.15"
-dependencies: []

@@ -22,7 +22,3 @@ pihole_local_records:
   - "192.168.1.104 registry.home"
   - "192.168.1.105 proxy.home"
 
-pihole_adlists: []
-
-pihole_lab_domain: lab.shychedelic.com
-pihole_lab_proxy_ip: 192.168.1.105

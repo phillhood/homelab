@@ -25,7 +25,6 @@
     upgrade: dist
     update_cache: true
     autoremove: true
-  register: lxc_upgrade
   environment:
     DEBIAN_FRONTEND: noninteractive
 

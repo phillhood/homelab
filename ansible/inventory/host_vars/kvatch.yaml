@@ -1,7 +1,4 @@
 ---
-pve_node_name: kvatch
-pve_mgmt_ip: 192.168.1.101
-
 music_tb_uuid: bc010000-0082-840e-03c9-94d812c28008
 music_disk_by_id: /dev/disk/by-id/nvme-WD_BLACK_SN770_2TB_251161806875
 music_disk_partition: /dev/disk/by-id/nvme-WD_BLACK_SN770_2TB_251161806875-part1

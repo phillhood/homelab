@@ -1,8 +1,0 @@
----
-galaxy_info:
-  role_name: music_share
-  author: Phill Hood
-  description: Samba and Syncthing for the music library, in CT 101.
-  license: MIT
-  min_ansible_version: "2.15"
-dependencies: []

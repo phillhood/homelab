@@ -1,1 +1,1 @@
-address=/{{ pihole_lab_domain }}/{{ pihole_lab_proxy_ip }}
+address=/{{ lab_domain }}/{{ hostvars[groups['proxy'] | first].ansible_host }}

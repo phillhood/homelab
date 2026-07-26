@@ -1,7 +1,6 @@
 ---
 homelab_domain: home
 homelab_timezone: America/Toronto
-upstream_dns:
-  - 1.1.1.1
-  - 1.0.0.1
+lab_domain: lab.shychedelic.com
 pihole_dns_ip: 192.168.1.100
+repo_root: "{{ ansible_config_file | dirname | dirname }}"

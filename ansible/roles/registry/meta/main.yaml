@@ -1,8 +1,0 @@
----
-galaxy_info:
-  role_name: registry
-  author: Phill Hood
-  description: Zot pull-through cache for upstream registries in CT 103.
-  license: MIT
-  min_ansible_version: "2.15"
-dependencies: []

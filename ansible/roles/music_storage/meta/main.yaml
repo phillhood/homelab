@@ -1,8 +1,0 @@
----
-galaxy_info:
-  role_name: music_storage
-  author: Phill Hood
-  description: Host-side music SSD — Thunderbolt enrollment, format guard, mount, layout.
-  license: MIT
-  min_ansible_version: "2.15"
-dependencies: []

@@ -1,21 +1,21 @@
 ---
 - name: Look for the backup script
   ansible.builtin.stat:
-    path: "{{ backup_music_script }}"
-  register: backup_music_script_stat
+    path: "{{ music_backup_script }}"
+  register: music_backup_script_stat
 
 - name: Refuse to continue if the backup was never provisioned
   ansible.builtin.assert:
     that:
-      - backup_music_script_stat.stat.exists
+      - music_backup_script_stat.stat.exists
     fail_msg: >-
-      {{ backup_music_script }} is missing. It is installed by the
+      {{ music_backup_script }} is missing. It is installed by the
       music_storage role — run `make apply`, or the musicbackup tag, first.
     quiet: true
 
 - name: Back up the music content
   ansible.builtin.command:
-    argv: ["{{ backup_music_script }}"]
+    argv: ["{{ music_backup_script }}"]
   register: backup_music_content
   changed_when: true
 

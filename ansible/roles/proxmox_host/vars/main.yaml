@@ -1,2 +1,2 @@
 ---
-sops_proxmox_secrets_file: "{{ playbook_dir }}/../inventory/group_vars/proxmox.sops.yaml"
+sops_proxmox_secrets_file: "{{ repo_root }}/ansible/inventory/group_vars/proxmox.sops.yaml"

@@ -10,11 +10,9 @@ music_container_features: nesting=1,keyctl=1
 music_format_disk: false
 music_device_timeout: 60
 
-music_stack_dir: /opt/music-stack
 music_backup_repo: /var/backups/restic/music
 music_backup_staging: /var/lib/music-backup/staging
 music_backup_password_file: /etc/music-backup/repo-password
-music_backup_script: /usr/local/sbin/music-backup
 music_backup_excludes:
   - lost+found
   - .Trash-*

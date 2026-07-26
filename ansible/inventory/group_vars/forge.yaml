@@ -1,16 +1,8 @@
 ---
-lab_domain: lab.shychedelic.com
 forgejo_version: v16.0.1
 forgejo_sha256: "7a4c568136650c10498a9d3d62c7fd630a0cf09c166293ebd78708248f6398fc"
-forgejo_user: git
-forgejo_home: /var/lib/forgejo
-forgejo_config_dir: /etc/forgejo
-forgejo_http_port: 3000
-forgejo_ssh_port: 2222
-forgejo_ssh_domain: forge.home
 forgejo_root_url: https://git.lab.shychedelic.com/
 forgejo_admin_user: phill
 forgejo_admin_email: phill@phillhood.ca
-postgresql_version: 17
 postgresql_db: forgejo
 postgresql_user: forgejo

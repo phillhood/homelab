@@ -28,6 +28,8 @@ terraform_role_privs:
   - VM.PowerMgmt
   - SDN.Use
 
+music_backup_script: /usr/local/sbin/music-backup
+
 pve_signing_key: /usr/share/keyrings/proxmox-archive-keyring.gpg
 pve_suite: trixie
 pve_repositories:
