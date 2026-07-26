@@ -82,7 +82,21 @@ So we go again!
 - [x] Library manifest backup
 - [ ] OPNsense port forward for 2235/tcp (manual)
 - [ ] Pair the Mac and Linux laptop with Syncthing (manual)
-- [ ] Custom downloader app image (`music_app_image`)
+- [ ] Custom downloader app image (`music_app_image`) — built and published, blocked on an upstream permission bug, see Phase 3.6
+
+
+### Phase 3.6 - Tier 0: forge, registry, proxy
+
+- [x] Caddy in CT 104, wildcard TLS for `*.lab.shychedelic.com` via Cloudflare DNS-01
+- [x] Zot in CT 103, pull-through cache for Docker Hub, ghcr.io, quay.io, registry.k8s.io
+- [x] Forgejo + PostgreSQL in CT 102, HTTPS and SSH
+- [x] Pi-hole wildcard DNS to the proxy
+- [x] Forgejo dump backups, package data excluded
+- [x] Thin-pool reclaim task for running containers
+- [ ] museek + museek-discord deployment — wiring, secrets and the gate are complete and
+      proven; blocked on a museek `0.1.0` image defect (crash-loops under the mandated
+      `1500:1500` user), fix pending upstream as `0.1.1`
+- [ ] GitHub push mirrors per repository (manual)
 
 
 ### Phase 4 - Flux
