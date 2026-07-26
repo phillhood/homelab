@@ -8,6 +8,8 @@ museek_spotify_client_id: ENC[AES256_GCM,data:3XZcrEYEG0kPrJG9i41xZB3BA3tLosP51A
 museek_spotify_client_secret: ENC[AES256_GCM,data:4YYU7xvh4gqQTeYVBfm0sNecwtuAOL1I+TeFW5zTJCU=,iv:9Uc7lLhWsMTrnagCKLqymkHhaUM1FQPTjCmKwq6OFPg=,tag:i3P4byw9l+XDZekzcNj2iQ==,type:str]
 slskd_soulseek_username: ENC[AES256_GCM,data:cSx+1rK5wB8PIHe0mMw8hH8=,iv:YqQnkjqQYXoWpiLPbFoLTlqs+fe2PBHN0vwUFX/GHHg=,tag:H9MXio7xwBsfi6VMXQPrew==,type:str]
 slskd_soulseek_password: ENC[AES256_GCM,data:nA/cKj2q2S/Dv0vdgLxGWazgUI9X2LXh,iv:ckNsTZq1bgfYiWllETQ9/ksU8qNU8IS+LiyAjYfYAVU=,tag:/RfJRH0V/gSLcExz0m4usw==,type:str]
+museek_discord_token: ENC[AES256_GCM,data:SpQVu7QO9nkZOu9HV0iWrcMMd3/1s8H/fvQayIFZg65NXEJs9bKT85Qn4gMgkGhMB8lRxyMSEKXF/1rLJUSQ9cg/m0wIVnic,iv:ss6Cm94Ng9964jTXYTFkm6NU2YGEMxiSRPOVzaG9x5M=,tag:cNpMZMfRxGWZnKQrHhYpxw==,type:str]
+museek_discord_guild_id: ENC[AES256_GCM,data:txgvJj4CAaQsjJomZgrBMsm7mA==,iv:P6k0hJvV20s2ap/0WwFnn9JCSe16vYScz0FhPFpyB24=,tag:fH02B31CCzGXPluSaV4taQ==,type:str]
 sops:
     age:
         - enc: |
@@ -19,7 +21,7 @@ sops:
             wy1O/JWTETKk2gzKxpkqzminkCQGIXDFuFfP4Dkl2ohXnQi58iiqtg==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1gt9v3qjej3vuykjydqv9amhsjucanjwwtt4w8fkf5thyssrdeuus5ke3rx
-    lastmodified: "2026-07-26T05:02:31Z"
-    mac: ENC[AES256_GCM,data:goBbrBc61+keSs6DG2Aq1gKe19caxbopl/BZBlQDSBMO5uO3SzLS9bNqt8vxelV452r6b3EdWZVOxmUu/0Jd86zmTZ7marDs3pLS/FJm5H1W7TEz+DwM6J6Zh+oiT4Vwy/gEq7ljb4clotC3ntSUX21BajfBbHBMmyfOqNPF6T8=,iv:JbxC1vLyrCDRJEOJczs5dMh3W9izbQPMOmgC2bBGPGE=,tag:5PeCbPefSPD4u1nKeP67Xw==,type:str]
+    lastmodified: "2026-07-26T11:01:02Z"
+    mac: ENC[AES256_GCM,data:TDzEqj+Ar41OBEI/MnzFHgezFxEOccpaRPDJx5F0iOep09qxyI+ADytxCh/IPUX9m9fWyJHATFNBSNTCwb4ZhFs+nhkEpOft+pgRN2Fd+3JuJm+X3fHsITe5XdU1uWRkzBFG7oU9W68B7UN4KFfgoVmk1pgGWHls6UFhuNuZ4mw=,iv:GVOnIqJvqPhEU2udm5HyxvdSdjgXJPpgQvsq5dpOvs4=,tag:XoObQVejRlEfVmopba1VlQ==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.2

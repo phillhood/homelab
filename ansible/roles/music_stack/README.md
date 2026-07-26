@@ -72,16 +72,26 @@ image bakes in `0022`; the override to `0002` keeps downloads group-writable.
 setting that is working. Use `.dev/scripts/verify-slskd-umask.sh`, which reads the real
 slskd pid from `docker top`.
 
-## The custom app is museek, and it is gated
+## The custom app is museek, and it deploys but does not start
 
-`music_app_image` maps to museek's `MUSEEK_IMAGE`, defaults to `""`, and the compose
-template omits the service entirely when empty. The full env surface is already written —
+`music_app_image` maps to museek's `MUSEEK_IMAGE` and `music_discord_image` maps to the
+discord bot's image; both default to `""` and the compose template omits the matching
+service entirely when its variable is empty. The full env surface is written —
 `MUSEEK_SLSKD_URL`, the shared API key, `MUSEEK_DEST_PATH`, `MUSEEK_UMASK`, Spotify and
 MusicBrainz config, and a `/srv/music/.state/museek` bind mount for its SQLite store.
 
-It is not deployable yet: museek waits on the self-hosted registry, and no `/submit` has
-completed end to end. See `~/Dev/shychedelic/museek/.dev/docs/`. To enable it later, set
-the image in `inventory/group_vars/music.yaml` and re-run `--tags compose`.
+Both images now pull anonymously from the self-hosted registry once `music_app_image` and
+`music_discord_image` are set in `inventory/group_vars/music.yaml`. museek-discord starts
+and logs into Discord — it carries no `user:` override, so it runs as its image's own
+default user. museek does not start: `git.lab.shychedelic.com/shychedelic/museek:0.1.0`
+crash-loops under `user: "1500:1500"` with `PermissionError: [Errno 13] Permission denied:
+'.env'`. Its `Config` (`pydantic_settings`) hardcodes `env_file=".env"`, a relative path
+resolved against the container's `WORKDIR` (`/home/appuser`), which the image bakes as
+`drwx------` owned by uid 10001 — uid 1500 cannot even `stat` inside that directory, so
+the process dies before it ever binds its HTTP listener and `/healthz` never comes up.
+This is an image defect, not a compose or permission-model problem on this side; fixing
+it means changing the image (a writable/owned `WORKDIR`, or dropping the implicit
+`env_file` lookup), not adding a bind mount or relaxing the `1500:1500` user.
 
 **Bind mounts are mandatory, never named volumes** — a named volume initialises from the
 museek image's uid 10001 and becomes unwritable under the `user: "1500:1500"` override.

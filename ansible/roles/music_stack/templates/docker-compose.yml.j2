@@ -61,6 +61,21 @@ services:
     networks:
       - music
 {% endif %}
+{% if music_discord_image %}
+
+  museek-discord:
+    image: {{ music_discord_image }}
+    container_name: museek-discord
+    restart: unless-stopped
+    depends_on:
+      museek:
+        condition: service_started
+    environment:
+      MUSEEK_DISCORD_MUSEEK_URL: http://museek:8080
+      MUSEEK_DISCORD_MUSEEK_TOKEN: {{ museek_api_token | to_json }}
+      MUSEEK_DISCORD_DISCORD_TOKEN: {{ museek_discord_token | to_json }}
+      MUSEEK_DISCORD_GUILD_ID: {{ museek_discord_guild_id | to_json }}
+{% endif %}
 
 networks:
   music:
