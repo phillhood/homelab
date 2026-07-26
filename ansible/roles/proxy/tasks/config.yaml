@@ -7,7 +7,7 @@
     group: "{{ caddy_user }}"
     mode: "0640"
   no_log: true
-  notify: Reload caddy
+  notify: Restart caddy
 
 - name: Render the Caddyfile
   ansible.builtin.template:
