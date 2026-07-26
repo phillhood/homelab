@@ -53,8 +53,15 @@ inventory: ## Show the inventory graph
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-inventory --graph
 
 .PHONY: vars
-vars: ## Show every variable resolved per host
-	@cd $(ANSIBLE_DIR) && $(UV) ansible-inventory --graph --vars
+vars: ## Show every variable per host — decrypts sops secrets, masked by default (SHOW_SECRETS=1 for real values)
+	@cd $(ANSIBLE_DIR) && \
+	keys=$$(grep -hoE '^[A-Za-z0-9_]+:' inventory/group_vars/*.sops.yaml | tr -d ':' | grep -vx sops | sort -u); \
+	if [ "$(SHOW_SECRETS)" = "1" ]; then \
+		$(UV) ansible-inventory --graph --vars; \
+	else \
+		pattern=$$(echo "$$keys" | paste -sd'|'); \
+		$(UV) ansible-inventory --graph --vars | sed -E "s/($$pattern) = [^}]*/\1 = <redacted>/g"; \
+	fi
 
 .PHONY: tags
 tags: ## List the tags available on site.yaml
