@@ -1,0 +1,8 @@
+---
+- name: Restart the music container
+  ansible.builtin.command:
+    argv:
+      - pct
+      - reboot
+      - "{{ music_container_id }}"
+  changed_when: true

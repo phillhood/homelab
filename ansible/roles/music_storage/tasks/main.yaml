@@ -14,3 +14,7 @@
 - name: Create the storage layout
   ansible.builtin.import_tasks: layout.yaml
   tags: [layout, storage]
+
+- name: Attach the container bind mount
+  ansible.builtin.import_tasks: container_mount.yaml
+  tags: [bindmount]
