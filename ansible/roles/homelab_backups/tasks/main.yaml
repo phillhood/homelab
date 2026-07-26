@@ -11,6 +11,10 @@
   ansible.builtin.import_tasks: music_manifest.yaml
   tags: [music]
 
+- name: Music content backup
+  ansible.builtin.import_tasks: music_content.yaml
+  tags: [music-content]
+
 - name: Forgejo dump backup
   ansible.builtin.import_tasks: forgejo_dump.yaml
   tags: [forgejo]

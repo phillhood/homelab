@@ -1,0 +1,11 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Back up the music library on a schedule
+
+[Timer]
+OnCalendar={{ music_backup_on_calendar }}
+RandomizedDelaySec={{ music_backup_randomized_delay }}
+Persistent=true
+
+[Install]
+WantedBy=timers.target

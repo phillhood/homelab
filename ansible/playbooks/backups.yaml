@@ -23,6 +23,18 @@
           tags: [music]
       tags: [music]
 
+- name: Back up the music content
+  hosts: proxmox
+  gather_facts: true
+  tasks:
+    - name: Run the music content tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: music_content
+        apply:
+          tags: [music-content]
+      tags: [music-content]
+
 - name: Back up the Forgejo dump
   hosts: forge
   gather_facts: true

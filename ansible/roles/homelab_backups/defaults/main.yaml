@@ -5,6 +5,7 @@ backup_music_dir: "{{ playbook_dir }}/../../.dev/music-backups"
 backup_forgejo_dir: "{{ playbook_dir }}/../../.dev/forgejo-backups"
 backup_terraform_dir: "{{ playbook_dir }}/../../.dev/terraform-backups"
 backup_terraform_state: "{{ playbook_dir }}/../../terraform/environments/kvatch/terraform.tfstate"
+backup_music_script: /usr/local/sbin/music-backup
 backup_retention: 14
 opnsense_host: 192.168.1.1
 

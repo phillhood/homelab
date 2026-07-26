@@ -9,3 +9,19 @@ music_container_mount: /srv/music
 music_container_features: nesting=1,keyctl=1
 music_format_disk: false
 music_device_timeout: 60
+
+music_stack_dir: /opt/music-stack
+music_backup_repo: /var/backups/restic/music
+music_backup_staging: /var/lib/music-backup/staging
+music_backup_password_file: /etc/music-backup/repo-password
+music_backup_script: /usr/local/sbin/music-backup
+music_backup_excludes:
+  - lost+found
+  - .Trash-*
+music_backup_stack_excludes:
+  - docker-compose.yml
+music_backup_keep_daily: 7
+music_backup_keep_weekly: 4
+music_backup_keep_monthly: 6
+music_backup_on_calendar: "*-*-* 03:30:00"
+music_backup_randomized_delay: 30min

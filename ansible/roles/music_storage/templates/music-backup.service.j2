@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+[Unit]
+Description=Back up the music library to the local restic repository
+RequiresMountsFor={{ music_host_mount }}
+
+[Service]
+Type=oneshot
+ExecStart={{ music_backup_script }}
+Nice=10
+IOSchedulingClass=idle

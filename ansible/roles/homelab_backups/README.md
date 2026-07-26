@@ -51,6 +51,7 @@ the canonical store from then on.
 ansible-playbook playbooks/backups.yaml              # everything
 ansible-playbook playbooks/backups.yaml --tags pihole
 ansible-playbook playbooks/backups.yaml --tags opnsense
+ansible-playbook playbooks/backups.yaml --tags music-content
 ansible-playbook playbooks/backups.yaml --tags rotate
 ```
 
@@ -151,6 +152,29 @@ The dump runs as `git` (no `sudo` on this host, hence `become_method: su`) and
 the `.zip` is fetched to `.dev/forgejo-backups/`, then deleted from the forge
 host's `/tmp` immediately after.
 
+## Music: two series that do different jobs
+
+`--tags music` writes a **manifest** — path, size, mtime for every file, plus the service
+config archive. It tells you what you had. It does not hold a single byte of audio.
+
+`--tags music-content` holds the files. It runs on `kvatch` and shells out to
+`/usr/local/sbin/music-backup`, installed by the `music_storage` role, which drives a
+restic repository at `/var/backups/restic/music`. This role does not reimplement the restic
+calls — it asserts the script is present and runs it, so the daily timer and the on-demand
+run are the same code. Design and measured restore figures are in
+`roles/music_storage/README.md`.
+
+`music-content` is therefore the one series here whose output does **not** land in `.dev/`,
+and it is not covered by `backup_prune_targets` — restic does its own retention
+(`--keep-daily 7 --keep-weekly 4 --keep-monthly 6`) inside the repository.
+
+**`museek.db` moved out of `config-*.tar.gz` into that repository.** This task used to
+archive it straight from `.state/museek/`, which is a plain copy of a live SQLite file and
+not crash-safe. It is data rather than configuration, and the content backup captures it
+with `sqlite3 .backup` plus an integrity check. Restoring museek's job history now means
+reaching for the restic snapshot, not the config archive — that is expected, not a missing
+file.
+
 ## Verifying rotation still works
 
 Retention only prunes once there are more backups than the limit, so it can sit unproven
@@ -190,6 +214,11 @@ here the source file is already on the controller.
   `pihole-FTL --teleporter <file>` on the host. The `pihole` role can also seed a fresh
   install with `-e pihole_teleporter_archive=/abs/path/to/archive.zip`.
 - **OPNsense:** System → Configuration → Backups → Restore, upload the `config.xml`.
+- **Music content:** `make music-restore DEST=/var/tmp/restore-test` pulls the newest
+  snapshot on `kvatch`; add `SNAPSHOT=<id>` for an older one. Restore somewhere scratch and
+  compare before writing over `/mnt/music`. `make music-snapshots` lists what is available.
+  The rendered `docker-compose.yml` is deliberately absent — rerun the `music_stack` role
+  to regenerate it, exactly as Forgejo's `app.ini` is regenerated rather than restored.
 - **Terraform:** copy the newest `terraform-<ts>.tfstate` to
   `terraform/environments/kvatch/terraform.tfstate`, then `make tf-plan` — `No changes`
   confirms it matches reality. If no snapshot is usable, run the matching
@@ -212,6 +241,15 @@ in `terraform/modules/proxmox-lxc`, `terraform.tfstate` starts carrying it in cl
 `backup_retention` multiplies it by 14, and this series needs the same treatment as
 `config.xml`. Re-check with `python3 -c` over the state rather than grepping for the key
 name — the field is always *present*, which is what makes a grep misleading.
+
+The restic repository holding the music content is encrypted, with its password in
+`group_vars/proxmox.sops.yaml` and deployed to `/etc/music-backup/repo-password` (`0600`)
+under `no_log: true`. Encryption is **not** the reason the rendered `docker-compose.yml` is
+kept out of it — the rule below is applied there identically to the archive series, because
+the file is regenerable and archiving it recovers nothing. The repository password lives on
+the same host as the repository, so an attacker holding `kvatch` root holds both; the
+encryption earns its keep if a disk or a copy of the repository leaves the host, not
+against local compromise.
 
 The music config archive (`.dev/music-backups/config-*.tar.gz`) does contain secrets, and
 the rule governing it is narrower than "no credentials in backups".

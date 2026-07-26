@@ -18,3 +18,7 @@
 - name: Attach the container bind mount
   ansible.builtin.import_tasks: container_mount.yaml
   tags: [bindmount]
+
+- name: Install the content backup
+  ansible.builtin.import_tasks: backup.yaml
+  tags: [musicbackup, storage]

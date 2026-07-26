@@ -1,4 +1,5 @@
 terraform_api_token: ENC[AES256_GCM,data:XIyDXLCHjO6avhsV7zlanLLf7B+Sp9dtal8EhU3VHmU8Ya2Y,iv:LQ226SQygl1QDVmjQJBBy3mPJlB3k3woJ8/Bcb4qv/w=,tag:b7debjQXt+8cJVrdw3pKvQ==,type:str]
+restic_repo_password: ENC[AES256_GCM,data:1bH9d7I5RdWXKG3SksMh3WQYn5zqVi7DkHT64dbKxRZ7vtOj7K4QPswv75o=,iv:2yXPVXrHKSxNz56T5J/3eXU2VI01wYjfCOepOOPV3RY=,tag:nep1ErFHj6SiFGCk0T9/TQ==,type:str]
 sops:
     age:
         - enc: |
@@ -10,7 +11,7 @@ sops:
             b6cs1pESLco91HQhWYzZsB9TGKtxZ5cANy4NPDJ3U6HKk4WWax5f7g==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1gt9v3qjej3vuykjydqv9amhsjucanjwwtt4w8fkf5thyssrdeuus5ke3rx
-    lastmodified: "2026-07-25T19:29:23Z"
-    mac: ENC[AES256_GCM,data:iF47nfcuZzdR34DFq5TYfrLBkRyvJdoRv4joxcM7CR4OYD8Zo9hO0JzGOh4FTE+1+1BFGX+dQQXXSyvBHXTg52GERODhd02dZcsfiRQv/roWuP2jlZldWA30j1s2aLGlUdkln2Gq9W9M0DAIWavUICB1Yvn1Mch5y5Ap9mHVcRM=,iv:6u1pz7f64xLSIwgZuoqdEm8unbli0VD7QNfVq0dvY5Y=,tag:jvsbs4sjdpHpx8obdbr3GA==,type:str]
+    lastmodified: "2026-07-26T17:32:46Z"
+    mac: ENC[AES256_GCM,data:szF/xqHZKNVuBnG8ugetK7eL0l6X4/u76EDf4KQaW/J8r9h6FcqqrlrBb7oJz86n2MqTYYPX9FBmGIErrbsp+yTh01Y6NSltw83pi8Jl/Kyw+LpDITtxNiW4TrrBXcOnysk8xbaBeJH8ueUB70ksiEpSV49d1HQXnUxV48w0nlY=,iv:vDDpIXfp7/SO6hWx+lAl+E5RrKWWzNu8kMh2SBErXEs=,tag:FErPGxRNGl5PuJH3pr845Q==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.2

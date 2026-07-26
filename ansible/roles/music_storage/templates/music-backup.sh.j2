@@ -1,0 +1,89 @@
+#!/bin/bash
+# {{ ansible_managed }}
+set -euo pipefail
+
+export RESTIC_REPOSITORY={{ music_backup_repo | quote }}
+export RESTIC_PASSWORD_FILE={{ music_backup_password_file | quote }}
+
+SOURCE={{ music_host_mount | quote }}
+STAGING={{ music_backup_staging | quote }}
+CTID={{ music_container_id | quote }}
+STACK_DIR={{ music_stack_dir | quote }}
+MUSEEK_DB="${SOURCE}/.state/museek/museek.db"
+
+log() { printf '%s  %s\n' "$(date -Is)" "$*"; }
+fail() { log "ERROR: $*"; exit 1; }
+
+exec 9>/var/lock/music-backup.lock
+flock -n 9 || { log "another music-backup run holds the lock — exiting"; exit 0; }
+
+test -d "$SOURCE" || fail "$SOURCE is not mounted — refusing to snapshot an empty tree"
+
+if ! restic cat config >/dev/null 2>&1; then
+    log "no repository at $RESTIC_REPOSITORY — initialising"
+    restic init
+fi
+
+rm -rf "$STAGING"
+mkdir -p "$STAGING"
+chmod 0700 "$STAGING"
+
+# museek.db is live SQLite. A plain copy is not crash-safe; .backup is.
+if [ -f "$MUSEEK_DB" ]; then
+    sqlite3 "$MUSEEK_DB" ".backup '${STAGING}/museek.db'"
+    [ "$(sqlite3 "${STAGING}/museek.db" 'pragma integrity_check;')" = "ok" ] \
+        || fail "museek.db copy failed its integrity check"
+    log "museek.db captured crash-safe ($(stat -c%s "${STAGING}/museek.db") bytes)"
+else
+    log "no museek.db at $MUSEEK_DB — skipped"
+fi
+
+# Anything regenerable from a template plus sops vars is left out: archiving it
+# recovers nothing and would put those credentials on disk beside the encrypted copies.
+STACK_EXCLUDES=(
+{% for pattern in music_backup_stack_excludes %}
+    {{ (music_stack_dir.lstrip('/') ~ '/' ~ pattern) | quote }}
+{% endfor %}
+)
+
+# slskd's config and data live on the container's own disk, not the bind mount,
+# so the host cannot see them without going through the container.
+if pct status "$CTID" 2>/dev/null | grep -q running; then
+    tar_args=()
+    for excluded in "${STACK_EXCLUDES[@]}"; do
+        tar_args+=("--exclude=${excluded}")
+    done
+
+    pct exec "$CTID" -- tar czf - -C / "${tar_args[@]}" "${STACK_DIR#/}" \
+        > "${STAGING}/music-stack.tar.gz"
+
+    members="$(tar tzf "${STAGING}/music-stack.tar.gz")" \
+        || fail "the ${STACK_DIR} archive is not readable"
+
+    for excluded in "${STACK_EXCLUDES[@]}"; do
+        if printf '%s\n' "$members" | grep -qx "$excluded"; then
+            fail "${excluded} reached the archive — it carries sops-managed secrets in the clear"
+        fi
+    done
+
+    log "${STACK_DIR} captured ($(stat -c%s "${STAGING}/music-stack.tar.gz") bytes, $(printf '%s\n' "$members" | wc -l) members)"
+else
+    log "CT ${CTID} is not running — ${STACK_DIR} skipped"
+fi
+
+log "backing up ${SOURCE} and ${STAGING}"
+restic backup --tag music --verbose=0 \
+{% for pattern in music_backup_excludes %}
+    --exclude={{ pattern | quote }} \
+{% endfor %}
+    "$SOURCE" "$STAGING"
+
+log "pruning to {{ music_backup_keep_daily }}d/{{ music_backup_keep_weekly }}w/{{ music_backup_keep_monthly }}m"
+restic forget --tag music \
+    --keep-daily {{ music_backup_keep_daily }} \
+    --keep-weekly {{ music_backup_keep_weekly }} \
+    --keep-monthly {{ music_backup_keep_monthly }} \
+    --prune
+
+restic check
+log "done — $(restic snapshots --tag music --json | grep -o '"time"' | wc -l) snapshots in $RESTIC_REPOSITORY"

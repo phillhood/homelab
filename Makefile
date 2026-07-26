@@ -12,6 +12,8 @@ FORGE_IP    := 192.168.1.103
 REGISTRY_IP := 192.168.1.104
 PROXY_IP    := 192.168.1.105
 LAB_DOMAIN  := lab.shychedelic.com
+RESTIC_REPO := /var/backups/restic/music
+RESTIC_PW   := /etc/music-backup/repo-password
 
 UV := uv run --project $(CURDIR)
 
@@ -149,8 +151,23 @@ backup-opnsense: ## Capture only the OPNsense config.xml
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags opnsense
 
 .PHONY: backup-music
-backup-music: ## Capture only the music library manifest
+backup-music: ## Capture only the music library manifest — what you had, not the files
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags music
+
+.PHONY: backup-music-content
+backup-music-content: ## Capture the music files themselves into the restic repo on kvatch
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags music-content
+
+.PHONY: music-snapshots
+music-snapshots: ## Show the restic snapshots holding the music library
+	@$(KVATCH_SSH) 'RESTIC_PASSWORD_FILE=$(RESTIC_PW) restic -r $(RESTIC_REPO) snapshots --tag music' \
+		|| echo "  no repository yet — run: make backup-music-content"
+
+.PHONY: music-restore
+music-restore: ## Restore the music library from restic (SNAPSHOT=latest DEST=/mnt/music-restore)
+	@test -n "$(DEST)" || { echo "  usage: make music-restore DEST=<path> [SNAPSHOT=latest]"; exit 1; }
+	@$(KVATCH_SSH) 'RESTIC_PASSWORD_FILE=$(RESTIC_PW) restic -r $(RESTIC_REPO) \
+		restore $(or $(SNAPSHOT),latest) --target $(DEST)'
 
 .PHONY: backup-forgejo
 backup-forgejo: ## Capture only the Forgejo dump
