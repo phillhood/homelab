@@ -1,7 +1,7 @@
 # registry
 
 Zot pull-through cache for upstream registries, running as a native systemd service
-in CT 103, fronted by Caddy at `registry.lab.shychedelic.com`.
+in CT 103, fronted by Caddy at `registry.{{ lab_domain }}`.
 
 ## The binary pin is trust-on-first-use
 
@@ -73,7 +73,7 @@ the LAN. What changed is that write is now explicitly denied rather than simply 
 exercised: before this key existed, an anonymous `DELETE` against a nonexistent manifest
 returned `404` (request reached the handler, no authorization check ran at all); with it,
 the same request returns `401`. Verified against both paths into Zot — through Caddy at
-`https://registry.lab.shychedelic.com` and directly at `http://192.168.1.104:5000` — since
+`https://registry.{{ lab_domain }}` and directly at `http://192.168.1.104:5000` — since
 Zot enforces this itself, not Caddy, so nothing about the proxy layer can be relied on to
 close the direct path.
 
@@ -88,7 +88,7 @@ Sync/`onDemand` pull-through is unaffected, because Zot's sync workers write to 
 internally and never go through the HTTP authorization layer that rejects the anonymous
 `DELETE` above. Verified by deleting a synced repository from `/var/lib/zot` outright
 (not just the tag — the whole on-disk directory) and re-pulling through
-`registry.lab.shychedelic.com`, for both a root-path upstream (`library/alpine:3.20`) and
+`registry.{{ lab_domain }}`, for both a root-path upstream (`library/alpine:3.20`) and
 a prefixed one (`registry.k8s.io/pause:3.10`): both re-populated the store from upstream
 and the pulls succeeded, confirmed by `journalctl -u zot` logging `"successfully synced
 image"` for each.

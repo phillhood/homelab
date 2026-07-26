@@ -132,6 +132,6 @@ After changing gravity or config, `pihole restartdns` before testing or a stale 
 is served.
 
 ```bash
-dig @192.168.1.100 doubleclick.net +short   # -> 0.0.0.0  (blocking)
-dig @192.168.1.100 kvatch.home +short       # -> 192.168.1.101  (local record)
+dig @192.168.1.100 doubleclick.net +short                # -> 0.0.0.0  (blocking)
+dig @192.168.1.100 kvatch.{{ homelab_domain }} +short    # -> 192.168.1.101  (local record)
 ```

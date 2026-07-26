@@ -2,7 +2,7 @@
 
 Caddy reverse proxy running as a native systemd service in CT 104
 (`proxy1`, `192.168.1.105`), holding a browser-trusted Let's Encrypt wildcard
-certificate for `*.lab.shychedelic.com` and fronting every other tier0 service.
+certificate for `*.{{ lab_domain }}` and fronting every other tier0 service.
 
 ## `caddy_sha256` is drift detection, not version pinning
 
@@ -43,8 +43,8 @@ TXT record, not by Let's Encrypt reaching back into the lab — so CT 104 needs 
 inbound port opened anywhere for issuance or renewal to work, unlike HTTP-01.
 
 `cloudflare_api_token` (`proxy.sops.yaml`) is scoped to **Zone:Read + DNS:Edit on
-the single zone `shychedelic.com`** — it cannot read or modify any other zone in
-the Cloudflare account, and it deliberately lacks `User:API Tokens:Read`, so
+the single parent zone of `{{ lab_domain }}`** — it cannot read or modify any other
+zone in the Cloudflare account, and it deliberately lacks `User:API Tokens:Read`, so
 `cloudflare -X GET /user/tokens/verify` returns "Invalid API Token" against a
 perfectly valid token. That's an expected false negative of that one endpoint, not
 evidence the token is broken; the two operations this role actually needs

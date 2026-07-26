@@ -1,7 +1,7 @@
 # forgejo
 
 Forgejo git service on CT 102 `forge` (`192.168.1.103`), behind Caddy at
-`git.lab.shychedelic.com`, with its own built-in SSH server on `:2222` and its own Postgres
+`git.{{ lab_domain }}`, with its own built-in SSH server on `:2222` and its own Postgres
 database via the `postgresql` role — socket-only, same container.
 
 ## Usage
@@ -13,10 +13,10 @@ database via the `postgresql` role — socket-only, same container.
 | `admin` | creates the admin account if it does not exist |
 | `forgejo` | all three |
 
-SSH clones go straight to `forge1:2222` (`ssh://git@forge.home:2222/...`), not through
-Caddy — Caddy is an HTTP proxy, and routing raw TCP would need the `layer4` plugin, which is
-not in this build. So the SSH path has no certificate to inspect or renew; it is plain
-host-key trust.
+SSH clones go straight to `forge1:2222` (`ssh://git@forge.{{ homelab_domain }}:2222/...`),
+not through Caddy — Caddy is an HTTP proxy, and routing raw TCP would need the `layer4`
+plugin, which is not in this build. So the SSH path has no certificate to inspect or renew;
+it is plain host-key trust.
 
 ## Variables
 
@@ -39,7 +39,7 @@ those six plus `sops.mac`.
 
 - **`forgejo_root_url` is a one-way door.** Forgejo bakes it into every clone URL it hands
   back and into the fully-qualified image reference for its OCI registry
-  (`git.lab.shychedelic.com/shychedelic/<image>:<tag>`). Once an image has been pushed under
+  (`git.{{ lab_domain }}/<org>/<image>:<tag>`). Once an image has been pushed under
   a given `ROOT_URL`, that hostname is part of its identity for every client that pulled it.
   Changing it later does not migrate references, it orphans them. Only change it as a
   deliberate, coordinated migration — never as a routine config edit.
@@ -58,7 +58,7 @@ those six plus `sops.mac`.
   `music_share`'s `nologin` service accounts.
 - **`GITEA_WORK_DIR` must be set for CLI invocations too**, not just in the systemd unit, or
   `forgejo admin user ...` does not reliably find `app.ini`'s companion runtime state.
-- **A `200` from `git.lab.shychedelic.com` is not evidence Forgejo is up.** The `proxy`
+- **A `200` from `git.{{ lab_domain }}` is not evidence Forgejo is up.** The `proxy`
   role's catch-all `handle {}` returns `200` with body `tier0 proxy ok` for any subdomain
   with no more specific block. Check the body, not the status.
 - `HTTP_ADDR = 0.0.0.0` serves cleartext HTTP to the whole LAN on `:3000`, not only to
