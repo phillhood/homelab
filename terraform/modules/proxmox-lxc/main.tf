@@ -14,6 +14,13 @@ resource "proxmox_virtual_environment_container" "this" {
   started       = true
   tags          = var.tags
 
+  lifecycle {
+    ignore_changes = [
+      features,
+      mount_point,
+    ]
+  }
+
   initialization {
     hostname = var.hostname
 

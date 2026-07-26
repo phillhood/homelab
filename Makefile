@@ -7,6 +7,7 @@ SITE        := playbooks/site.yaml
 BACKUPS     := playbooks/backups.yaml
 PIHOLE_IP   := 192.168.1.100
 KVATCH_IP   := 192.168.1.101
+MUSIC_IP    := 192.168.1.102
 
 UV := uv run --project $(CURDIR)
 
@@ -52,8 +53,15 @@ inventory: ## Show the inventory graph
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-inventory --graph
 
 .PHONY: vars
-vars: ## Show every variable resolved per host
-	@cd $(ANSIBLE_DIR) && $(UV) ansible-inventory --graph --vars
+vars: ## Show every variable per host — decrypts sops secrets, masked by default (SHOW_SECRETS=1 for real values)
+	@cd $(ANSIBLE_DIR) && \
+	keys=$$(grep -hoE '^[A-Za-z0-9_]+:' inventory/group_vars/*.sops.yaml | tr -d ':' | grep -vx sops | sort -u); \
+	if [ "$(SHOW_SECRETS)" = "1" ]; then \
+		$(UV) ansible-inventory --graph --vars; \
+	else \
+		pattern=$$(echo "$$keys" | paste -sd'|'); \
+		$(UV) ansible-inventory --graph --vars | sed -E "s/($$pattern) = [^}]*/\1 = <redacted>/g"; \
+	fi
 
 .PHONY: tags
 tags: ## List the tags available on site.yaml
@@ -86,6 +94,11 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && $(UV) ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
 	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
 	@printf "%-32s %s\n" "vm template 9000"       "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'qm config 9000 | grep -c template:' 2>/dev/null | tail -1)"
+	@printf "%-32s %s\n" "music mount"            "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'findmnt -no TARGET /mnt/music || echo MISSING')"
+	@printf "%-32s %s\n" "music bind mount"       "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'findmnt -no TARGET /srv/music || echo MISSING')"
+	@printf "%-32s %s\n" "music smb share"        "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'systemctl is-active smbd')"
+	@printf "%-32s %s\n" "music syncthing"        "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'systemctl is-active syncthing@syncthing')"
+	@printf "%-32s %s\n" "music slskd"            "$$(ssh -o BatchMode=yes root@$(MUSIC_IP) 'docker inspect -f "{{.State.Status}}" slskd 2>/dev/null || echo MISSING')"
 
 .PHONY: idempotent
 idempotent: ## Converge twice; fail unless the second run changes nothing
@@ -120,9 +133,13 @@ backup-pihole: ## Capture only the Pi-hole Teleporter archive
 backup-opnsense: ## Capture only the OPNsense config.xml
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags opnsense
 
+.PHONY: backup-music
+backup-music: ## Capture only the music library manifest
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags music
+
 .PHONY: backups-list
 backups-list: ## Show captured backups, newest last
-	@find .dev/pihole-backups .dev/opnsense-backups -type f 2>/dev/null \
+	@find .dev/pihole-backups .dev/opnsense-backups .dev/music-backups -type f 2>/dev/null \
 		-printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\n' | sort || echo "no backups yet — run: make backup"
 
 ##@ Terraform

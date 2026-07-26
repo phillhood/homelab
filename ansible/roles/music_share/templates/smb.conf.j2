@@ -1,0 +1,26 @@
+[global]
+   workgroup = {{ music_smb_workgroup }}
+   server string = {{ inventory_hostname }}
+   security = user
+   min protocol = SMB3
+   load printers = no
+   printing = bsd
+   printcap name = /dev/null
+   disable spoolss = yes
+   vfs objects = catia fruit streams_xattr
+   fruit:metadata = stream
+   fruit:posix_rename = yes
+   fruit:veto_appledouble = no
+
+[{{ music_share_name }}]
+   path = {{ music_container_mount }}
+   browseable = yes
+   read only = no
+   guest ok = no
+   valid users = {{ music_smb_user }}
+   force group = music
+   create mask = 0664
+   force create mode = 0664
+   directory mask = 2775
+   force directory mode = 2775
+   veto files = /.state/

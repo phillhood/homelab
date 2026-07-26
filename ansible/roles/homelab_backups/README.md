@@ -54,8 +54,13 @@ ansible-playbook playbooks/backups.yaml --tags opnsense
 ansible-playbook playbooks/backups.yaml --tags rotate
 ```
 
-Writes timestamped backups into `.dev/pihole-backups/` and `.dev/opnsense-backups/`,
-then keeps the newest `backup_retention` (default 14) in each.
+Writes timestamped backups into `.dev/pihole-backups/`, `.dev/opnsense-backups/`, and
+`.dev/music-backups/`. Retention is per *series*, not per directory: `.dev/music-backups/`
+holds two independent series written every run (`manifest-*.tsv.gz` and
+`config-*.tar.gz`), each pruned to the newest `backup_retention` (default 14) on its own —
+so that directory ends up with up to `2 * backup_retention` files, not `backup_retention`.
+`rotate.yaml` prunes per `(directory, pattern)` pair, driven by `backup_prune_targets` in
+`defaults/main.yaml`, for exactly this reason.
 
 **This role is `changed` on every run by design** — a backup that never changes is
 broken. It is the one role where `changed=0` is not the goal.
@@ -99,3 +104,28 @@ ansible-playbook playbooks/backups.yaml --tags rotate -e backup_retention=2
 
 `config.xml` contains secrets in cleartext. It stays in gitignored `.dev/` and is never
 committed. If it ever needs to go offsite, `age`-encrypt it first.
+
+The music config archive (`.dev/music-backups/config-*.tar.gz`) does contain secrets, and
+the rule governing it is narrower than "no credentials in backups".
+
+**The rule is: never duplicate a sops-managed secret in cleartext.** The archive holds
+Syncthing's identity and config, not just its config: `config.xml` carries its own
+credentials — a bcrypt GUI password hash and a plaintext REST `<apikey>` — and `key.pem`
+(with `cert.pem`) is the device's private key, the thing that makes its device ID
+(`Q6WY5F5-…`) reproducible. All three are kept anyway, because that state is irreplaceable
+and exists nowhere else — restoring `config.xml` onto a rebuilt container without `key.pem`
+generates a new keypair and a new device ID, and every paired client rejects it until it is
+re-paired by hand. It is the same trade already accepted for OPNsense's `config.xml` above.
+The rendered `docker-compose.yml` is excluded because it fails the rule twice over: it is
+byte-for-byte regenerable from `music_stack/templates/docker-compose.yml.j2` plus vars
+already sops-encrypted in git, so archiving it recovers nothing, and doing so would put
+the slskd credentials on disk in the clear beside the encrypted copies — undoing the
+`no_log: true` the deploy task applies for exactly that reason. Retention multiplies the
+exposure by `backup_retention`.
+
+`smb.conf` is also derived, and is kept for a reason that is not "it is harmless": it is
+the file Samba actually runs, deployed behind `validate: testparm -s %s`, so a snapshot
+captures drift a static Jinja template cannot show you. Keep that bar for anything added
+later — irreplaceable state, or drift visibility on a live config. Derived-and-inert
+files do not earn a place, and derived files carrying a sops-managed secret are excluded
+outright.

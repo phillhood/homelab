@@ -1,0 +1,67 @@
+services:
+  slskd:
+    image: {{ music_slskd_image }}
+    container_name: slskd
+    restart: unless-stopped
+    user: "{{ music_gid }}:{{ music_gid }}"
+    environment:
+      SLSKD_DOWNLOADS_DIR: /downloads
+      SLSKD_SHARED_DIR: /library
+      SLSKD_UMASK: "0002"
+      SLSKD_SLSK_USERNAME: {{ slskd_soulseek_username | to_json }}
+      SLSKD_SLSK_PASSWORD: {{ slskd_soulseek_password | to_json }}
+      SLSKD_SLSK_LISTEN_PORT: {{ music_slskd_listen_port }}
+      SLSKD_API_KEY: {{ museek_slskd_api_key | to_json }}
+      SLSKD_USERNAME: {{ slskd_web_username | to_json }}
+      SLSKD_PASSWORD: {{ slskd_web_password | to_json }}
+    ports:
+      - "{{ music_slskd_web_port }}:5030"
+      - "{{ music_slskd_listen_port }}:{{ music_slskd_listen_port }}"
+    volumes:
+      - {{ music_stack_dir }}/slskd:/app
+      - {{ music_container_mount }}/downloads/complete:/downloads
+      - {{ music_container_mount }}/library:/library:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5030/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - music
+{% if music_app_image %}
+
+  museek:
+    image: {{ music_app_image }}
+    container_name: museek
+    restart: unless-stopped
+    user: "{{ music_gid }}:{{ music_gid }}"
+    depends_on:
+      slskd:
+        condition: service_healthy
+    environment:
+      MUSEEK_SLSKD_URL: http://slskd:5030
+      MUSEEK_SLSKD_DOWNLOADS_DIR: /downloads
+      MUSEEK_SLSKD_API_KEY: {{ museek_slskd_api_key | to_json }}
+      MUSEEK_DEST_PATH: /library
+      MUSEEK_MATCH_THRESHOLD: {{ music_museek_match_threshold }}
+      MUSEEK_DB_PATH: /data/museek.db
+      MUSEEK_STAGING_PATH: /data/staging
+      MUSEEK_API_TOKEN: {{ museek_api_token | to_json }}
+      MUSEEK_SPOTIFY_CLIENT_ID: {{ museek_spotify_client_id | to_json }}
+      MUSEEK_SPOTIFY_CLIENT_SECRET: {{ museek_spotify_client_secret | to_json }}
+      MUSEEK_MUSICBRAINZ_CONTACT: {{ museek_musicbrainz_contact }}
+      MUSEEK_UMASK: "002"
+    ports:
+      - "{{ music_museek_port }}:8080"
+    volumes:
+      - {{ music_container_mount }}/downloads/complete:/downloads:ro
+      - {{ music_container_mount }}/library:/library
+      - {{ music_container_mount }}/.state/museek:/data
+    networks:
+      - music
+{% endif %}
+
+networks:
+  music:
+    name: music

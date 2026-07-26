@@ -22,6 +22,7 @@ below), never here.
   not needed.
 - **No mount-unit masking.** Failed `dev-mqueue`/`run-lock`/`tmp` units are cosmetic;
   `/tmp` is writable. Masking `tmp.mount` breaks the Pi-hole installer's `/tmp` staging.
+  See "The nesting exception" below — CT 101 does not exhibit these at all.
 
 If `health.yaml` ever fails, revisit these — the asserts are the tripwire.
 
@@ -51,3 +52,33 @@ Debian 13 no longer ships `/etc/timezone`. Check the timezone with
 
 Both `command` tasks in `health.yaml` carry `check_mode: false`, because `--check`
 otherwise skips them and the asserts fail on undefined `stdout`.
+
+## The nesting exception
+
+CT 101 `music` is the deliberate exception to the "no nesting" negative above. It runs
+Docker, which needs `nesting=1` and `keyctl=1`. Those flags are set by
+`music_storage/tasks/container_mount.yaml` via `pct set`, not by this role and not by
+Terraform — the API token gets a 403 on feature flags.
+
+**Observed**, same Debian 13 template, same host:
+
+| Container | Features | Failed units |
+|---|---|---|
+| CT 100 `pihole` | none | 3 — `dev-mqueue.mount`, `run-lock.mount`, `tmp.mount` |
+| CT 101 `music` | `nesting=1,keyctl=1` | 0 |
+
+**Not established: which flag is responsible.** Both were enabled together, so this is
+one paired observation with two variables changed at once. It does not show that
+`nesting=1` alone is sufficient, and the negatives above should not be read as
+overturned. To isolate it: `pct set 101 -features nesting=1`, reboot, re-check. Nobody
+has done that.
+
+What follows regardless of the cause: `music` needs **no** `lxc_expected_failed_units`
+override. The role's default allowlist is a superset of what this container actually
+fails, and a superset does not weaken the assert — `health.yaml` diffs the *actually
+failing* units against the allowlist, so entries that never fire suppress nothing and
+any genuinely new failure still trips it.
+
+If a future container does fail a different set, override `lxc_expected_failed_units`
+per group in `inventory/group_vars/`, never in this role's defaults — widening the
+baseline would blind every container at once.

@@ -38,6 +38,11 @@ before changing a role — several encode findings that cost real time to discov
   messages too — no parenthetical asides.
 - Secrets rule: *would leaking this let someone in?* If yes it goes in a `*.sops.yaml`;
   if no it stays plaintext. Public keys and device IDs are not secrets.
+- `vars_plugins_enabled` includes `community.sops.sops`, so any inventory read — including
+  `make vars` — decrypts every `*.sops.yaml`. `make vars` masks those values by default;
+  the key list comes from the top-level keys of `inventory/group_vars/*.sops.yaml` at run
+  time, so a new secret is covered automatically without editing the Makefile. Pass
+  `SHOW_SECRETS=1` to see the real values.
 - Any read-only `command` whose output a later task consumes needs `check_mode: false`,
   or `--check` skips it and the dependent guard breaks.
 

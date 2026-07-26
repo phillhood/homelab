@@ -1,0 +1,90 @@
+---
+- name: Install Syncthing and its XML module dependency
+  ansible.builtin.apt:
+    name:
+      - syncthing
+      - python3-lxml
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create the Syncthing service user
+  ansible.builtin.user:
+    name: "{{ music_syncthing_user }}"
+    groups: music
+    append: true
+    system: true
+    home: "{{ music_syncthing_home }}"
+    create_home: true
+    shell: /usr/sbin/nologin
+    state: present
+
+- name: Generate the initial Syncthing configuration
+  ansible.builtin.command:
+    argv:
+      - syncthing
+      - generate
+      - "--config={{ music_syncthing_config_dir }}"
+      - --no-default-folder
+      - "--gui-user={{ music_smb_user }}"
+      - --gui-password=-
+    stdin: "{{ syncthing_gui_password }}"
+    creates: "{{ music_syncthing_config_dir }}/config.xml"
+  become: true
+  become_method: ansible.builtin.su
+  become_user: "{{ music_syncthing_user }}"
+  become_flags: "-s /bin/sh"
+  no_log: true
+
+- name: Bind the GUI to the LAN
+  community.general.xml:
+    path: "{{ music_syncthing_config_dir }}/config.xml"
+    xpath: /configuration/gui/address
+    value: "0.0.0.0:{{ music_syncthing_gui_port }}"
+  notify: Restart syncthing
+
+- name: Define the library folder
+  community.general.xml:
+    path: "{{ music_syncthing_config_dir }}/config.xml"
+    xpath: "/configuration/folder[@id='{{ music_syncthing_folder_id }}']"
+    attribute: "{{ item.name }}"
+    value: "{{ item.value }}"
+  loop:
+    - {name: id, value: "{{ music_syncthing_folder_id }}"}
+    - {name: label, value: "{{ music_syncthing_folder_label }}"}
+    - {name: path, value: "{{ music_container_mount }}/library"}
+    - {name: type, value: sendonly}
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Restart syncthing
+
+- name: Remove the default folder
+  community.general.xml:
+    path: "{{ music_syncthing_config_dir }}/config.xml"
+    xpath: "/configuration/folder[@id='default']"
+    state: absent
+  notify: Restart syncthing
+
+- name: Create the systemd drop-in directory
+  ansible.builtin.file:
+    path: "/etc/systemd/system/syncthing@{{ music_syncthing_user }}.service.d"
+    state: directory
+    mode: "0755"
+
+- name: Set the Syncthing umask
+  ansible.builtin.copy:
+    dest: "/etc/systemd/system/syncthing@{{ music_syncthing_user }}.service.d/umask.conf"
+    content: |
+      [Service]
+      UMask=0002
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart syncthing
+
+- name: Enable and start Syncthing
+  ansible.builtin.systemd_service:
+    name: "syncthing@{{ music_syncthing_user }}"
+    enabled: true
+    state: started
+    daemon_reload: true

@@ -1,0 +1,55 @@
+---
+- name: Check whether the music container exists
+  ansible.builtin.stat:
+    path: "/etc/pve/lxc/{{ music_container_id }}.conf"
+  register: music_ct_conf_stat
+
+- name: Report that the container is not created yet
+  ansible.builtin.debug:
+    msg: >-
+      CT {{ music_container_id }} not present. Run terraform apply,
+      then re-run with --tags bindmount.
+  when: not music_ct_conf_stat.stat.exists
+
+- name: Read the container config
+  ansible.builtin.slurp:
+    src: "/etc/pve/lxc/{{ music_container_id }}.conf"
+  register: music_ct_conf
+  when: music_ct_conf_stat.stat.exists
+
+- name: Set container config facts
+  ansible.builtin.set_fact:
+    music_ct_conf_text: "{{ music_ct_conf.content | b64decode }}"
+  when: music_ct_conf_stat.stat.exists
+
+- name: Set the container feature flags
+  ansible.builtin.command:
+    argv:
+      - pct
+      - set
+      - "{{ music_container_id }}"
+      - -features
+      - "{{ music_container_features }}"
+  when:
+    - music_ct_conf_stat.stat.exists
+    - "('features: ' ~ music_container_features) not in music_ct_conf_text.splitlines()"
+  changed_when: true
+  notify:
+    - Restart the music container
+    - Wait for the music container to accept connections
+
+- name: Attach the bind mount
+  ansible.builtin.command:
+    argv:
+      - pct
+      - set
+      - "{{ music_container_id }}"
+      - -mp0
+      - "{{ music_host_mount }},mp={{ music_container_mount }}"
+  when:
+    - music_ct_conf_stat.stat.exists
+    - "('mp0: ' ~ music_host_mount ~ ',mp=' ~ music_container_mount) not in music_ct_conf_text.splitlines()"
+  changed_when: true
+  notify:
+    - Restart the music container
+    - Wait for the music container to accept connections

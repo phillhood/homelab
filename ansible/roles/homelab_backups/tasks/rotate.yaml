@@ -5,20 +5,18 @@
     state: directory
     mode: "0700"
   delegate_to: localhost
-  loop:
-    - "{{ backup_pihole_dir }}"
-    - "{{ backup_opnsense_dir }}"
+  loop: "{{ backup_prune_targets | map(attribute='path') | unique }}"
 
-- name: Find backups in each target dir
+- name: Find backups in each series
   ansible.builtin.find:
-    paths: "{{ item }}"
-    patterns: ["*.zip", "*.xml"]
+    paths: "{{ item.path }}"
+    patterns: "{{ item.patterns }}"
   register: backup_inventory
   changed_when: false
   delegate_to: localhost
-  loop:
-    - "{{ backup_pihole_dir }}"
-    - "{{ backup_opnsense_dir }}"
+  loop: "{{ backup_prune_targets }}"
+  loop_control:
+    label: "{{ item.path }} {{ item.patterns }}"
 
 - name: Prune backups beyond the retention count
   ansible.builtin.file:

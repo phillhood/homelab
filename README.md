@@ -69,6 +69,22 @@ So we go again!
   - [x] install, config, gravity, password
 
 
+### Phase 3.5 - Music NAS
+
+- [x] 2 TB NVMe formatted ext4, label `music`, 1 inode/MiB
+- [x] Thunderbolt enclosure enrolled via `bolt`, policy auto
+- [x] Host mount on kvatch, `/mnt/music`, layout + ownership
+- [x] CT 101 `music` via Terraform
+- [x] Bind mount + nesting/keyctl via Ansible `pct set`
+- [x] Samba share, macOS-safe
+- [x] Syncthing send-only library folder
+- [x] Docker + slskd stack
+- [x] Library manifest backup
+- [ ] OPNsense port forward for 2235/tcp (manual)
+- [ ] Pair the Mac and Linux laptop with Syncthing (manual)
+- [ ] Custom downloader app image (`music_app_image`)
+
+
 ### Phase 4 - Flux
 > Goal: learn another GitOps framework - leaner and more homelab-friendly than ArgoCD
 - [ ] TODO: this task list
@@ -97,9 +113,9 @@ OPNsense router
   - [x] Remove legacy ISC DHCP service
   - [x] Update VLANs with switch
   - [x] Manual config backup
-- [ ] Automate backups via API
-  - [ ] Create backup user, scope, group
-  - [ ] Define ansible playbook task
+- [x] Automate backups via API
+  - [x] Create backup user, scope, group
+  - [x] Define ansible playbook task
     - [ ] Setup cron
   
 

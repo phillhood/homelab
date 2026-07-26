@@ -1,0 +1,24 @@
+---
+- name: Own the mount root
+  ansible.builtin.file:
+    path: "{{ music_host_mount }}"
+    state: directory
+    owner: "{{ music_host_uid }}"
+    group: "{{ music_host_gid }}"
+    mode: "2775"
+
+- name: Create the library and download trees
+  ansible.builtin.file:
+    path: "{{ music_host_mount }}/{{ item }}"
+    state: directory
+    owner: "{{ music_host_uid }}"
+    group: "{{ music_host_gid }}"
+    mode: "2775"
+  loop:
+    - library
+    - downloads
+    - downloads/incomplete
+    - downloads/complete
+    - .state
+    - .state/museek
+    - .meta

@@ -11,8 +11,16 @@ all:
           hosts:
             pihole1:
               ansible_host: 192.168.1.100
+        music:
+          hosts:
+            music1:
+              ansible_host: 192.168.1.102
     opnsense:
       hosts:
         opnsense1:
           ansible_host: 192.168.1.1
           ansible_connection: local
+    music_common:
+      hosts:
+        kvatch: {}
+        music1: {}

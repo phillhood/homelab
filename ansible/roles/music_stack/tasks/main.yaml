@@ -1,0 +1,8 @@
+---
+- name: Install Docker Engine
+  ansible.builtin.import_tasks: docker.yaml
+  tags: [docker, stack]
+
+- name: Deploy the compose stack
+  ansible.builtin.import_tasks: compose.yaml
+  tags: [compose, stack]

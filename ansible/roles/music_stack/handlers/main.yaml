@@ -1,0 +1,14 @@
+---
+- name: Recreate the music stack
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ music_stack_dir }}/docker-compose.yml"
+      - up
+      - -d
+      - --force-recreate
+      - --remove-orphans
+  changed_when: true
+  no_log: true

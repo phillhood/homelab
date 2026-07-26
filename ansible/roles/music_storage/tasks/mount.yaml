@@ -1,0 +1,42 @@
+---
+- name: Create the host mount point
+  ansible.builtin.file:
+    path: "{{ music_host_mount }}"
+    state: directory
+    mode: "2775"
+
+- name: Read the filesystem UUID
+  ansible.builtin.command:
+    argv:
+      - blkid
+      - -s
+      - UUID
+      - -o
+      - value
+      - "{{ music_disk_partition }}"
+  register: music_uuid_probe
+  changed_when: false
+  check_mode: false
+
+- name: Assert the UUID matches the recorded one
+  ansible.builtin.assert:
+    that: music_uuid_probe.stdout | trim == music_disk_uuid
+    fail_msg: >-
+      Disk UUID is {{ music_uuid_probe.stdout | trim }}, expected {{ music_disk_uuid }}.
+      Update music_disk_uuid in host_vars if the disk was reformatted.
+    success_msg: "Disk UUID matches."
+
+- name: Add the fstab entry and mount the disk
+  ansible.posix.mount:
+    path: "{{ music_host_mount }}"
+    src: "UUID={{ music_disk_uuid }}"
+    fstype: ext4
+    opts: defaults,noatime,nofail,x-systemd.device-timeout=15
+    dump: "0"
+    passno: "2"
+    state: mounted
+
+- name: Reload systemd so the generated mount unit tracks fstab
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  changed_when: false

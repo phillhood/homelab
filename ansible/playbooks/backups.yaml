@@ -11,6 +11,18 @@
           tags: [pihole]
       tags: [pihole]
 
+- name: Back up the music library manifest
+  hosts: music
+  gather_facts: true
+  tasks:
+    - name: Run the music manifest tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: music_manifest
+        apply:
+          tags: [music]
+      tags: [music]
+
 - name: Back up OPNsense config and rotate
   hosts: opnsense
   gather_facts: true
