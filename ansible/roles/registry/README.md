@@ -64,11 +64,39 @@ Reproduce:
 ssh root@192.168.1.104 'du -sh /var/lib/zot; du -sh /var/lib/zot/*'
 ```
 
-## No credentials, and no backup
+## Anonymous read, no write — enforced by Zot itself, not just left unconfigured
 
-`config.json.j2` has no `auth` extension — Zot serves anonymously, on purpose.
-Nothing ever pushes to this registry; it only pulls-through and caches upstream
-images on demand, so there is no write path to gate behind a credential.
+`config.json.j2` sets `http.accessControl.repositories["**"]` to
+`anonymousPolicy: [read]` / `defaultPolicy: []`. There is no `auth` extension and no
+credential anywhere in this role — read stays anonymous, on purpose, for every client on
+the LAN. What changed is that write is now explicitly denied rather than simply never
+exercised: before this key existed, an anonymous `DELETE` against a nonexistent manifest
+returned `404` (request reached the handler, no authorization check ran at all); with it,
+the same request returns `401`. Verified against both paths into Zot — through Caddy at
+`https://registry.lab.shychedelic.com` and directly at `http://192.168.1.104:5000` — since
+Zot enforces this itself, not Caddy, so nothing about the proxy layer can be relied on to
+close the direct path.
+
+**`accessControl` is nested under `http`, not top-level.** `zot schema` (a subcommand of
+the binary itself) is the authority here, not the examples in Zot's docs: a top-level
+`"accessControl"` key is rejected at startup with `'config.Config' has invalid keys:
+accesscontrol` and crash-loops the service. The correct shape is
+`http.accessControl.repositories`, confirmed by dumping the JSON Schema with `zot schema`
+and locating `AccessControlConfig` under `HTTPConfig`.
+
+Sync/`onDemand` pull-through is unaffected, because Zot's sync workers write to storage
+internally and never go through the HTTP authorization layer that rejects the anonymous
+`DELETE` above. Verified by deleting a synced repository from `/var/lib/zot` outright
+(not just the tag — the whole on-disk directory) and re-pulling through
+`registry.lab.shychedelic.com`, for both a root-path upstream (`library/alpine:3.20`) and
+a prefixed one (`registry.k8s.io/pause:3.10`): both re-populated the store from upstream
+and the pulls succeeded, confirmed by `journalctl -u zot` logging `"successfully synced
+image"` for each.
+
+Nothing ever pushes to this registry through a real client — it only pulls-through and
+caches upstream images on demand — so the write path being closed costs nothing in normal
+operation; it only forecloses the anonymous-LAN-write posture that existed before this
+key was added.
 
 For the same reason it carries no entry in `playbooks/backups.yaml`: every byte in
 `/var/lib/zot` is a re-fetchable copy of something that exists upstream, so losing
