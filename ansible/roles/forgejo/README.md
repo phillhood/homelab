@@ -18,6 +18,19 @@ existing references — it orphans them. Treat `forgejo_root_url` as a one-way d
 it once, verify it (Step 11's certificate/HTTP checks), and only change it as part of a
 deliberate, coordinated migration, never as a routine config edit.
 
+## `HTTP_ADDR = 0.0.0.0` serves cleartext HTTP to the whole LAN, not just to Caddy
+
+Forgejo has to listen on every interface, not just loopback, because Caddy runs on a
+different container (CT 104) and reaches Forgejo over the network at `192.168.1.103:3000`.
+The side effect: that same `:3000` is reachable, in cleartext, from anything else on the
+LAN too — confirmed with `curl http://192.168.1.103:3000/api/healthz` returning `200`
+from the desktop, no TLS involved. This is intentional (it's what makes the Caddy proxy
+work at all) but it means the TLS path through `git.lab.shychedelic.com` is not the only
+way to reach Forgejo — a second, unauthenticated-at-the-transport-layer path exists
+alongside it. Forgejo's own auth still applies to anything sensitive; what's missing is
+confidentiality of traffic and any restriction on who can connect. See the backlog for
+the broader "no host firewall on Tier 0" entry this falls under.
+
 ## SSH is Forgejo's own built-in server on `:2222`, not proxied through Caddy
 
 `START_SSH_SERVER = true` / `SSH_LISTEN_PORT = 2222` in `app.ini` makes Forgejo run its
