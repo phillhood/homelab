@@ -15,6 +15,18 @@ all:
           hosts:
             music1:
               ansible_host: 192.168.1.102
+        forge:
+          hosts:
+            forge1:
+              ansible_host: 192.168.1.103
+        registry:
+          hosts:
+            registry1:
+              ansible_host: 192.168.1.104
+        proxy:
+          hosts:
+            proxy1:
+              ansible_host: 192.168.1.105
     opnsense:
       hosts:
         opnsense1:

@@ -1,0 +1,15 @@
+---
+lab_domain: lab.shychedelic.com
+zot_version: v2.1.18
+zot_user: zot
+zot_config_dir: /etc/zot
+zot_data_dir: /var/lib/zot
+zot_port: 5000
+zot_upstreams:
+  - host: ghcr.io
+    url: https://ghcr.io
+  - host: quay.io
+    url: https://quay.io
+  - host: registry.k8s.io
+    url: https://registry.k8s.io
+zot_dockerhub_url: https://registry-1.docker.io
