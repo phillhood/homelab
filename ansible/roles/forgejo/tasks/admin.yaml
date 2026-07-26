@@ -1,0 +1,44 @@
+---
+- name: List existing Forgejo users
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/forgejo
+      - admin
+      - user
+      - list
+      - --config
+      - "{{ forgejo_config_dir }}/app.ini"
+  become: true
+  become_method: ansible.builtin.su
+  become_user: "{{ forgejo_user }}"
+  environment:
+    GITEA_WORK_DIR: "{{ forgejo_home }}"
+  register: forgejo_users
+  changed_when: false
+  check_mode: false
+
+- name: Create the admin account
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/forgejo
+      - admin
+      - user
+      - create
+      - --admin
+      - --username
+      - "{{ forgejo_admin_user }}"
+      - --email
+      - "{{ forgejo_admin_email }}"
+      - --password
+      - "{{ forgejo_admin_password }}"
+      - --must-change-password=false
+      - --config
+      - "{{ forgejo_config_dir }}/app.ini"
+  become: true
+  become_method: ansible.builtin.su
+  become_user: "{{ forgejo_user }}"
+  environment:
+    GITEA_WORK_DIR: "{{ forgejo_home }}"
+  when: forgejo_admin_user not in forgejo_users.stdout
+  changed_when: true
+  no_log: true

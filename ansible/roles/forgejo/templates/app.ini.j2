@@ -1,0 +1,50 @@
+APP_NAME = Forgejo
+RUN_USER = {{ forgejo_user }}
+RUN_MODE = prod
+WORK_PATH = {{ forgejo_home }}
+
+[server]
+PROTOCOL = http
+DOMAIN = git.{{ lab_domain }}
+ROOT_URL = {{ forgejo_root_url }}
+HTTP_ADDR = 0.0.0.0
+HTTP_PORT = {{ forgejo_http_port }}
+APP_DATA_PATH = {{ forgejo_home }}/data
+DISABLE_SSH = false
+START_SSH_SERVER = true
+SSH_DOMAIN = {{ forgejo_ssh_domain }}
+SSH_PORT = {{ forgejo_ssh_port }}
+SSH_LISTEN_PORT = {{ forgejo_ssh_port }}
+LFS_START_SERVER = true
+LFS_JWT_SECRET = {{ forgejo_lfs_jwt_secret }}
+
+[database]
+DB_TYPE = postgres
+HOST = /var/run/postgresql
+NAME = {{ postgresql_db }}
+USER = {{ postgresql_user }}
+PASSWD = {{ postgresql_password }}
+SSL_MODE = disable
+
+[repository]
+ROOT = {{ forgejo_home }}/data/forgejo-repositories
+
+[security]
+INSTALL_LOCK = true
+SECRET_KEY = {{ forgejo_secret_key }}
+INTERNAL_TOKEN = {{ forgejo_internal_token }}
+
+[oauth2]
+JWT_SECRET = {{ forgejo_jwt_secret }}
+
+[service]
+DISABLE_REGISTRATION = true
+REQUIRE_SIGNIN_VIEW = false
+
+[packages]
+ENABLED = true
+
+[log]
+MODE = console
+LEVEL = info
+ROOT_PATH = {{ forgejo_home }}/log

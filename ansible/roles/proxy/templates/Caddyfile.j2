@@ -7,6 +7,11 @@
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 	}
 
+	@git host git.{{ lab_domain }}
+	handle @git {
+		reverse_proxy {{ forge_backend }}
+	}
+
 	@registry host registry.{{ lab_domain }}
 	handle @registry {
 		reverse_proxy {{ registry_backend }}

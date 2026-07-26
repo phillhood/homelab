@@ -18,6 +18,16 @@
     mode: "0640"
   notify: Restart postgresql
 
+- name: Require a password over the socket for non-postgres roles
+  ansible.builtin.lineinfile:
+    path: "/etc/postgresql/{{ postgresql_version }}/main/pg_hba.conf"
+    regexp: "^local\\s+all\\s+all\\s+peer\\s*$"
+    line: "local   all             all                                     scram-sha-256"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: Restart postgresql
+
 - name: Restart postgresql now, not at end of play
   ansible.builtin.meta: flush_handlers
 

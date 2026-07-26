@@ -1,0 +1,62 @@
+---
+- name: Install git and dependencies
+  ansible.builtin.apt:
+    name:
+      - git
+      - git-lfs
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Create the forgejo group
+  ansible.builtin.group:
+    name: "{{ forgejo_user }}"
+    system: true
+    state: present
+
+- name: Create the forgejo user
+  ansible.builtin.user:
+    name: "{{ forgejo_user }}"
+    group: "{{ forgejo_user }}"
+    home: "{{ forgejo_home }}"
+    shell: /bin/bash
+    system: true
+    create_home: true
+    state: present
+
+- name: Create the forgejo directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ forgejo_user }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - { path: "{{ forgejo_home }}/data", owner: "{{ forgejo_user }}", mode: "0750" }
+    - { path: "{{ forgejo_home }}/log", owner: "{{ forgejo_user }}", mode: "0750" }
+    - { path: "{{ forgejo_config_dir }}", owner: root, mode: "0750" }
+
+- name: Fetch the Forgejo binary
+  ansible.builtin.get_url:
+    url: >-
+      https://codeberg.org/forgejo/forgejo/releases/download/{{ forgejo_version }}/forgejo-{{ forgejo_version | regex_replace('^v', '') }}-linux-amd64
+    dest: /usr/local/bin/forgejo
+    checksum: "sha256:{{ forgejo_sha256 }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart forgejo
+
+- name: Install the forgejo systemd unit
+  ansible.builtin.template:
+    src: forgejo.service.j2
+    dest: /etc/systemd/system/forgejo.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart forgejo
+
+- name: Reload systemd so it tracks the forgejo unit
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  changed_when: false

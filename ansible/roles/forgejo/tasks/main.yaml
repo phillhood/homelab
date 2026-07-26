@@ -1,0 +1,12 @@
+---
+- name: Install Forgejo
+  ansible.builtin.import_tasks: install.yaml
+  tags: [install, forgejo]
+
+- name: Configure Forgejo
+  ansible.builtin.import_tasks: config.yaml
+  tags: [config, forgejo]
+
+- name: Ensure the admin account exists
+  ansible.builtin.import_tasks: admin.yaml
+  tags: [admin, forgejo]

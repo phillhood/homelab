@@ -105,3 +105,26 @@ is `no_log: true`, so it never appears in playbook output. It comes from a
 `*.sops.yaml` file per host group (e.g. `group_vars/forge.sops.yaml`), generated with
 `openssl rand -base64 32 | tr -d '\n/+=' | head -c 32` and encrypted directly via sops
 from stdin — the plaintext never touches disk.
+
+## Local socket auth is `scram-sha-256`, not the Debian-default `peer`, for anything but `postgres`
+
+`postgresql-{{ postgresql_version }}`'s postinst writes a `pg_hba.conf` where every
+local (Unix-socket) connection authenticates via `peer`: the connecting OS username must
+equal the Postgres role name, full stop — no password is ever checked. That is fine for
+this role's own `become_user: postgres` tasks (OS user `postgres` connecting as role
+`postgres`), but breaks the moment an application connects as its own dedicated role
+under a *different* OS account. Forgejo (the first, and so far only, consumer of this
+role) is exactly that case: its `app.ini` connects to Postgres role `forgejo` over the
+socket, but the OS process runs as `git` (required — the SSH clone URL is
+`git@forge.home`, so the service account can't be renamed to match). `peer` auth
+rejected that outright with `FATAL: Peer authentication failed for user "forgejo"`,
+regardless of the password configured on either side — `peer` doesn't look at it.
+
+`tasks/install.yaml` now rewrites just the catch-all line —
+`local   all   all   peer` → `local   all   all   scram-sha-256` — leaving
+`local   all   postgres   peer` untouched (matched first, so `become_user: postgres`
+keeps working exactly as before). This is what makes the `PASSWD` field in a consuming
+role's `app.ini`-equivalent config actually mean something: without this change, no
+password-based client can ever authenticate over the socket here, no matter what
+password it's configured with. Any future service added to this role inherits the same
+fix automatically — it's in the generic `install.yaml`, not scoped to Forgejo.

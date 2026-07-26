@@ -1,0 +1,25 @@
+---
+- name: Render app.ini
+  ansible.builtin.template:
+    src: app.ini.j2
+    dest: "{{ forgejo_config_dir }}/app.ini"
+    owner: root
+    group: "{{ forgejo_user }}"
+    mode: "0640"
+  no_log: true
+  notify: Restart forgejo
+
+- name: Enable and start forgejo
+  ansible.builtin.systemd_service:
+    name: forgejo
+    enabled: true
+    state: started
+
+- name: Wait for forgejo to answer
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ forgejo_http_port }}/api/healthz"
+    status_code: [200]
+  register: forgejo_ready
+  until: forgejo_ready is succeeded
+  retries: 20
+  delay: 3

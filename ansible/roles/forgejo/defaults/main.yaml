@@ -1,0 +1,10 @@
+---
+forgejo_user: git
+forgejo_home: /var/lib/forgejo
+forgejo_config_dir: /etc/forgejo
+forgejo_http_port: 3000
+forgejo_ssh_port: 2222
+forgejo_ssh_domain: forge.home
+forgejo_root_url: ""
+forgejo_admin_user: ""
+forgejo_admin_email: ""

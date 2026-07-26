@@ -1,0 +1,8 @@
+---
+galaxy_info:
+  role_name: forgejo
+  author: Phill Hood
+  description: Forgejo git service with its built-in OCI registry in CT 102.
+  license: MIT
+  min_ansible_version: "2.15"
+dependencies: []
