@@ -7,6 +7,7 @@ services:
     environment:
       SLSKD_DOWNLOADS_DIR: /downloads
       SLSKD_SHARED_DIR: /library
+      SLSKD_UMASK: "0002"
       SLSKD_SLSK_USERNAME: {{ slskd_soulseek_username | to_json }}
       SLSKD_SLSK_PASSWORD: {{ slskd_soulseek_password | to_json }}
       SLSKD_SLSK_LISTEN_PORT: {{ music_slskd_listen_port }}
