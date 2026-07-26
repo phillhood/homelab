@@ -2,6 +2,7 @@
 base_packages:
   - curl
   - ca-certificates
+  - needrestart
 
 lxc_expected_failed_units:
   - dev-mqueue.mount
