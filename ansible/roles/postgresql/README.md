@@ -18,6 +18,12 @@ This is not specific to Forgejo. Any future service given its own database via t
 role should keep the same posture: same-container, socket-only, unless a real
 requirement forces otherwise.
 
+The socket itself lives at Debian's default `unix_socket_directories`,
+`/var/run/postgresql` — this role never overrides it, so it doesn't appear as an
+explicit task anywhere. Forgejo's `app.ini` connects there directly (`HOST =
+/var/run/postgresql`, see `forgejo/templates/app.ini.j2`), not to `localhost:5432`;
+there is nothing listening on `5432` to connect to in the first place.
+
 ## Why the role itself is host-agnostic
 
 `postgresql_db`, `postgresql_user` and `postgresql_password` default to empty strings.

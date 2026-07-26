@@ -63,3 +63,15 @@ Reproduce:
 ```bash
 ssh root@192.168.1.104 'du -sh /var/lib/zot; du -sh /var/lib/zot/*'
 ```
+
+## No credentials, and no backup
+
+`config.json.j2` has no `auth` extension — Zot serves anonymously, on purpose.
+Nothing ever pushes to this registry; it only pulls-through and caches upstream
+images on demand, so there is no write path to gate behind a credential.
+
+For the same reason it carries no entry in `playbooks/backups.yaml`: every byte in
+`/var/lib/zot` is a re-fetchable copy of something that exists upstream, so losing
+the store costs re-warming the cache on next pull, not lost data. `music_stack` and
+`forgejo` back up state that exists nowhere else; `registry` deliberately does not,
+by the same rule `homelab_backups/README.md` states for derived/regenerable files.

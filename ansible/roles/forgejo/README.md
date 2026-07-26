@@ -143,6 +143,29 @@ window (one `admin.yaml` run, first install only, guarded by the same idempotenc
 that skips this task on every subsequent converge — see below), but it's real, and
 worth knowing if `forge1` is ever shared with a less-trusted process.
 
+## GitHub push mirrors are per-repository UI config, not Ansible's job
+
+Mirroring a repository out to GitHub (`Settings -> Repository -> Push Mirror` in the
+Forgejo UI) is configured by hand, one repository at a time, by design — it is not
+templated or driven from `group_vars` here. The GitHub PAT a mirror needs lives
+inside Forgejo's own database (encrypted with the instance's `SECRET_KEY`, the same
+mechanism Forgejo uses for its other stored remote credentials), **not** in
+`forge.sops.yaml` or any other SOPS file — this role has no variable for it and
+never will, short of a future task that decides to automate mirror creation via the
+API. See the top-level roadmap for the current manual status.
+
+## Backups exclude package data on purpose
+
+`homelab_backups`' Forgejo dump task runs `forgejo dump --skip-package-data`. The
+container registry blob store under `APP_DATA_PATH` is the only thing that flag
+drops — those images (including museek's own, once it ships) are rebuildable from
+source in their own repositories, so the dump doesn't need to preserve the built
+artifacts to make a restore whole. Everything irreplaceable (the database, the git
+trees, the self-provisioned SSH host key and JWT signing key) is still captured; see
+`homelab_backups/README.md`'s "Forgejo dump" section for the full inventory of
+what's in and out of the archive, including why `app.ini` itself is deliberately
+absent.
+
 ## Verifying `git.{{ lab_domain }}` before the vhost existed
 
 Before this role landed, `https://git.lab.shychedelic.com/api/healthz` returned `200`
