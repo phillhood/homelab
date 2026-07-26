@@ -25,8 +25,10 @@
       - syncthing
       - generate
       - "--config={{ music_syncthing_config_dir }}"
+      - --no-default-folder
       - "--gui-user={{ music_smb_user }}"
-      - "--gui-password={{ syncthing_gui_password }}"
+      - --gui-password=-
+    stdin: "{{ syncthing_gui_password }}"
     creates: "{{ music_syncthing_config_dir }}/config.xml"
   become: true
   become_method: ansible.builtin.su
