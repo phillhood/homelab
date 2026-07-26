@@ -59,7 +59,20 @@ Docker, which needs `nesting=1` and `keyctl=1`. Those flags are set by
 `music_storage/tasks/container_mount.yaml` via `pct set`, not by this role and not by
 Terraform — the API token gets a 403 on feature flags.
 
-Nesting changes which systemd units fail, so `music` overrides
-`lxc_expected_failed_units` in `inventory/group_vars/music.yaml` rather than widening
-the baseline for every container. Any future nesting container does the same: override
-per group, never in this role's defaults.
+**Nesting eliminates the three failed mount units — it does not merely shift them.**
+Measured on identical Debian 13 templates on the same host:
+
+| Container | Features | Failed units |
+|---|---|---|
+| CT 100 `pihole` | none | 3 — `dev-mqueue.mount`, `run-lock.mount`, `tmp.mount` |
+| CT 101 `music` | `nesting=1,keyctl=1` | 0 |
+
+So `music` needs **no** `lxc_expected_failed_units` override. The role's default
+allowlist is a superset of what this container actually fails, and the assert still
+bites on anything new. This also qualifies the "no mount-unit masking" negative above:
+those failures are a consequence of running without nesting, not an inherent property
+of unprivileged LXC.
+
+If a future nesting container does fail a different set, override
+`lxc_expected_failed_units` per group in `inventory/group_vars/`, never in this role's
+defaults — widening the baseline would blind every container at once.
