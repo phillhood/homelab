@@ -1,0 +1,4 @@
+---
+- name: Enroll the Thunderbolt enclosure
+  ansible.builtin.import_tasks: thunderbolt.yaml
+  tags: [thunderbolt, storage]

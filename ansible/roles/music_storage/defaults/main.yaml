@@ -1,0 +1,10 @@
+---
+music_host_mount: /mnt/music
+music_fs_label: music
+music_gid: 1500
+music_host_uid: 100000
+music_host_gid: 101500
+music_container_id: 101
+music_container_mount: /srv/music
+music_container_features: nesting=1,keyctl=1
+music_format_disk: false

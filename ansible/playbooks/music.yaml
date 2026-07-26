@@ -1,0 +1,6 @@
+---
+- name: Host-side music storage
+  hosts: proxmox
+  gather_facts: true
+  roles:
+    - music_storage
