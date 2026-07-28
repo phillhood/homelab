@@ -12,6 +12,7 @@ FORGE_IP    := 192.168.1.103
 REGISTRY_IP := 192.168.1.104
 PROXY_IP    := 192.168.1.105
 PAULT_IP    := 192.168.1.106
+PAULT_VARS  := $(ANSIBLE_DIR)/inventory/group_vars/pault.yaml
 PAULT_HOST  := pault.ca
 PAULT_MEDIA := media.pault.ca
 LAB_DOMAIN  := lab.shychedelic.com
@@ -148,7 +149,22 @@ apply: ## Converge the homelab (site.yaml)
 	@$(A)
 
 .PHONY: pault
-pault: ## Redeploy the pault stack after publishing new images
+pault: ## Redeploy the pault stack. SHA=<short-sha> repins both images first
+	@if [ -n "$(SHA)" ]; then \
+	  for svc in web api; do \
+	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \
+	    [ -n "$$repo" ] || { echo "pault_$${svc}_image is not a tagged reference" >&2; exit 1; }; \
+	    docker manifest inspect "$$repo:$(SHA)" >/dev/null 2>&1 \
+	      || { echo "$$repo:$(SHA) is not in the registry" >&2; exit 1; }; \
+	  done; \
+	  for svc in web api; do \
+	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \
+	    sed -i "s|^pault_$${svc}_image: .*|pault_$${svc}_image: $$repo:$(SHA)|" $(PAULT_VARS); \
+	  done; \
+	  test $$(grep -cE "^pault_(web|api)_image: .*:$(SHA)$$" $(PAULT_VARS)) -eq 2 \
+	    || { echo "repin did not take" >&2; exit 1; }; \
+	  grep -E "^pault_(web|api)_image:" $(PAULT_VARS); \
+	fi
 	@$(MAKE) --no-print-directory apply LIMIT=pault1 TAGS=compose
 
 .PHONY: preflight
