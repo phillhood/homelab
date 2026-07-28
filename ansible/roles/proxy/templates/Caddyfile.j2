@@ -17,6 +17,19 @@
 		reverse_proxy {{ registry_backend }}
 	}
 
+	@pault_api {
+		host pault.{{ lab_domain }}
+		path /api/* /healthz
+	}
+	handle @pault_api {
+		reverse_proxy {{ pault_api_backend }}
+	}
+
+	@pault host pault.{{ lab_domain }}
+	handle @pault {
+		reverse_proxy {{ pault_web_backend }}
+	}
+
 	handle {
 		respond "tier0 proxy ok" 200
 	}

@@ -6,3 +6,5 @@ caddy_download_url: >-
 caddy_acme_email: phill@phillhood.ca
 forge_backend: 192.168.1.103:3000
 registry_backend: 192.168.1.104:5000
+pault_web_backend: 192.168.1.106:80
+pault_api_backend: 192.168.1.106:8080
