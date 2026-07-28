@@ -147,6 +147,10 @@ idempotent: ## Converge twice; fail unless the second run changes nothing
 apply: ## Converge the homelab (site.yaml)
 	@$(A)
 
+.PHONY: pault
+pault: ## Redeploy the pault stack after publishing new images
+	@$(MAKE) --no-print-directory apply LIMIT=pault1 TAGS=compose
+
 .PHONY: preflight
 preflight: lint backup check ## The safe path: lint, take a backup, then show what would change
 	@echo ""
