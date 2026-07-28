@@ -15,6 +15,8 @@ PAULT_IP    := 192.168.1.106
 PAULT_VARS  := $(ANSIBLE_DIR)/inventory/group_vars/pault.yaml
 PAULT_HOST  := pault.ca
 PAULT_MEDIA := media.pault.ca
+PAULT_REPO  ?= $(HOME)/Dev/phillhood/pault
+SHA         ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
 LAB_DOMAIN  := lab.shychedelic.com
 RESTIC_REPO := /var/backups/restic/music
 RESTIC_PW   := /etc/music-backup/repo-password
@@ -149,7 +151,8 @@ apply: ## Converge the homelab (site.yaml)
 	@$(A)
 
 .PHONY: pault
-pault: ## Redeploy the pault stack. SHA=<short-sha> repins both images first
+pault: ## Redeploy the pault stack, repinned to the pault repo's HEAD. SHA= overrides
+	@if [ -z "$(SHA)" ]; then echo "No SHA resolved from $(PAULT_REPO); deploying the pinned images"; fi
 	@if [ -n "$(SHA)" ]; then \
 	  for svc in web api; do \
 	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \
