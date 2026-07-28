@@ -1,6 +1,6 @@
 # Local
-.dev/
-.docs/
+.dev
+.docs
 
 # Terraform
 *.tfvars
@@ -11,6 +11,7 @@
 *.retry
 *.agekey
 keys.txt
+.ansible/
 
 
 # Python
