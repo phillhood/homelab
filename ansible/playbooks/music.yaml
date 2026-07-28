@@ -10,4 +10,5 @@
   gather_facts: true
   roles:
     - music_share
+    - docker_engine
     - music_stack

@@ -1,0 +1,4 @@
+---
+- name: Install Docker Engine
+  ansible.builtin.import_tasks: install.yaml
+  tags: [docker_engine, docker, stack]

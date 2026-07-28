@@ -36,12 +36,7 @@
 
 - name: Install Docker Engine and the compose plugin
   ansible.builtin.apt:
-    name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-buildx-plugin
-      - docker-compose-plugin
+    name: "{{ docker_engine_packages }}"
     state: present
     update_cache: true
 
