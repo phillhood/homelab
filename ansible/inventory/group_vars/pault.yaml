@@ -1,0 +1,11 @@
+---
+pault_minio_image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+pault_mc_image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+pault_cloudflared_image: cloudflare/cloudflared:2026.7.3
+
+pault_public_host: pault.ca
+pault_media_host: media.pault.ca
+
+pault_web_image: ""
+pault_api_image: ""
+pault_tunnel_id: 2763c49a-f549-48cd-a57a-5e21d9ff1dd5

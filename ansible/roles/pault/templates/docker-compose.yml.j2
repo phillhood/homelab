@@ -1,0 +1,101 @@
+services:
+{% if pault_web_image %}
+  pault-web:
+    image: {{ pault_web_image }}
+    container_name: pault-web
+    restart: unless-stopped
+    ports:
+      - "{{ pault_web_port }}:8080"
+    networks:
+      - pault
+{% endif %}
+{% if pault_api_image %}
+  pault-api:
+    image: {{ pault_api_image }}
+    container_name: pault-api
+    restart: unless-stopped
+    depends_on:
+      - minio
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      GATE_WORD: {{ pault_gate_word | to_json }}
+      SESSION_SECRET: {{ pault_session_secret | to_json }}
+      SESSION_TTL: {{ pault_session_ttl }}
+      THROTTLE_TTL: {{ pault_throttle_ttl }}
+      THROTTLE_LIMIT: "{{ pault_throttle_limit }}"
+      S3_INTERNAL_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: https://{{ pault_media_host }}
+      S3_BUCKET: {{ pault_s3_bucket }}
+      S3_ACCESS_KEY: {{ pault_s3_access_key | to_json }}
+      S3_SECRET_KEY: {{ pault_s3_secret_key | to_json }}
+      S3_REGION: {{ pault_s3_region }}
+      PRESIGN_TTL: {{ pault_presign_ttl }}
+      PRESIGN_WINDOW: {{ pault_presign_window }}
+      MANIFEST_CACHE_TTL: {{ pault_manifest_cache_ttl }}
+      PHOTOS_MAX_LIMIT: "{{ pault_photos_max_limit }}"
+    ports:
+      - "{{ pault_api_port }}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - pault
+{% endif %}
+
+  minio:
+    image: {{ pault_minio_image }}
+    container_name: pault-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: {{ pault_minio_root_user | to_json }}
+      MINIO_ROOT_PASSWORD: {{ pault_minio_root_password | to_json }}
+    ports:
+      - "{{ pault_minio_port }}:9000"
+    volumes:
+      - {{ pault_minio_data }}:/data
+    healthcheck:
+      test: {{ pault_minio_healthcheck | to_json }}
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - pault
+
+  minio-init:
+    image: {{ pault_mc_image }}
+    profiles: ["init"]
+    restart: "no"
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: {{ pault_minio_root_user | to_json }}
+      MINIO_ROOT_PASSWORD: {{ pault_minio_root_password | to_json }}
+      PAULT_S3_ACCESS_KEY: {{ pault_s3_access_key | to_json }}
+      PAULT_S3_SECRET_KEY: {{ pault_s3_secret_key | to_json }}
+    entrypoint: ["/bin/sh", "/minio-init.sh"]
+    volumes:
+      - {{ pault_stack_dir }}/minio-init.sh:/minio-init.sh:ro
+    networks:
+      - pault
+{% if pault_tunnel_id %}
+
+  cloudflared:
+    image: {{ pault_cloudflared_image }}
+    container_name: pault-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate --config /etc/cloudflared/config.yml run
+    volumes:
+      - {{ pault_cloudflared_dir }}:/etc/cloudflared:ro
+    networks:
+      - pault
+{% endif %}
+
+networks:
+  pault:
+    name: pault

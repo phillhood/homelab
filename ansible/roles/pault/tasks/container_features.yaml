@@ -1,0 +1,39 @@
+---
+- name: Check whether the pault container exists
+  ansible.builtin.stat:
+    path: "/etc/pve/lxc/{{ pault_container_id }}.conf"
+  register: pault_ct_conf_stat
+
+- name: Report that the container is not created yet
+  ansible.builtin.debug:
+    msg: >-
+      CT {{ pault_container_id }} not present. Run terraform apply,
+      then re-run with --tags container-features.
+  when: not pault_ct_conf_stat.stat.exists
+
+- name: Read the container config
+  ansible.builtin.slurp:
+    src: "/etc/pve/lxc/{{ pault_container_id }}.conf"
+  register: pault_ct_conf
+  when: pault_ct_conf_stat.stat.exists
+
+- name: Set container config facts
+  ansible.builtin.set_fact:
+    pault_ct_conf_text: "{{ pault_ct_conf.content | b64decode }}"
+  when: pault_ct_conf_stat.stat.exists
+
+- name: Set the container feature flags
+  ansible.builtin.command:
+    argv:
+      - pct
+      - set
+      - "{{ pault_container_id }}"
+      - -features
+      - "{{ pault_container_features }}"
+  when:
+    - pault_ct_conf_stat.stat.exists
+    - "('features: ' ~ pault_container_features) not in pault_ct_conf_text.splitlines()"
+  changed_when: true
+  notify:
+    - Restart the pault container
+    - Wait for the pault container to accept connections

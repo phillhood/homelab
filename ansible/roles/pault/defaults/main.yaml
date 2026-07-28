@@ -1,0 +1,30 @@
+---
+pault_container_id: 105
+pault_container_features: nesting=1,keyctl=1
+
+pault_stack_dir: /opt/pault
+pault_minio_data: /opt/pault/minio
+pault_cloudflared_dir: /opt/pault/cloudflared
+pault_cloudflared_uid: 65532
+
+pault_web_port: 80
+pault_api_port: 8080
+pault_minio_port: 9000
+
+pault_web_image: ""
+pault_api_image: ""
+pault_tunnel_id: ""
+
+pault_s3_bucket: pault
+pault_s3_region: us-east-1
+pault_session_ttl: 7d
+pault_throttle_ttl: 60s
+pault_throttle_limit: 10
+pault_presign_ttl: 1h
+pault_presign_window: 15m
+pault_manifest_cache_ttl: 60s
+pault_photos_max_limit: 100
+
+pault_minio_healthcheck:
+  - CMD-SHELL
+  - "curl -fsS http://localhost:9000/minio/health/live || exit 1"

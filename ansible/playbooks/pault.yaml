@@ -1,0 +1,17 @@
+---
+- name: Set the pault container feature flags
+  hosts: proxmox
+  gather_facts: false
+  tasks:
+    - name: Apply the container feature flags
+      ansible.builtin.import_role:
+        name: pault
+        tasks_from: container_features.yaml
+      tags: [pault, container-features]
+
+- name: Deploy the pault stack
+  hosts: pault
+  gather_facts: true
+  roles:
+    - docker_engine
+    - pault

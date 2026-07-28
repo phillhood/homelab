@@ -1,0 +1,135 @@
+---
+- name: Refuse to render the stack with missing secrets
+  ansible.builtin.assert:
+    that:
+      - pault_gate_word | default('') | length > 0
+      - pault_session_secret | default('') | length > 0
+      - pault_minio_root_user | default('') | length > 0
+      - pault_minio_root_password | default('') | length > 0
+      - pault_s3_access_key | default('') | length > 0
+      - pault_s3_secret_key | default('') | length > 0
+      - not (pault_tunnel_id | length > 0) or (pault_tunnel_credentials | default('') | length > 0)
+    fail_msg: >-
+      One or more pault secrets are unset. Set them with
+      sops ansible/inventory/group_vars/pault.sops.yaml
+    quiet: true
+
+- name: Refuse to render the stack with missing hostnames
+  ansible.builtin.assert:
+    that:
+      - pault_public_host | default('') | length > 0
+      - pault_media_host | default('') | length > 0
+    fail_msg: >-
+      pault_public_host and pault_media_host must be set in
+      inventory/group_vars/pault.yaml. Both are rendered into
+      S3_PUBLIC_ENDPOINT and the tunnel ingress rules.
+    quiet: true
+
+- name: Create the stack directory
+  ansible.builtin.file:
+    path: "{{ pault_stack_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the MinIO data directory
+  ansible.builtin.file:
+    path: "{{ pault_minio_data }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Create the cloudflared directory
+  ansible.builtin.file:
+    path: "{{ pault_cloudflared_dir }}"
+    state: directory
+    owner: "{{ pault_cloudflared_uid }}"
+    group: "{{ pault_cloudflared_uid }}"
+    mode: "0750"
+  when: pault_tunnel_id | length > 0
+
+- name: Write the tunnel credentials
+  ansible.builtin.copy:
+    content: "{{ pault_tunnel_credentials }}"
+    dest: "{{ pault_cloudflared_dir }}/credentials.json"
+    owner: "{{ pault_cloudflared_uid }}"
+    group: "{{ pault_cloudflared_uid }}"
+    mode: "0600"
+  no_log: true
+  when: pault_tunnel_id | length > 0
+  notify: Recreate the pault stack
+
+- name: Render the tunnel config
+  ansible.builtin.template:
+    src: cloudflared-config.yml.j2
+    dest: "{{ pault_cloudflared_dir }}/config.yml"
+    owner: "{{ pault_cloudflared_uid }}"
+    group: "{{ pault_cloudflared_uid }}"
+    mode: "0640"
+  when: pault_tunnel_id | length > 0
+  notify: Recreate the pault stack
+
+- name: Deploy the MinIO init script
+  ansible.builtin.template:
+    src: minio-init.sh.j2
+    dest: "{{ pault_stack_dir }}/minio-init.sh"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Recreate the pault stack
+
+- name: Deploy the compose file
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ pault_stack_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0640"
+  no_log: true
+  notify: Recreate the pault stack
+
+- name: Pull the stack images
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ pault_stack_dir }}/docker-compose.yml"
+      - pull
+  register: pault_compose_pull
+  changed_when: >-
+    'Downloading' in pault_compose_pull.stderr
+    or 'Extracting' in pault_compose_pull.stderr
+  no_log: true
+
+- name: Bring the stack up
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ pault_stack_dir }}/docker-compose.yml"
+      - up
+      - -d
+      - --remove-orphans
+  register: pault_compose_up
+  changed_when: "'Started' in pault_compose_up.stderr or 'Created' in pault_compose_up.stderr"
+  no_log: true
+
+- name: Initialise the bucket, policy and service account
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - -f
+      - "{{ pault_stack_dir }}/docker-compose.yml"
+      - run
+      - --rm
+      - minio-init
+  register: pault_minio_init
+  changed_when: >-
+    'Created policy' in pault_minio_init.stdout
+    or 'Added user' in pault_minio_init.stdout
+  no_log: true

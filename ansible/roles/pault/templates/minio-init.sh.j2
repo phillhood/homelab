@@ -1,0 +1,40 @@
+#!/bin/sh
+set -eu
+
+until mc alias set local http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null 2>&1; do
+	sleep 2
+done
+
+mc mb --ignore-existing "local/{{ pault_s3_bucket }}"
+mc anonymous set none "local/{{ pault_s3_bucket }}"
+
+cat >/tmp/pault-rw.json <<'POLICY'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+      "Resource": ["arn:aws:s3:::{{ pault_s3_bucket }}/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::{{ pault_s3_bucket }}"]
+    }
+  ]
+}
+POLICY
+
+mc admin policy info local pault-rw >/dev/null 2>&1 \
+	|| mc admin policy create local pault-rw /tmp/pault-rw.json
+
+mc admin user info local "$PAULT_S3_ACCESS_KEY" >/dev/null 2>&1 \
+	|| mc admin user add local "$PAULT_S3_ACCESS_KEY" "$PAULT_S3_SECRET_KEY"
+
+mc admin policy attach local pault-rw --user "$PAULT_S3_ACCESS_KEY" 2>/dev/null || true
+
+case "$(mc admin policy entities local --user "$PAULT_S3_ACCESS_KEY")" in
+	*pault-rw*) ;;
+	*) echo "pault-rw is not attached to $PAULT_S3_ACCESS_KEY" >&2; exit 1 ;;
+esac
