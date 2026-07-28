@@ -1,4 +1,4 @@
 ---
-music_app_image: git.lab.shychedelic.com/shychedelic/museek:0.1.2
-music_discord_image: git.lab.shychedelic.com/shychedelic/museek-discord:0.1.2
+music_app_image: git.lab.shychedelic.com/shychedelic/museek:0.2.0
+music_discord_image: git.lab.shychedelic.com/shychedelic/museek-discord:0.2.0
 museek_musicbrainz_contact: shy@shychedelic.com
