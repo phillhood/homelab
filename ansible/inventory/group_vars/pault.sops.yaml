@@ -1,4 +1,4 @@
-pault_gate_word: ENC[AES256_GCM,data:WSn2UeNn650=,iv:KNi3AixLZhpEMLvGORHdlXYsmqXqUCphMec6+Di2oQA=,tag:9O8KGgzpoBHtXEwH/QTDnA==,type:str]
+pault_gate_word: ENC[AES256_GCM,data:/nBbu+sEVUE=,iv:5ItACXNQVvqLL0UgE4ur09BIpBecDgE1UqTfJDrVJ9M=,tag:bhct8u+9OXtO03KWjc+RhA==,type:str]
 pault_session_secret: ENC[AES256_GCM,data:oaB2OV/Y7puIjHlClZY2jRAON1xNN7PfMjgDq4Wt8sOREMd3WEVdByMYcRY+hock/Qsgz4Qnfln60coUifAzvg==,iv:rA+U8jp3lWHl83G9S37p03g+c5f3C0bGPIMo/CT6W7c=,tag:OkOU6SyIzTifsSBsFz7aDQ==,type:str]
 pault_minio_root_user: ENC[AES256_GCM,data:cB0boP2/Vb/2LQ==,iv:EZUXyxzbAHRLHZ8c5FyPWuNPuVOPnr14tHazX2cJOQU=,tag:u3zgzzyhKLim4uHJ63jKZA==,type:str]
 pault_minio_root_password: ENC[AES256_GCM,data:UcHSnRWereSaotJa9ZPEpQvRl64OqePxXlY/FQBUaaw=,iv:vQ4/3+/8hsLcWMWP849UP1O/NaT7z1s/LbAsgYWR5QI=,tag:O3FHRUIUU4fwMITvvuvdSQ==,type:str]
@@ -16,7 +16,7 @@ sops:
             N+rN82tvS02HuP9WVj0M/kX516mQ6c6XUeoJebYVqx2MTMq0KOmHUA==
             -----END AGE ENCRYPTED FILE-----
           recipient: age1gt9v3qjej3vuykjydqv9amhsjucanjwwtt4w8fkf5thyssrdeuus5ke3rx
-    lastmodified: "2026-07-28T20:13:39Z"
-    mac: ENC[AES256_GCM,data:h7+PrIuna7RsGcuvprmbO2cYkltuQV/xUIIPcK3m77dKsehA01g1HJdFOkKiwvj5WXHf4Zx9axyKkjS51NEtiLcuFyvfd3AGtb1NQf1UdCtVIt2ymnE9JdX0LMQmNF0bGo1+lhdC25l9aRdr71L983AYK+5AtiPgt5utl/jbYgg=,iv:lBBak3QIPagoo4AEEfKXgWxh/h543xEaBX8oWqvuUrc=,tag:DPNimDLHerMEBSXVIiBRKQ==,type:str]
+    lastmodified: "2026-07-28T21:19:28Z"
+    mac: ENC[AES256_GCM,data:caOlVnXzkLKhEsy+eamt5fRP6CBohdFQ1Ms5SMs/Oidp2ohOvSzN/amV1z5Gfbd8m4VYmJFqc3ICx0fWGOXoRogLxuwcTl2MPE0K3EIAhfFRRwejFw1Md8x0nFFRopbRAyMAQDv+VPFgeWcy0N7QHGHUgxgn0XYsFL42bWu2T6c=,iv:LX0siU46Qm4U36BmghwJ0qXxxTBGOGP+MSwdQ9Dzj08=,tag:XC+mlWn0FAbH1wfueaMv7g==,type:str]
     unencrypted_suffix: _unencrypted
     version: 3.13.3
