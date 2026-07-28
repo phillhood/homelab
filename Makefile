@@ -129,7 +129,8 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pault cloudflared"     "$$(ssh -o BatchMode=yes root@$(PAULT_IP) 'docker inspect -f "{{.State.Status}}" pault-cloudflared 2>/dev/null || echo MISSING')"
 	@printf "%-32s %s\n" "pault media public"    "$$(curl -s -o /dev/null -w '%{http_code}' https://$(PAULT_MEDIA)/minio/health/live)"
 	@printf "%-32s %s\n" "pault public"          "$$(curl -s -o /dev/null -w '%{http_code}' https://$(PAULT_HOST)/)"
-	@printf "%-32s %s\n" "pault web digest"      "$$(ssh -o BatchMode=yes root@$(PAULT_IP) 'docker inspect -f "{{index .RepoDigests 0}}" pault-web 2>/dev/null || echo gated' | tail -1)"
+	@printf "%-32s %s\n" "pault web digest"      "$$(ssh -o BatchMode=yes root@$(PAULT_IP) 'docker image inspect -f "{{index .RepoDigests 0}}" $$(docker inspect -f "{{.Image}}" pault-web) 2>/dev/null || echo gated' | tail -1)"
+	@printf "%-32s %s\n" "pault api digest"      "$$(ssh -o BatchMode=yes root@$(PAULT_IP) 'docker image inspect -f "{{index .RepoDigests 0}}" $$(docker inspect -f "{{.Image}}" pault-api) 2>/dev/null || echo gated' | tail -1)"
 	@printf "%-32s %s\n" "pault lab"             "$$(curl -s https://pault.$(LAB_DOMAIN)/ | head -c 20)"
 
 .PHONY: idempotent
