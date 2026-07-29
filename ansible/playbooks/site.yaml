@@ -32,3 +32,6 @@
 
 - name: Import the pault plays
   ansible.builtin.import_playbook: pault.yaml
+
+- name: Import the headscale play
+  ansible.builtin.import_playbook: headscale.yaml

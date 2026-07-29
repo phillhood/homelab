@@ -1,0 +1,9 @@
+---
+headscale_version: v0.29.2
+headscale_sha256: "858ef94bca9ecdfc742c24119c831e437e1b75691fdd5041be4059db1a38aac0"
+headscale_server_url: https://vpn.shychedelic.com
+headscale_base_domain: ts.shychedelic.com
+headscale_dns_nameservers:
+  - "{{ pihole_dns_ip }}"
+headscale_dns_search_domains:
+  - "{{ homelab_domain }}"

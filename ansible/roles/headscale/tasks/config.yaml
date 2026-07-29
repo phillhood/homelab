@@ -1,0 +1,27 @@
+---
+- name: Refuse to render a headscale config with missing values
+  ansible.builtin.assert:
+    that:
+      - headscale_server_url | default('') | length > 0
+      - headscale_base_domain | default('') | length > 0
+      - headscale_dns_nameservers | default([]) | length > 0
+      - not (headscale_server_url | urlsplit('hostname')).endswith('.' ~ headscale_base_domain)
+    fail_msg: >-
+      headscale_server_url, headscale_base_domain and headscale_dns_nameservers must be
+      set, and the server hostname must not fall inside the base domain.
+    quiet: true
+
+- name: Render the headscale config
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ headscale_config_dir }}/config.yaml"
+    owner: root
+    group: "{{ headscale_user }}"
+    mode: "0640"
+  notify: Restart headscale
+
+- name: Enable and start headscale
+  ansible.builtin.systemd_service:
+    name: headscale
+    enabled: true
+    state: started

@@ -1,0 +1,6 @@
+---
+- name: Deploy headscale
+  hosts: headscale
+  gather_facts: true
+  roles:
+    - headscale
