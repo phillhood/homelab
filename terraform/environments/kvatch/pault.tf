@@ -16,5 +16,5 @@ module "pault" {
 
   ssh_public_keys = var.ssh_public_keys
 
-  tags = ["tier1", "public"]
+  tags = ["minio", "public"]
 }

@@ -16,5 +16,5 @@ module "registry" {
 
   ssh_public_keys = var.ssh_public_keys
 
-  tags = ["tier0", "registry"]
+  tags = ["registry", "infra"]
 }
