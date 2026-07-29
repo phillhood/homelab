@@ -1,25 +1,27 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-ANSIBLE_DIR := ansible
-TF_DIR      := terraform/environments/kvatch
-SITE        := playbooks/site.yaml
-BACKUPS     := playbooks/backups.yaml
-PIHOLE_IP   := 192.168.1.100
-KVATCH_IP   := 192.168.1.101
-MUSIC_IP    := 192.168.1.102
-FORGE_IP    := 192.168.1.103
-REGISTRY_IP := 192.168.1.104
-PROXY_IP    := 192.168.1.105
-PAULT_IP    := 192.168.1.106
-PAULT_VARS  := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
-PAULT_HOST  := pault.ca
-PAULT_MEDIA := media.pault.ca
-PAULT_REPO  ?= $(HOME)/Dev/phillhood/pault
-SHA         ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
-LAB_DOMAIN  := lab.shychedelic.com
-RESTIC_REPO := /var/backups/restic/music
-RESTIC_PW   := /etc/music-backup/repo-password
+ANSIBLE_DIR  := ansible
+TF_DIR       := terraform/environments/kvatch
+SITE         := playbooks/site.yaml
+BACKUPS      := playbooks/backups.yaml
+PIHOLE_IP    := 192.168.1.100
+KVATCH_IP    := 192.168.1.101
+MUSIC_IP     := 192.168.1.102
+FORGE_IP     := 192.168.1.103
+REGISTRY_IP  := 192.168.1.104
+PROXY_IP     := 192.168.1.105
+PAULT_IP     := 192.168.1.106
+HEADSCALE_IP := 192.168.1.107
+PAULT_VARS   := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
+PAULT_HOST   := pault.ca
+PAULT_MEDIA  := media.pault.ca
+PAULT_REPO   ?= $(HOME)/Dev/phillhood/pault
+SHA          ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
+LAB_DOMAIN   := lab.shychedelic.com
+VPN_HOST     := vpn.shychedelic.com
+RESTIC_REPO  := /var/backups/restic/music
+RESTIC_PW    := /etc/music-backup/repo-password
 
 UV := uv run --project $(CURDIR)
 
@@ -105,7 +107,7 @@ check: ## Dry run with diffs — what WOULD change
 verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pihole resolves"        "$$(dig +short @$(PIHOLE_IP) kvatch.home)"
 	@printf "%-32s %s\n" "pihole filters"         "$$(dig +short @$(PIHOLE_IP) doubleclick.net)"
-	@printf "%-32s %s/11\n" "infra dns records"   "$$(for n in router switch ap proxmox kvatch pihole music forge registry proxy pault; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
+	@printf "%-32s %s/12\n" "infra dns records"   "$$(for n in router switch ap proxmox kvatch pihole music forge registry proxy pault headscale; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
 	@printf "%-32s %s\n" "pmxcfs symlink intact"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'test -L /root/.ssh/authorized_keys && echo yes || echo BROKEN')"
 	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && $(UV) ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
 	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
@@ -135,6 +137,16 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pault web digest"      "$$(ssh -o BatchMode=yes root@$(PAULT_IP) 'docker image inspect -f "{{index .RepoDigests 0}}" $$(docker inspect -f "{{.Image}}" pault-web) 2>/dev/null || echo gated' | tail -1)"
 	@printf "%-32s %s\n" "pault api digest"      "$$(ssh -o BatchMode=yes root@$(PAULT_IP) 'docker image inspect -f "{{index .RepoDigests 0}}" $$(docker inspect -f "{{.Image}}" pault-api) 2>/dev/null || echo gated' | tail -1)"
 	@printf "%-32s %s\n" "pault lab"             "$$(curl -s https://pault.$(LAB_DOMAIN)/ | head -c 20)"
+	@printf "%-32s %s\n" "headscale"             "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'systemctl is-active headscale')"
+	@printf "%-32s %s\n" "headscale health"      "$$(curl -s -o /dev/null -w '%{http_code}' http://$(HEADSCALE_IP):8080/health)"
+	@printf "%-32s %s\n" "headscale nodes"       "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'headscale nodes list' 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -cE '^[0-9]+ +\|' || echo 0)"
+	@printf "%-32s %s\n" "headscale lab tls"     "$$(curl -s -o /dev/null -w '%{http_code}' https://$(VPN_HOST)/health)"
+	@printf "%-32s %s\n" "headscale public"      "$$(curl -s -o /dev/null -w '%{http_code}' --resolve $(VPN_HOST):443:$$(dig +short $(VPN_HOST) @1.1.1.1 | tail -1) https://$(VPN_HOST)/health)"
+	@printf "%-32s %s\n" "ddns record current"   "$$(w=$$(curl -s --max-time 8 https://ifconfig.me); r=$$(dig +short A $(VPN_HOST) @1.1.1.1 | tail -1); if [ -z "$$w" ] || [ -z "$$r" ]; then echo unknown; elif [ "$$w" = "$$r" ]; then echo current; else echo "STALE-BAD $$r != $$w"; fi)"
+	@printf "%-32s %s\n" "public listener tight" "$$(out=$$(curl -sk -D - -o /dev/null -w '%{size_download}' --resolve git.$(LAB_DOMAIN):8443:$(PROXY_IP) https://git.$(LAB_DOMAIN):8443/ 2>/dev/null); if echo "$$out" | grep -qi '^via:' || [ "$$(echo "$$out" | tail -1)" != 0 ]; then echo LEAKING-BAD; else echo closed; fi)"
+	@printf "%-32s %s\n" "kvatch tailscaled"     "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'systemctl is-active tailscaled')"
+	@printf "%-32s %s\n" "kvatch tailnet state"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'tailscale status --json' 2>/dev/null | sed -n 's/.*"BackendState": "\([^"]*\)".*/\1/p' | head -1)"
+	@printf "%-32s %s\n" "subnet route approved" "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'headscale nodes list-routes' 2>/dev/null | grep -c '192.168.1.0/24' || echo 0)"
 
 .PHONY: idempotent
 idempotent: ## Converge twice; fail unless the second run changes nothing
@@ -216,9 +228,13 @@ backup-forgejo: ## Capture only the Forgejo dump
 backup-terraform: ## Capture only the Terraform state + its recovery script
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags terraform
 
+.PHONY: backup-headscale
+backup-headscale: ## Capture only the headscale database and keys
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(BACKUPS) --tags headscale
+
 .PHONY: backups-list
 backups-list: ## Show captured backups, newest last
-	@find .dev/pihole-backups .dev/opnsense-backups .dev/music-backups .dev/forgejo-backups .dev/terraform-backups -type f 2>/dev/null \
+	@find .dev/pihole-backups .dev/opnsense-backups .dev/music-backups .dev/forgejo-backups .dev/terraform-backups .dev/headscale-backups -type f 2>/dev/null \
 		-printf '%TY-%Tm-%Td %TH:%TM  %8s  %p\n' | sort || echo "no backups yet — run: make backup"
 
 ##@ Snapshots (the revert path for guest OS upgrades)

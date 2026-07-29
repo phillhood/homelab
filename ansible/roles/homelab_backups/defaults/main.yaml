@@ -5,6 +5,8 @@ backup_music_dir: "{{ repo_root }}/.dev/music-backups"
 backup_forgejo_dir: "{{ repo_root }}/.dev/forgejo-backups"
 backup_terraform_dir: "{{ repo_root }}/.dev/terraform-backups"
 backup_terraform_state: "{{ repo_root }}/terraform/environments/kvatch/terraform.tfstate"
+backup_headscale_dir: "{{ repo_root }}/.dev/headscale-backups"
+backup_headscale_data_dir: /var/lib/headscale
 backup_retention: 14
 opnsense_host: 192.168.1.1
 
@@ -25,3 +27,5 @@ backup_prune_targets:
     patterns: ["terraform-*.tfstate.backup"]
   - path: "{{ backup_terraform_dir }}"
     patterns: ["restore-imports-*.sh"]
+  - path: "{{ backup_headscale_dir }}"
+    patterns: ["headscale-*.tar.gz"]

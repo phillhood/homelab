@@ -8,3 +8,5 @@ forge_backend: 192.168.1.103:3000
 registry_backend: 192.168.1.104:5000
 pault_web_backend: 192.168.1.106:80
 pault_api_backend: 192.168.1.106:8080
+headscale_backend: 192.168.1.107:8080
+headscale_public_host: vpn.shychedelic.com

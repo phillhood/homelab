@@ -34,3 +34,11 @@
 		respond "proxy ok" 200
 	}
 }
+
+{{ headscale_public_host }}, {{ headscale_public_host }}:{{ caddy_public_listen_port }} {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+
+	reverse_proxy {{ headscale_backend }}
+}

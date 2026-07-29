@@ -1,0 +1,4 @@
+---
+tailscale_config_dir: /etc/tailscale
+tailscale_auth_key_file: /etc/tailscale/authkey
+tailscale_advertise_routes: []

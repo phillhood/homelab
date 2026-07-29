@@ -22,4 +22,6 @@ pihole_local_records:
   - "192.168.1.104 registry.home"
   - "192.168.1.105 proxy.home"
   - "192.168.1.106 pault.home"
+  - "192.168.1.107 headscale.home"
+  - "192.168.1.105 vpn.shychedelic.com"
 

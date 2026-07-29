@@ -60,6 +60,18 @@
           tags: [terraform]
       tags: [terraform]
 
+- name: Back up the headscale state
+  hosts: headscale
+  gather_facts: true
+  tasks:
+    - name: Run the headscale state tasks
+      ansible.builtin.include_role:
+        name: homelab_backups
+        tasks_from: headscale_db
+        apply:
+          tags: [headscale]
+      tags: [headscale]
+
 - name: Back up OPNsense config and rotate
   hosts: opnsense
   gather_facts: true

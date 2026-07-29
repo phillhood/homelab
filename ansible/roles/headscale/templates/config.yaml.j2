@@ -1,0 +1,50 @@
+server_url: {{ headscale_server_url }}
+listen_addr: 0.0.0.0:{{ headscale_listen_port }}
+metrics_listen_addr: {{ headscale_metrics_listen_addr }}
+grpc_listen_addr: {{ headscale_grpc_listen_addr }}
+grpc_allow_insecure: false
+
+noise:
+  private_key_path: {{ headscale_data_dir }}/noise_private.key
+
+prefixes:
+  v4: {{ headscale_prefix_v4 }}
+  v6: {{ headscale_prefix_v6 }}
+  allocation: sequential
+
+derp:
+  server:
+    enabled: false
+  urls:
+    - https://controlplane.tailscale.com/derpmap/default
+  auto_update_enabled: true
+  update_frequency: 24h
+
+disable_check_updates: true
+ephemeral_node_inactivity_timeout: 30m
+
+database:
+  type: sqlite
+  sqlite:
+    path: {{ headscale_data_dir }}/db.sqlite
+    write_ahead_log: true
+
+log:
+  format: text
+  level: info
+
+dns:
+  magic_dns: true
+  base_domain: {{ headscale_base_domain }}
+  nameservers:
+    global:
+{% for ns in headscale_dns_nameservers %}
+      - {{ ns }}
+{% endfor %}
+  search_domains:
+{% for domain in headscale_dns_search_domains %}
+    - {{ domain }}
+{% endfor %}
+
+unix_socket: {{ headscale_run_dir }}/headscale.sock
+unix_socket_permission: "0770"

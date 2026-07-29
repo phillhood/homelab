@@ -1,0 +1,101 @@
+---
+- name: Refuse to register without an auth key, a route, and a server URL
+  ansible.builtin.assert:
+    that:
+      - tailscale_auth_key | default('') | length > 0
+      - tailscale_advertise_routes | default([]) | length > 0
+      - hostvars['headscale']['headscale_server_url'] | default('') | length > 0
+    fail_msg: >-
+      tailscale_auth_key, tailscale_advertise_routes, and
+      hostvars['headscale']['headscale_server_url'] must all be set. Generate a pre-auth
+      key on the headscale host and store it in sops.
+    quiet: true
+
+- name: Create the tailscale config directory
+  ansible.builtin.file:
+    path: "{{ tailscale_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Write the pre-auth key
+  ansible.builtin.copy:
+    content: "{{ tailscale_auth_key }}\n"
+    dest: "{{ tailscale_auth_key_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Read the tailscale backend state
+  ansible.builtin.command:
+    argv: [tailscale, status, --json]
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Read the tailscale preferences
+  ansible.builtin.command:
+    argv: [tailscale, debug, prefs]
+  register: tailscale_prefs
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Set the tailscale state facts
+  ansible.builtin.set_fact:
+    tailscale_backend_state: >-
+      {{ (tailscale_status.stdout | default('{}', true) | from_json).BackendState
+      | default('', true) }}
+    tailscale_control_url: >-
+      {{ (tailscale_prefs.stdout | default('{}', true) | from_json).ControlURL
+      | default('', true) | regex_replace('/+$', '') }}
+    tailscale_current_routes: >-
+      {{ (tailscale_prefs.stdout | default('{}', true) | from_json).AdvertiseRoutes
+      | default([], true) }}
+    tailscale_current_accept_dns: >-
+      {{ (tailscale_prefs.stdout | default('{}', true) | from_json).CorpDNS
+      | default(false, true) }}
+    tailscale_expected_control_url: >-
+      {{ hostvars['headscale']['headscale_server_url'] | regex_replace('/+$', '') }}
+
+- name: Refuse to reattach a node registered with another control plane
+  ansible.builtin.assert:
+    that:
+      - tailscale_control_url == tailscale_expected_control_url
+    fail_msg: >-
+      tailscaled is attached to {{ tailscale_control_url | default('an unknown control plane', true) }},
+      not {{ tailscale_expected_control_url }}. Run tailscale logout on this host, then
+      re-run this play.
+    quiet: true
+  when: tailscale_backend_state == 'Running'
+
+- name: Register the node with headscale
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - up
+      - --login-server
+      - "{{ hostvars['headscale']['headscale_server_url'] }}"
+      - --auth-key
+      - "file:{{ tailscale_auth_key_file }}"
+      - --advertise-routes
+      - "{{ tailscale_advertise_routes | join(',') }}"
+      - --accept-dns=false
+  when: tailscale_backend_state != 'Running'
+  changed_when: true
+
+- name: Reconcile the advertised routes and DNS setting
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - set
+      - "--advertise-routes={{ tailscale_advertise_routes | join(',') }}"
+      - --accept-dns=false
+  when:
+    - tailscale_backend_state == 'Running'
+    - tailscale_current_routes | sort != tailscale_advertise_routes | sort
+      or tailscale_current_accept_dns | bool
+  changed_when: true

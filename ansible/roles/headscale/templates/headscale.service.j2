@@ -1,0 +1,23 @@
+[Unit]
+Description=headscale
+After=network.target network-online.target
+Requires=network-online.target
+
+[Service]
+Type=simple
+User={{ headscale_user }}
+Group={{ headscale_user }}
+ExecStart=/usr/local/bin/headscale serve
+Restart=on-failure
+RestartSec=5s
+RuntimeDirectory=headscale
+RuntimeDirectoryMode=0750
+LimitNOFILE=65536
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+NoNewPrivileges=true
+ReadWritePaths={{ headscale_data_dir }}
+
+[Install]
+WantedBy=multi-user.target

@@ -21,6 +21,8 @@ all:
           ansible_host: 192.168.1.105
         pault:
           ansible_host: 192.168.1.106
+        headscale:
+          ansible_host: 192.168.1.107
       children:
         pihole:
           hosts:
