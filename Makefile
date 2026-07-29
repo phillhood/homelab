@@ -19,6 +19,7 @@ PAULT_MEDIA  := media.pault.ca
 PAULT_REPO   ?= $(HOME)/Dev/phillhood/pault
 SHA          ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
 LAB_DOMAIN   := lab.shychedelic.com
+VPN_HOST     := vpn.shychedelic.com
 RESTIC_REPO  := /var/backups/restic/music
 RESTIC_PW    := /etc/music-backup/repo-password
 
@@ -139,8 +140,9 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "headscale"             "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'systemctl is-active headscale')"
 	@printf "%-32s %s\n" "headscale health"      "$$(curl -s -o /dev/null -w '%{http_code}' http://$(HEADSCALE_IP):8080/health)"
 	@printf "%-32s %s\n" "headscale nodes"       "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'headscale nodes list' 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | grep -cE '^[0-9]+ +\|' || echo 0)"
-	@printf "%-32s %s\n" "headscale lab tls"     "$$(curl -s -o /dev/null -w '%{http_code}' https://vpn.shychedelic.com/health)"
-	@printf "%-32s %s\n" "headscale public"      "$$(curl -s -o /dev/null -w '%{http_code}' --resolve vpn.shychedelic.com:443:$$(dig +short vpn.shychedelic.com @1.1.1.1 | tail -1) https://vpn.shychedelic.com/health)"
+	@printf "%-32s %s\n" "headscale lab tls"     "$$(curl -s -o /dev/null -w '%{http_code}' https://$(VPN_HOST)/health)"
+	@printf "%-32s %s\n" "headscale public"      "$$(curl -s -o /dev/null -w '%{http_code}' --resolve $(VPN_HOST):443:$$(dig +short $(VPN_HOST) @1.1.1.1 | tail -1) https://$(VPN_HOST)/health)"
+	@printf "%-32s %s\n" "ddns record current"   "$$(w=$$(curl -s --max-time 8 https://ifconfig.me); r=$$(dig +short A $(VPN_HOST) @1.1.1.1 | tail -1); if [ -z "$$w" ] || [ -z "$$r" ]; then echo unknown; elif [ "$$w" = "$$r" ]; then echo current; else echo "STALE-BAD $$r != $$w"; fi)"
 	@printf "%-32s %s\n" "public listener tight" "$$(out=$$(curl -sk -D - -o /dev/null -w '%{size_download}' --resolve git.$(LAB_DOMAIN):8443:$(PROXY_IP) https://git.$(LAB_DOMAIN):8443/ 2>/dev/null); if echo "$$out" | grep -qi '^via:' || [ "$$(echo "$$out" | tail -1)" != 0 ]; then echo LEAKING-BAD; else echo closed; fi)"
 	@printf "%-32s %s\n" "kvatch tailscaled"     "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'systemctl is-active tailscaled')"
 	@printf "%-32s %s\n" "kvatch tailnet state"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'tailscale status --json' 2>/dev/null | sed -n 's/.*"BackendState": "\([^"]*\)".*/\1/p' | head -1)"
