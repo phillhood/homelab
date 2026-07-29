@@ -1,12 +1,14 @@
 ---
-- name: Refuse to register without an auth key and a route
+- name: Refuse to register without an auth key, a route, and a server URL
   ansible.builtin.assert:
     that:
       - tailscale_auth_key | default('') | length > 0
       - tailscale_advertise_routes | default([]) | length > 0
+      - hostvars['headscale']['headscale_server_url'] | default('') | length > 0
     fail_msg: >-
-      tailscale_auth_key and tailscale_advertise_routes must both be set. Generate a
-      pre-auth key on the headscale host and store it in sops.
+      tailscale_auth_key, tailscale_advertise_routes, and
+      hostvars['headscale']['headscale_server_url'] must all be set. Generate a pre-auth
+      key on the headscale host and store it in sops.
     quiet: true
 
 - name: Create the tailscale config directory
