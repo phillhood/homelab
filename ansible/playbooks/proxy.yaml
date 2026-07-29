@@ -1,0 +1,6 @@
+---
+- name: Configure the reverse proxy
+  hosts: proxy
+  gather_facts: true
+  roles:
+    - proxy

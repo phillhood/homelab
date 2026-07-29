@@ -1,0 +1,6 @@
+---
+- name: Configure the upstream image cache
+  hosts: registry
+  gather_facts: true
+  roles:
+    - registry

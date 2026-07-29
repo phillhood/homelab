@@ -21,8 +21,14 @@
 - name: Import the music NAS plays
   ansible.builtin.import_playbook: music.yaml
 
-- name: Import the tier0 plays
-  ansible.builtin.import_playbook: tier0.yaml
+- name: Import the registry play
+  ansible.builtin.import_playbook: registry.yaml
+
+- name: Import the proxy play
+  ansible.builtin.import_playbook: proxy.yaml
+
+- name: Import the forge plays
+  ansible.builtin.import_playbook: forge.yaml
 
 - name: Import the pault plays
   ansible.builtin.import_playbook: pault.yaml

@@ -1,0 +1,7 @@
+---
+- name: Configure the git forge
+  hosts: forge
+  gather_facts: true
+  roles:
+    - postgresql
+    - forgejo
