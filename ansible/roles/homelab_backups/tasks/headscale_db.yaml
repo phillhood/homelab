@@ -15,17 +15,19 @@
     name: headscale
     state: stopped
 
-- name: Archive the headscale state
-  community.general.archive:
-    path: "{{ backup_headscale_data_dir }}"
-    dest: "/tmp/{{ headscale_archive_name }}"
-    format: gz
-    mode: "0600"
-
-- name: Start headscale
-  ansible.builtin.systemd_service:
-    name: headscale
-    state: started
+- name: Archive the headscale state and restart the service
+  block:
+    - name: Archive the headscale state
+      community.general.archive:
+        path: "{{ backup_headscale_data_dir }}"
+        dest: "/tmp/{{ headscale_archive_name }}"
+        format: gz
+        mode: "0600"
+  always:
+    - name: Start headscale
+      ansible.builtin.systemd_service:
+        name: headscale
+        state: started
 
 - name: Fetch the archive to the control node
   ansible.builtin.fetch:
