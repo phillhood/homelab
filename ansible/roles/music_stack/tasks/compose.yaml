@@ -5,10 +5,9 @@
       - slskd_soulseek_username != 'FILL_ME'
       - slskd_soulseek_password != 'FILL_ME'
     fail_msg: >-
-      Soulseek credentials in music.sops.yaml are still placeholders. Refusing to deploy.
+      Soulseek credentials are still placeholders. Refusing to deploy.
       Soulseek claims an unused username on first login, so starting slskd with these
-      would register a live public account on the real network. Set them with:
-      sops ansible/inventory/group_vars/music.sops.yaml
+      would register a live public account on the real network.
     success_msg: "Soulseek credentials configured."
 
 - name: Assert museek has a MusicBrainz contact
@@ -16,8 +15,7 @@
     that: museek_musicbrainz_contact | default('') | length > 0
     fail_msg: >-
       music_app_image is set but museek_musicbrainz_contact is empty. MusicBrainz
-      rate-limits or blocks anonymous clients. Set it in
-      inventory/group_vars/music.yaml.
+      rate-limits or blocks anonymous clients.
     success_msg: "MusicBrainz contact configured."
   when: music_app_image | length > 0
 

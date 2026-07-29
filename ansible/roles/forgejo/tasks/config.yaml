@@ -5,7 +5,7 @@
     fail_msg: >-
       forgejo_root_url is not set. Forgejo bakes ROOT_URL into every clone URL and
       every image reference in its OCI registry, so an empty one is not recoverable
-      by editing it later. Set it in inventory/group_vars/forge.yaml.
+      by editing it later.
     quiet: true
 
 - name: Render app.ini

@@ -67,7 +67,7 @@ inventory: ## Show the inventory graph
 .PHONY: vars
 vars: ## Show every variable per host — decrypts sops secrets, masked by default (SHOW_SECRETS=1 for real values)
 	@cd $(ANSIBLE_DIR) && \
-	keys=$$(grep -hoE '^[A-Za-z0-9_]+:' inventory/group_vars/*.sops.yaml | tr -d ':' | grep -vx sops | sort -u); \
+	keys=$$(grep -hoE '^[A-Za-z0-9_]+:' inventory/group_vars/*.sops.yaml inventory/host_vars/*.sops.yaml | tr -d ':' | grep -vx sops | sort -u); \
 	if [ "$(SHOW_SECRETS)" = "1" ]; then \
 		$(UV) ansible-inventory --graph --vars; \
 	else \
@@ -85,7 +85,7 @@ tags: ## List the tags available on site.yaml and backups.yaml
 
 .PHONY: secrets
 secrets: ## Confirm every *.sops.yaml is encrypted at rest
-	@for f in $(ANSIBLE_DIR)/inventory/group_vars/*.sops.yaml; do \
+	@for f in $(ANSIBLE_DIR)/inventory/group_vars/*.sops.yaml $(ANSIBLE_DIR)/inventory/host_vars/*.sops.yaml; do \
 		[ -e "$$f" ] || continue; \
 		n=$$(grep -c 'ENC\[' "$$f"); \
 		printf "%-52s %s\n" "$$f" "$$([ $$n -gt 0 ] && echo "encrypted ($$n)" || echo "PLAINTEXT — DO NOT COMMIT")"; \
@@ -168,7 +168,7 @@ pault: ## Redeploy the pault stack, repinned to the pault repo's HEAD. SHA= over
 	    || { echo "repin did not take" >&2; exit 1; }; \
 	  grep -E "^pault_(web|api)_image:" $(PAULT_VARS); \
 	fi
-	@$(MAKE) --no-print-directory apply LIMIT=pault1 TAGS=compose
+	@$(MAKE) --no-print-directory apply LIMIT=pault TAGS=compose
 
 .PHONY: preflight
 preflight: lint backup check ## The safe path: lint, take a backup, then show what would change

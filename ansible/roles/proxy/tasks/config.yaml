@@ -9,8 +9,7 @@
       - pault_api_backend | default('') | length > 0
     fail_msg: >-
       caddy_acme_email, forge_backend, registry_backend, pault_web_backend and
-      pault_api_backend must all be set in
-      inventory/group_vars/proxy.yaml. Empty values render a Caddyfile that passes
+      pault_api_backend must all be set. Empty values render a Caddyfile that passes
       validation and then serves the catch-all for every vhost.
     quiet: true
 

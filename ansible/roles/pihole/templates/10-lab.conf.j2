@@ -1,1 +1,1 @@
-address=/{{ lab_domain }}/{{ hostvars[groups['proxy'] | first].ansible_host }}
+address=/{{ lab_domain }}/{{ hostvars['proxy'].ansible_host }}

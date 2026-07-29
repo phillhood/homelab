@@ -10,8 +10,7 @@
       - pault_s3_secret_key | default('') | length > 0
       - not (pault_tunnel_id | length > 0) or (pault_tunnel_credentials | default('') | length > 0)
     fail_msg: >-
-      One or more pault secrets are unset. Set them with
-      sops ansible/inventory/group_vars/pault.sops.yaml
+      One or more pault secrets are unset. Set them in the pault sops file.
     quiet: true
 
 - name: Refuse to render the stack with missing hostnames
@@ -20,9 +19,8 @@
       - pault_public_host | default('') | length > 0
       - pault_media_host | default('') | length > 0
     fail_msg: >-
-      pault_public_host and pault_media_host must be set in
-      inventory/group_vars/pault.yaml. Both are rendered into
-      S3_PUBLIC_ENDPOINT and the tunnel ingress rules.
+      pault_public_host and pault_media_host must both be set. Both are rendered
+      into S3_PUBLIC_ENDPOINT and the tunnel ingress rules.
     quiet: true
 
 - name: Create the stack directory

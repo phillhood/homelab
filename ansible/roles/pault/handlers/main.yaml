@@ -9,7 +9,7 @@
 
 - name: Wait for the pault container to accept connections
   ansible.builtin.wait_for:
-    host: "{{ hostvars[groups['pault'] | first].ansible_host }}"
+    host: "{{ hostvars['pault'].ansible_host }}"
     port: 22
     delay: 2
     timeout: 120

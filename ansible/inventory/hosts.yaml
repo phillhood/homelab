@@ -1,42 +1,32 @@
 ---
 all:
+  hosts:
+    opnsense:
+      ansible_host: 192.168.1.1
+      ansible_connection: local
   children:
     proxmox:
       hosts:
         kvatch:
           ansible_host: 192.168.1.101
     lxc:
+      hosts:
+        music:
+          ansible_host: 192.168.1.102
+        forge:
+          ansible_host: 192.168.1.103
+        registry:
+          ansible_host: 192.168.1.104
+        proxy:
+          ansible_host: 192.168.1.105
+        pault:
+          ansible_host: 192.168.1.106
       children:
         pihole:
           hosts:
             pihole1:
               ansible_host: 192.168.1.100
-        music:
-          hosts:
-            music1:
-              ansible_host: 192.168.1.102
-        forge:
-          hosts:
-            forge1:
-              ansible_host: 192.168.1.103
-        registry:
-          hosts:
-            registry1:
-              ansible_host: 192.168.1.104
-        proxy:
-          hosts:
-            proxy1:
-              ansible_host: 192.168.1.105
-        pault:
-          hosts:
-            pault1:
-              ansible_host: 192.168.1.106
-    opnsense:
-      hosts:
-        opnsense1:
-          ansible_host: 192.168.1.1
-          ansible_connection: local
     music_common:
       hosts:
         kvatch: {}
-        music1: {}
+        music: {}
