@@ -5,6 +5,7 @@
       - ca-certificates
       - curl
       - gnupg
+      - python3-debian
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -27,12 +28,20 @@
     force: true
 
 - name: Add the Docker apt repository
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc]
-      https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable
-    filename: docker
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: [deb]
+    uris: https://download.docker.com/linux/debian
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: [stable]
+    architectures: [amd64]
+    signed_by: /etc/apt/keyrings/docker.asc
     state: present
+
+- name: Remove the one-line Docker apt repository
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
 
 - name: Install Docker Engine and the compose plugin
   ansible.builtin.apt:
