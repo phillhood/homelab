@@ -139,6 +139,8 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "headscale"             "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'systemctl is-active headscale')"
 	@printf "%-32s %s\n" "headscale health"      "$$(curl -s -o /dev/null -w '%{http_code}' http://$(HEADSCALE_IP):8080/health)"
 	@printf "%-32s %s\n" "headscale nodes"       "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'headscale nodes list' 2>/dev/null | tail -n +2 | grep -c . || echo 0)"
+	@printf "%-32s %s\n" "headscale lab tls"     "$$(curl -s -o /dev/null -w '%{http_code}' https://vpn.shychedelic.com/health)"
+	@printf "%-32s %s\n" "public listener tight" "$$(test "$$(curl -sk -o /dev/null -w '%{http_code}' --resolve git.$(LAB_DOMAIN):8443:$(PROXY_IP) https://git.$(LAB_DOMAIN):8443/)" = 200 && echo LEAKING-BAD || echo closed)"
 
 .PHONY: idempotent
 idempotent: ## Converge twice; fail unless the second run changes nothing
