@@ -1,8 +1,8 @@
 ---
 - name: Install Caddy
   ansible.builtin.import_tasks: install.yaml
-  tags: [install, caddy]
+  tags: [install, caddy, proxy]
 
 - name: Configure Caddy
   ansible.builtin.import_tasks: config.yaml
-  tags: [config, caddy]
+  tags: [config, caddy, proxy]

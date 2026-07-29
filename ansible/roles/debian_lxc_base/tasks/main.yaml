@@ -1,7 +1,7 @@
 ---
 - name: Install base packages
   ansible.builtin.import_tasks: packages.yaml
-  tags: [packages]
+  tags: [packages, debian_lxc_base]
 
 - name: Upgrade all packages
   ansible.builtin.import_tasks: upgrade.yaml
@@ -9,8 +9,8 @@
 
 - name: Set timezone
   ansible.builtin.import_tasks: timezone.yaml
-  tags: [timezone]
+  tags: [timezone, debian_lxc_base]
 
 - name: Verify container health
   ansible.builtin.import_tasks: health.yaml
-  tags: [health]
+  tags: [health, debian_lxc_base]

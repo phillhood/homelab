@@ -1,4 +1,4 @@
 ---
 - name: Deploy the compose stack
   ansible.builtin.import_tasks: compose.yaml
-  tags: [compose, stack]
+  tags: [compose, stack, music_stack]

@@ -1,12 +1,12 @@
 ---
 - name: Create the music group and service users
   ansible.builtin.import_tasks: users.yaml
-  tags: [users, share]
+  tags: [users, share, music_share]
 
 - name: Configure Samba
   ansible.builtin.import_tasks: samba.yaml
-  tags: [samba, share]
+  tags: [samba, share, music_share]
 
 - name: Configure Syncthing
   ansible.builtin.import_tasks: syncthing.yaml
-  tags: [syncthing, share]
+  tags: [syncthing, share, music_share]

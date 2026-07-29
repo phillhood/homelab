@@ -1,8 +1,8 @@
 ---
 - name: Install Zot
   ansible.builtin.import_tasks: install.yaml
-  tags: [install, zot]
+  tags: [install, zot, registry]
 
 - name: Configure Zot
   ansible.builtin.import_tasks: config.yaml
-  tags: [config, zot]
+  tags: [config, zot, registry]

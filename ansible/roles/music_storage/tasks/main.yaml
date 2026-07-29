@@ -1,24 +1,24 @@
 ---
 - name: Enroll the Thunderbolt enclosure
   ansible.builtin.import_tasks: thunderbolt.yaml
-  tags: [thunderbolt, storage]
+  tags: [thunderbolt, storage, music_storage]
 
 - name: Prepare the music disk
   ansible.builtin.import_tasks: disk.yaml
-  tags: [disk, storage]
+  tags: [disk, storage, music_storage]
 
 - name: Mount the music disk
   ansible.builtin.import_tasks: mount.yaml
-  tags: [host-mount, storage]
+  tags: [host-mount, storage, music_storage]
 
 - name: Create the storage layout
   ansible.builtin.import_tasks: layout.yaml
-  tags: [layout, storage]
+  tags: [layout, storage, music_storage]
 
 - name: Attach the container bind mount
   ansible.builtin.import_tasks: container_mount.yaml
-  tags: [bind-mount]
+  tags: [bind-mount, music_storage]
 
 - name: Install the content backup
   ansible.builtin.import_tasks: backup.yaml
-  tags: [music-backup, storage]
+  tags: [music-backup, storage, music_storage]
