@@ -3,3 +3,5 @@ music_tb_uuid: bc010000-0082-840e-03c9-94d812c28008
 music_disk_by_id: /dev/disk/by-id/nvme-WD_BLACK_SN770_2TB_251161806875
 music_disk_partition: /dev/disk/by-id/nvme-WD_BLACK_SN770_2TB_251161806875-part1
 music_disk_uuid: f5fb4bd9-3aaf-409f-bd4b-ef393e182f34
+tailscale_advertise_routes:
+  - 192.168.1.0/24

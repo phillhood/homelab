@@ -4,3 +4,9 @@
   gather_facts: true
   roles:
     - headscale
+
+- name: Configure the tailnet subnet router
+  hosts: proxmox
+  gather_facts: true
+  roles:
+    - tailscale_router
