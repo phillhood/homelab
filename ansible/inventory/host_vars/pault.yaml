@@ -6,6 +6,6 @@ pault_cloudflared_image: cloudflare/cloudflared:2026.7.3
 pault_public_host: pault.ca
 pault_media_host: media.pault.ca
 
-pault_web_image: git.lab.shychedelic.com/phillhood/pault-web:eae470dd
-pault_api_image: git.lab.shychedelic.com/phillhood/pault-api:eae470dd
+pault_web_image: git.lab.shychedelic.com/phillhood/pault-web:5062cfde
+pault_api_image: git.lab.shychedelic.com/phillhood/pault-api:5062cfde
 pault_tunnel_id: 2763c49a-f549-48cd-a57a-5e21d9ff1dd5
