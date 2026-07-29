@@ -141,7 +141,7 @@ verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "headscale nodes"       "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'headscale nodes list' 2>/dev/null | tail -n +2 | grep -c . || echo 0)"
 	@printf "%-32s %s\n" "headscale lab tls"     "$$(curl -s -o /dev/null -w '%{http_code}' https://vpn.shychedelic.com/health)"
 	@printf "%-32s %s\n" "headscale public"      "$$(curl -s -o /dev/null -w '%{http_code}' --resolve vpn.shychedelic.com:443:$$(dig +short vpn.shychedelic.com @1.1.1.1 | tail -1) https://vpn.shychedelic.com/health)"
-	@printf "%-32s %s\n" "public listener tight" "$$(code=$$(curl -sk -o /dev/null -w '%{http_code}' --resolve git.$(LAB_DOMAIN):8443:$(PROXY_IP) https://git.$(LAB_DOMAIN):8443/); case $$code in 2??|3??) echo LEAKING-BAD;; *) echo closed;; esac)"
+	@printf "%-32s %s\n" "public listener tight" "$$(out=$$(curl -sk -D - -o /dev/null -w '%{size_download}' --resolve git.$(LAB_DOMAIN):8443:$(PROXY_IP) https://git.$(LAB_DOMAIN):8443/ 2>/dev/null); if echo "$$out" | grep -qi '^via:' || [ "$$(echo "$$out" | tail -1)" != 0 ]; then echo LEAKING-BAD; else echo closed; fi)"
 	@printf "%-32s %s\n" "kvatch tailscaled"     "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'systemctl is-active tailscaled')"
 	@printf "%-32s %s\n" "kvatch tailnet state"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'tailscale status --json' 2>/dev/null | sed -n 's/.*"BackendState": "\([^"]*\)".*/\1/p' | head -1)"
 	@printf "%-32s %s\n" "subnet route approved" "$$(ssh -o BatchMode=yes root@$(HEADSCALE_IP) 'headscale nodes list-routes' 2>/dev/null | grep -c '192.168.1.0/24' || echo 0)"
