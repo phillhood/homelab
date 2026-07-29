@@ -1,25 +1,26 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-ANSIBLE_DIR := ansible
-TF_DIR      := terraform/environments/kvatch
-SITE        := playbooks/site.yaml
-BACKUPS     := playbooks/backups.yaml
-PIHOLE_IP   := 192.168.1.100
-KVATCH_IP   := 192.168.1.101
-MUSIC_IP    := 192.168.1.102
-FORGE_IP    := 192.168.1.103
-REGISTRY_IP := 192.168.1.104
-PROXY_IP    := 192.168.1.105
-PAULT_IP    := 192.168.1.106
-PAULT_VARS  := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
-PAULT_HOST  := pault.ca
-PAULT_MEDIA := media.pault.ca
-PAULT_REPO  ?= $(HOME)/Dev/phillhood/pault
-SHA         ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
-LAB_DOMAIN  := lab.shychedelic.com
-RESTIC_REPO := /var/backups/restic/music
-RESTIC_PW   := /etc/music-backup/repo-password
+ANSIBLE_DIR  := ansible
+TF_DIR       := terraform/environments/kvatch
+SITE         := playbooks/site.yaml
+BACKUPS      := playbooks/backups.yaml
+PIHOLE_IP    := 192.168.1.100
+KVATCH_IP    := 192.168.1.101
+MUSIC_IP     := 192.168.1.102
+FORGE_IP     := 192.168.1.103
+REGISTRY_IP  := 192.168.1.104
+PROXY_IP     := 192.168.1.105
+PAULT_IP     := 192.168.1.106
+HEADSCALE_IP := 192.168.1.107
+PAULT_VARS   := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
+PAULT_HOST   := pault.ca
+PAULT_MEDIA  := media.pault.ca
+PAULT_REPO   ?= $(HOME)/Dev/phillhood/pault
+SHA          ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
+LAB_DOMAIN   := lab.shychedelic.com
+RESTIC_REPO  := /var/backups/restic/music
+RESTIC_PW    := /etc/music-backup/repo-password
 
 UV := uv run --project $(CURDIR)
 
@@ -105,7 +106,7 @@ check: ## Dry run with diffs — what WOULD change
 verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pihole resolves"        "$$(dig +short @$(PIHOLE_IP) kvatch.home)"
 	@printf "%-32s %s\n" "pihole filters"         "$$(dig +short @$(PIHOLE_IP) doubleclick.net)"
-	@printf "%-32s %s/11\n" "infra dns records"   "$$(for n in router switch ap proxmox kvatch pihole music forge registry proxy pault; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
+	@printf "%-32s %s/12\n" "infra dns records"   "$$(for n in router switch ap proxmox kvatch pihole music forge registry proxy pault headscale; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
 	@printf "%-32s %s\n" "pmxcfs symlink intact"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'test -L /root/.ssh/authorized_keys && echo yes || echo BROKEN')"
 	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && $(UV) ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
 	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
