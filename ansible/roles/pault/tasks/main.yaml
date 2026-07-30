@@ -2,3 +2,7 @@
 - name: Deploy the compose stack
   ansible.builtin.import_tasks: compose.yaml
   tags: [pault, compose, stack]
+
+- name: Seed the bucket from another environment
+  ansible.builtin.import_tasks: seed.yaml
+  tags: [seed, never]

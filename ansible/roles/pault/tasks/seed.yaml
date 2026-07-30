@@ -1,0 +1,63 @@
+---
+- name: Refuse to seed the production stack
+  ansible.builtin.assert:
+    that:
+      - inventory_hostname != 'pault'
+    fail_msg: >-
+      The seed mirrors into the host it runs on, replacing its bucket.
+      Refusing to run against pault.
+    quiet: true
+
+- name: Refuse to seed without a readable source
+  ansible.builtin.assert:
+    that:
+      - pault_seed_source | default('') | length > 0
+      - pault_seed_source in groups['pault_env']
+      - hostvars[pault_seed_source].pault_s3_access_key | default('') | length > 0
+      - hostvars[pault_seed_source].pault_s3_secret_key | default('') | length > 0
+    fail_msg: >-
+      pault_seed_source must name a host in pault_env whose S3 credentials are set.
+    quiet: true
+
+- name: Mirror the source bucket into this stack
+  block:
+    - name: Deploy the MinIO seed script
+      ansible.builtin.template:
+        src: minio-seed.sh.j2
+        dest: "{{ pault_stack_dir }}/minio-seed.sh"
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Write the seed environment
+      ansible.builtin.template:
+        src: minio-seed.env.j2
+        dest: "{{ pault_stack_dir }}/minio-seed.env"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Run the mirror
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --network
+          - pault
+          - --env-file
+          - "{{ pault_stack_dir }}/minio-seed.env"
+          - -v
+          - "{{ pault_stack_dir }}/minio-seed.sh:/minio-seed.sh:ro"
+          - --entrypoint
+          - /bin/sh
+          - "{{ pault_mc_image }}"
+          - /minio-seed.sh
+      register: pault_minio_seed
+      changed_when: true
+  always:
+    - name: Remove the seed environment
+      ansible.builtin.file:
+        path: "{{ pault_stack_dir }}/minio-seed.env"
+        state: absent

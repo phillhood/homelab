@@ -192,6 +192,11 @@ pault: ## Redeploy the pault stack, repinned to the pault repo's HEAD. SHA= over
 pault-staging: ## Redeploy the staging pault stack, repinned to the pault repo's HEAD. SHA= overrides
 	@$(MAKE) --no-print-directory _pault-deploy VARS=$(PAULT_STAGING_VARS) HOST=pault-staging SHA='$(SHA)'
 
+.PHONY: pault-staging-seed
+pault-staging-seed: ## Replace staging's photo bucket with a mirror of production's
+	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) \
+		--limit pault-staging --tags seed -e pault_seed_source=pault
+
 .PHONY: preflight
 preflight: lint backup check ## The safe path: lint, take a backup, then show what would change
 	@echo ""
