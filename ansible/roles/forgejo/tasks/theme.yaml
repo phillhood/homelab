@@ -28,6 +28,7 @@
     - "{{ forgejo_home }}/custom/public"
     - "{{ forgejo_home }}/custom/public/assets"
     - "{{ forgejo_home }}/custom/public/assets/css"
+    - "{{ forgejo_home }}/custom/public/assets/img"
 
 - name: Fetch the catppuccin theme archive
   ansible.builtin.get_url:
@@ -54,4 +55,16 @@
     group: "{{ forgejo_user }}"
     mode: "0640"
   loop: "{{ forgejo_custom_themes }}"
+  notify: Restart forgejo
+
+- name: Install the recoloured logo
+  ansible.builtin.template:
+    src: logo.svg.j2
+    dest: "{{ forgejo_home }}/custom/public/assets/img/{{ item }}.svg"
+    owner: "{{ forgejo_user }}"
+    group: "{{ forgejo_user }}"
+    mode: "0640"
+  loop:
+    - logo
+    - favicon
   notify: Restart forgejo

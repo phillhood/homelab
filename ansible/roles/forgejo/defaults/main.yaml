@@ -13,3 +13,5 @@ forgejo_builtin_themes:
   - forgejo-dark
 forgejo_custom_themes:
   - catppuccin-mocha-mauve
+forgejo_logo_accent: "#f60"
+forgejo_logo_accent_alt: "#d40000"
