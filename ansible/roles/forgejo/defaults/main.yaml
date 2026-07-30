@@ -5,3 +5,11 @@ forgejo_config_dir: /etc/forgejo
 forgejo_http_port: 3000
 forgejo_ssh_port: 2222
 forgejo_ssh_domain: forge.home
+forgejo_theme_stage_dir: /var/cache/forgejo/themes
+forgejo_theme: catppuccin-mocha-mauve
+forgejo_builtin_themes:
+  - forgejo-auto
+  - forgejo-light
+  - forgejo-dark
+forgejo_custom_themes:
+  - catppuccin-mocha-mauve

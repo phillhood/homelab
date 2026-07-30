@@ -19,13 +19,13 @@
       - --file
       - "/tmp/{{ forgejo_dump_name }}"
       - --config
-      - "{{ forgejo_config_dir }}/app.ini"
+      - "{{ backup_forgejo_config_dir }}/app.ini"
     chdir: /tmp
   become: true
   become_method: ansible.builtin.su
-  become_user: "{{ forgejo_user }}"
+  become_user: "{{ backup_forgejo_user }}"
   environment:
-    GITEA_WORK_DIR: "{{ forgejo_home }}"
+    GITEA_WORK_DIR: "{{ backup_forgejo_home }}"
   register: forgejo_dump_run
   changed_when: true
 

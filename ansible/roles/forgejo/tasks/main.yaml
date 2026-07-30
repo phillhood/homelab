@@ -3,6 +3,11 @@
   ansible.builtin.import_tasks: install.yaml
   tags: [install, forgejo]
 
+- name: Install the custom themes
+  ansible.builtin.import_tasks: theme.yaml
+  when: forgejo_custom_themes | length > 0
+  tags: [theme, forgejo]
+
 - name: Configure Forgejo
   ansible.builtin.import_tasks: config.yaml
   tags: [config, forgejo]

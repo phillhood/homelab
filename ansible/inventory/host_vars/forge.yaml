@@ -2,6 +2,8 @@
 forgejo_version: v16.0.1
 forgejo_sha256: "7a4c568136650c10498a9d3d62c7fd630a0cf09c166293ebd78708248f6398fc"
 forgejo_root_url: https://git.lab.shychedelic.com/
+forgejo_catppuccin_version: v1.0.2
+forgejo_catppuccin_sha256: "1cfe00a789762b50563f5cd67422984b963937e25c2807178be1f1d60e8c5707"
 forgejo_admin_user: phill
 forgejo_admin_email: phill@phillhood.ca
 postgresql_db: forgejo

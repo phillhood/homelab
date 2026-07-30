@@ -3,6 +3,9 @@ backup_pihole_dir: "{{ repo_root }}/.dev/pihole-backups"
 backup_opnsense_dir: "{{ repo_root }}/.dev/opnsense-backups"
 backup_music_dir: "{{ repo_root }}/.dev/music-backups"
 backup_forgejo_dir: "{{ repo_root }}/.dev/forgejo-backups"
+backup_forgejo_user: git
+backup_forgejo_home: /var/lib/forgejo
+backup_forgejo_config_dir: /etc/forgejo
 backup_terraform_dir: "{{ repo_root }}/.dev/terraform-backups"
 backup_terraform_state: "{{ repo_root }}/terraform/environments/kvatch/terraform.tfstate"
 backup_headscale_dir: "{{ repo_root }}/.dev/headscale-backups"

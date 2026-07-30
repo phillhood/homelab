@@ -1,0 +1,57 @@
+---
+- name: Refuse to render a default theme that is not offered
+  ansible.builtin.assert:
+    that: forgejo_theme in (forgejo_builtin_themes + forgejo_custom_themes)
+    fail_msg: >-
+      forgejo_theme is {{ forgejo_theme }}, which is in neither forgejo_builtin_themes nor
+      forgejo_custom_themes. Forgejo only serves themes listed in THEMES, so this would
+      leave the interface unstyled.
+    quiet: true
+
+- name: Create the theme staging directory
+  ansible.builtin.file:
+    path: "{{ forgejo_theme_stage_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the custom asset directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ forgejo_user }}"
+    group: "{{ forgejo_user }}"
+    mode: "0750"
+  loop:
+    - "{{ forgejo_home }}/custom"
+    - "{{ forgejo_home }}/custom/public"
+    - "{{ forgejo_home }}/custom/public/assets"
+    - "{{ forgejo_home }}/custom/public/assets/css"
+
+- name: Fetch the catppuccin theme archive
+  ansible.builtin.get_url:
+    url: >-
+      https://github.com/catppuccin/gitea/releases/download/{{ forgejo_catppuccin_version }}/catppuccin-gitea.tar.gz
+    dest: "{{ forgejo_theme_stage_dir }}/catppuccin-gitea.tar.gz"
+    checksum: "sha256:{{ forgejo_catppuccin_sha256 }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Unpack the catppuccin stylesheets
+  ansible.builtin.unarchive:
+    src: "{{ forgejo_theme_stage_dir }}/catppuccin-gitea.tar.gz"
+    remote_src: true
+    dest: "{{ forgejo_theme_stage_dir }}"
+
+- name: Install the selected catppuccin stylesheets
+  ansible.builtin.copy:
+    src: "{{ forgejo_theme_stage_dir }}/theme-{{ item }}.css"
+    dest: "{{ forgejo_home }}/custom/public/assets/css/theme-{{ item }}.css"
+    remote_src: true
+    owner: "{{ forgejo_user }}"
+    group: "{{ forgejo_user }}"
+    mode: "0640"
+  loop: "{{ forgejo_custom_themes }}"
+  notify: Restart forgejo

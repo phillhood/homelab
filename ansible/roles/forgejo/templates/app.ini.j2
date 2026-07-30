@@ -37,6 +37,10 @@ INTERNAL_TOKEN = {{ forgejo_internal_token }}
 [oauth2]
 JWT_SECRET = {{ forgejo_jwt_secret }}
 
+[ui]
+DEFAULT_THEME = {{ forgejo_theme }}
+THEMES = {{ (forgejo_builtin_themes + forgejo_custom_themes) | unique | join(',') }}
+
 [service]
 DISABLE_REGISTRATION = true
 REQUIRE_SIGNIN_VIEW = false
