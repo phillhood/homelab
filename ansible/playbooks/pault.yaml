@@ -1,6 +1,6 @@
 ---
 - name: Set the pault container feature flags
-  hosts: proxmox
+  hosts: pault_env
   gather_facts: false
   tasks:
     - name: Apply the container feature flags
@@ -10,7 +10,7 @@
       tags: [pault, container-features]
 
 - name: Deploy the pault stack
-  hosts: pault
+  hosts: pault_env
   gather_facts: true
   roles:
     - docker_engine

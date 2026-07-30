@@ -1,5 +1,4 @@
 ---
-pault_container_id: 105
 pault_container_features: nesting=1,keyctl=1
 
 pault_stack_dir: /opt/pault
