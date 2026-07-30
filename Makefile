@@ -1,28 +1,29 @@
 .DEFAULT_GOAL := help
 SHELL := /usr/bin/env bash
 
-ANSIBLE_DIR       := ansible
-TF_DIR            := terraform/environments/kvatch
-SITE              := playbooks/site.yaml
-BACKUPS           := playbooks/backups.yaml
-PIHOLE_IP         := 192.168.1.100
-KVATCH_IP         := 192.168.1.101
-MUSIC_IP          := 192.168.1.102
-FORGE_IP          := 192.168.1.103
-REGISTRY_IP       := 192.168.1.104
-PROXY_IP          := 192.168.1.105
-PAULT_IP          := 192.168.1.106
-HEADSCALE_IP      := 192.168.1.107
-PAULT_STAGING_IP  := 192.168.1.108
-PAULT_VARS        := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
-PAULT_HOST        := pault.ca
-PAULT_MEDIA       := media.pault.ca
-PAULT_REPO        ?= $(HOME)/Dev/phillhood/pault
-SHA               ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
-LAB_DOMAIN        := lab.shychedelic.com
-VPN_HOST          := vpn.shychedelic.com
-RESTIC_REPO       := /var/backups/restic/music
-RESTIC_PW         := /etc/music-backup/repo-password
+ANSIBLE_DIR        := ansible
+TF_DIR             := terraform/environments/kvatch
+SITE               := playbooks/site.yaml
+BACKUPS            := playbooks/backups.yaml
+PIHOLE_IP          := 192.168.1.100
+KVATCH_IP          := 192.168.1.101
+MUSIC_IP           := 192.168.1.102
+FORGE_IP           := 192.168.1.103
+REGISTRY_IP        := 192.168.1.104
+PROXY_IP           := 192.168.1.105
+PAULT_IP           := 192.168.1.106
+HEADSCALE_IP       := 192.168.1.107
+PAULT_STAGING_IP   := 192.168.1.108
+PAULT_VARS         := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
+PAULT_STAGING_VARS := $(ANSIBLE_DIR)/inventory/host_vars/pault-staging.yaml
+PAULT_HOST         := pault.ca
+PAULT_MEDIA        := media.pault.ca
+PAULT_REPO         ?= $(HOME)/Dev/phillhood/pault
+SHA                ?= $(shell git -C $(PAULT_REPO) rev-parse --short=8 HEAD 2>/dev/null)
+LAB_DOMAIN         := lab.shychedelic.com
+VPN_HOST           := vpn.shychedelic.com
+RESTIC_REPO        := /var/backups/restic/music
+RESTIC_PW          := /etc/music-backup/repo-password
 
 UV := uv run --project $(CURDIR)
 
@@ -163,25 +164,33 @@ idempotent: ## Converge twice; fail unless the second run changes nothing
 apply: ## Converge the homelab (site.yaml)
 	@$(A)
 
-.PHONY: pault
-pault: ## Redeploy the pault stack, repinned to the pault repo's HEAD. SHA= overrides
+.PHONY: _pault-deploy
+_pault-deploy:
 	@if [ -z "$(SHA)" ]; then echo "No SHA resolved from $(PAULT_REPO); deploying the pinned images"; fi
 	@if [ -n "$(SHA)" ]; then \
 	  for svc in web api; do \
-	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \
+	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(VARS)); \
 	    [ -n "$$repo" ] || { echo "pault_$${svc}_image is not a tagged reference" >&2; exit 1; }; \
 	    docker manifest inspect "$$repo:$(SHA)" >/dev/null 2>&1 \
 	      || { echo "$$repo:$(SHA) is not in the registry" >&2; exit 1; }; \
 	  done; \
 	  for svc in web api; do \
-	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \
-	    sed -i "s|^pault_$${svc}_image: .*|pault_$${svc}_image: $$repo:$(SHA)|" $(PAULT_VARS); \
+	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(VARS)); \
+	    sed -i "s|^pault_$${svc}_image: .*|pault_$${svc}_image: $$repo:$(SHA)|" $(VARS); \
 	  done; \
-	  test $$(grep -cE "^pault_(web|api)_image: .*:$(SHA)$$" $(PAULT_VARS)) -eq 2 \
+	  test $$(grep -cE "^pault_(web|api)_image: .*:$(SHA)$$" $(VARS)) -eq 2 \
 	    || { echo "repin did not take" >&2; exit 1; }; \
-	  grep -E "^pault_(web|api)_image:" $(PAULT_VARS); \
+	  grep -E "^pault_(web|api)_image:" $(VARS); \
 	fi
-	@$(MAKE) --no-print-directory apply LIMIT=pault TAGS=compose
+	@$(MAKE) --no-print-directory apply LIMIT=$(HOST) TAGS=compose
+
+.PHONY: pault
+pault: ## Redeploy the pault stack, repinned to the pault repo's HEAD. SHA= overrides
+	@$(MAKE) --no-print-directory _pault-deploy VARS=$(PAULT_VARS) HOST=pault SHA='$(SHA)'
+
+.PHONY: pault-staging
+pault-staging: ## Redeploy the staging pault stack, repinned to the pault repo's HEAD. SHA= overrides
+	@$(MAKE) --no-print-directory _pault-deploy VARS=$(PAULT_STAGING_VARS) HOST=pault-staging SHA='$(SHA)'
 
 .PHONY: preflight
 preflight: lint backup check ## The safe path: lint, take a backup, then show what would change
