@@ -30,6 +30,24 @@
 		reverse_proxy {{ pault_web_backend }}
 	}
 
+	@pault_staging_api {
+		host pault-staging.{{ lab_domain }}
+		path /api/* /healthz
+	}
+	handle @pault_staging_api {
+		reverse_proxy {{ pault_staging_api_backend }}
+	}
+
+	@pault_staging host pault-staging.{{ lab_domain }}
+	handle @pault_staging {
+		reverse_proxy {{ pault_staging_web_backend }}
+	}
+
+	@pault_staging_media host pault-staging-media.{{ lab_domain }}
+	handle @pault_staging_media {
+		reverse_proxy {{ pault_staging_media_backend }}
+	}
+
 	handle {
 		respond "proxy ok" 200
 	}
