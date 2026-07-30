@@ -12,6 +12,7 @@ FORGE_IP     := 192.168.1.103
 REGISTRY_IP  := 192.168.1.104
 PROXY_IP     := 192.168.1.105
 PAULT_IP     := 192.168.1.106
+PAULT_STAGING_IP := 192.168.1.108
 HEADSCALE_IP := 192.168.1.107
 PAULT_VARS   := $(ANSIBLE_DIR)/inventory/host_vars/pault.yaml
 PAULT_HOST   := pault.ca
@@ -107,7 +108,7 @@ check: ## Dry run with diffs — what WOULD change
 verify: ## Read-only health probes against the real systems
 	@printf "%-32s %s\n" "pihole resolves"        "$$(dig +short @$(PIHOLE_IP) kvatch.home)"
 	@printf "%-32s %s\n" "pihole filters"         "$$(dig +short @$(PIHOLE_IP) doubleclick.net)"
-	@printf "%-32s %s/12\n" "infra dns records"   "$$(for n in router switch ap proxmox kvatch pihole music forge registry proxy pault headscale; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
+	@printf "%-32s %s/13\n" "infra dns records"   "$$(for n in router switch ap proxmox kvatch pihole music forge registry proxy pault pault-staging headscale; do dig +short @$(PIHOLE_IP) $$n.home; done | grep -c '^192')"
 	@printf "%-32s %s\n" "pmxcfs symlink intact"  "$$(ssh -o BatchMode=yes root@$(KVATCH_IP) 'test -L /root/.ssh/authorized_keys && echo yes || echo BROKEN')"
 	@printf "%-32s %s\n" "lxc timezone"           "$$(cd $(ANSIBLE_DIR) && $(UV) ansible lxc -m command -a 'readlink -f /etc/localtime' 2>/dev/null | tail -1)"
 	@printf "%-32s %s\n" "lxc templates"          "$$(cd $(ANSIBLE_DIR) && $(UV) ansible proxmox -m shell -a 'pveam list local | grep -c debian-13' 2>/dev/null | tail -1)"
