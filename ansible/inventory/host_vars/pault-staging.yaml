@@ -10,3 +10,5 @@ pault_media_host: pault-staging-media.lab.shychedelic.com
 pault_web_image: git.lab.shychedelic.com/phillhood/pault-web:5062cfde
 pault_api_image: git.lab.shychedelic.com/phillhood/pault-api:5062cfde
 pault_tunnel_id: ""
+
+pault_seed_target: true

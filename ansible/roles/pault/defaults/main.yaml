@@ -14,6 +14,8 @@ pault_web_image: ""
 pault_api_image: ""
 pault_tunnel_id: ""
 
+pault_seed_target: false
+
 pault_s3_bucket: pault
 pault_s3_region: us-east-1
 pault_session_ttl: 7d

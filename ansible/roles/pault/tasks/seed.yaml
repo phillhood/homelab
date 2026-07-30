@@ -1,11 +1,18 @@
 ---
+- name: Refuse to seed a host that has not opted in
+  ansible.builtin.assert:
+    that:
+      - pault_seed_target | default(false) | bool
+    fail_msg: >-
+      Refusing to seed a host without pault_seed_target set.
+    quiet: true
+
 - name: Refuse to seed the production stack
   ansible.builtin.assert:
     that:
       - inventory_hostname != 'pault'
     fail_msg: >-
-      The seed mirrors into the host it runs on, replacing its bucket.
-      Refusing to run against pault.
+      Refusing to seed pault.
     quiet: true
 
 - name: Refuse to seed without a readable source
@@ -17,6 +24,22 @@
       - hostvars[pault_seed_source].pault_s3_secret_key | default('') | length > 0
     fail_msg: >-
       pault_seed_source must name a host in pault_env whose S3 credentials are set.
+    quiet: true
+
+- name: Refuse to seed a host from itself
+  ansible.builtin.assert:
+    that:
+      - inventory_hostname != pault_seed_source
+    fail_msg: >-
+      pault_seed_source must name a host other than this one.
+    quiet: true
+
+- name: Refuse to seed into an unnamed bucket
+  ansible.builtin.assert:
+    that:
+      - pault_s3_bucket | default('') | length > 0
+    fail_msg: >-
+      pault_s3_bucket must be set.
     quiet: true
 
 - name: Mirror the source bucket into this stack
@@ -54,7 +77,6 @@
           - /bin/sh
           - "{{ pault_mc_image }}"
           - /minio-seed.sh
-      register: pault_minio_seed
       changed_when: true
   always:
     - name: Remove the seed environment
