@@ -40,6 +40,19 @@ Narrow any target with `LIMIT=` and `TAGS=`, e.g. `make check LIMIT=pihole TAGS=
 against. The one deliberate exception is `make backup`, which is `changed` every run — a
 backup that never changes is broken.
 
+## Applications
+
+Images are built in their own repos and pinned here by short commit SHA.
+
+```bash
+make pault-tags      # published tags, newest first, marked with what is deployed
+make pault-staging   # repin staging to the app repo's HEAD, then converge
+make pault           # the same for production; prompts before touching pault.ca
+```
+
+`make apply` never repins — it redeploys whatever SHA is already in `host_vars`. Pin
+explicitly, and roll back, with `SHA=<short-sha>`.
+
 ## Reverting
 
 Two paths, covering different things.
@@ -60,4 +73,7 @@ the notes rather than doing it from memory.
 
 ## Documentation
 
-See `Homelab` in Obsidian
+`.docs/` carries the per-role notes and their invariants — read those before changing a role.
+It is gitignored, so it does not survive a clone.
+
+See `Homelab` in Obsidian.
