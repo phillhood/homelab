@@ -229,6 +229,29 @@ pault-staging-seed: ## Replace staging's photo bucket with a mirror of productio
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) \
 		--limit pault-staging --tags seed -e pault_seed_source=pault
 
+.PHONY: pault-tags
+pault-tags: ## Published pault image tags, newest first, marked with what is deployed
+	@repo=$$(sed -n "s|^pault_web_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \
+	host=$${repo%%/*}; path=$${repo#*/}; \
+	tok=$$(curl -s "https://$$host/v2/token?scope=repository:$$path:pull&service=container_registry" \
+		| sed -n 's/.*"token":"\([^"]*\)".*/\1/p'); \
+	[ -n "$$tok" ] || { echo "  no token from $$host — is the registry reachable?" >&2; exit 1; }; \
+	tags=$$(curl -s -H "Authorization: Bearer $$tok" "https://$$host/v2/$$path/tags/list" \
+		| tr '",' '\n\n' | grep -E "^[0-9a-f]{7,40}$$"); \
+	[ -n "$$tags" ] || { echo "  no tags returned for $$path" >&2; exit 1; }; \
+	prod=$$(sed -n "s|^pault_web_image: .*:||p" $(PAULT_VARS)); \
+	stg=$$(sed -n "s|^pault_web_image: .*:||p" $(PAULT_STAGING_VARS)); \
+	echo ""; \
+	for t in $$tags; do \
+		git -C $(PAULT_REPO) show -s --format="%ct %h %ad %s" --date=short --abbrev=8 "$$t" 2>/dev/null; \
+	done | sort -rn | while read -r ts sha date subj; do \
+		mark=""; \
+		[ "$$sha" = "$$prod" ] && mark="$$mark  <- production"; \
+		[ "$$sha" = "$$stg" ] && mark="$$mark  <- staging"; \
+		printf "  %-10s %s  %-44.44s%s\n" "$$sha" "$$date" "$$subj" "$$mark"; \
+	done; \
+	echo ""
+
 .PHONY: preflight
 preflight: lint backup check ## The safe path: lint, take a backup, then show what would change
 	@echo ""
