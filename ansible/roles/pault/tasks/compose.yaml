@@ -10,9 +10,15 @@
       - pault_s3_secret_key | default('') | length > 0
       - pault_s3_readonly_access_key | default('') | length > 0
       - pault_s3_readonly_secret_key | default('') | length > 0
+      - postgresql_db | default('') | length > 0
+      - postgresql_user | default('') | length > 0
+      - postgresql_password | default('') | length > 0
       - not (pault_tunnel_id | length > 0) or (pault_tunnel_credentials | default('') | length > 0)
     fail_msg: >-
-      One or more pault secrets are unset. Set them in the pault sops file.
+      One or more of pault_gate_word, pault_session_secret, pault_minio_root_user,
+      pault_minio_root_password, pault_s3_access_key, pault_s3_secret_key,
+      pault_s3_readonly_access_key, pault_s3_readonly_secret_key, postgresql_db,
+      postgresql_user or postgresql_password is unset. Set them in the pault sops file.
     quiet: true
 
 - name: Refuse to render the stack with a shared S3 access key

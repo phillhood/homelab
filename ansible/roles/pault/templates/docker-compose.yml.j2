@@ -22,6 +22,7 @@ services:
       GATE_WORD: {{ pault_gate_word | to_json }}
       SESSION_SECRET: {{ pault_session_secret | to_json }}
       SESSION_TTL: {{ pault_session_ttl }}
+      DATABASE_URL: postgresql://{{ postgresql_user }}:{{ postgresql_password | urlencode | replace('/', '%2F') }}@localhost/{{ postgresql_db }}?host=/var/run/postgresql
       THROTTLE_TTL: {{ pault_throttle_ttl }}
       THROTTLE_LIMIT: "{{ pault_throttle_limit }}"
       S3_INTERNAL_ENDPOINT: http://minio:9000
@@ -34,6 +35,8 @@ services:
       PRESIGN_WINDOW: {{ pault_presign_window }}
       MANIFEST_CACHE_TTL: {{ pault_manifest_cache_ttl }}
       PHOTOS_MAX_LIMIT: "{{ pault_photos_max_limit }}"
+    volumes:
+      - /var/run/postgresql:/var/run/postgresql
     ports:
       - "{{ pault_api_port }}:8080"
     healthcheck:
