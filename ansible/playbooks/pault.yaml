@@ -13,5 +13,6 @@
   hosts: pault_env
   gather_facts: true
   roles:
+    - postgresql
     - docker_engine
     - pault
