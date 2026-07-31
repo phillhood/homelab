@@ -182,6 +182,22 @@ apply: ## Converge the homelab (site.yaml)
 _pault-deploy:
 	@[ -n "$(HOST)" ] || { echo "HOST is required" >&2; exit 1; }
 	@[ -n "$(VARS)" ] || { echo "VARS is required" >&2; exit 1; }
+	@if [ -n "$(CONFIRM)" ]; then \
+		echo ""; \
+		echo "  This converges $(HOST) and recreates the stack, so $(CONFIRM) is unreachable"; \
+		echo "  while the tunnel reconnects."; \
+		echo ""; \
+		grep -E "^pault_(web|api)_image:" $(VARS) | sed 's|^|      running   |'; \
+		if [ -n "$(SHA)" ]; then \
+			echo "      deploying $(SHA)"; \
+		else \
+			echo "      deploying the pinned images, unchanged"; \
+		fi; \
+		echo ""; \
+		test -t 0 || { echo "  refusing: no terminal to confirm on." >&2; exit 1; }; \
+		read -r -p "  Type $(CONFIRM) to confirm: " ans; \
+		test "$$ans" = "$(CONFIRM)" || { echo "  aborted — nothing changed."; exit 1; }; \
+	fi
 	@if [ -z "$(SHA)" ]; then echo "No SHA resolved from $(PAULT_REPO); deploying the pinned images"; fi
 	@if [ -n "$(SHA)" ]; then \
 	  for svc in web api; do \
@@ -202,7 +218,7 @@ _pault-deploy:
 
 .PHONY: pault
 pault: ## Redeploy the pault stack, repinned to the pault repo's HEAD. SHA= overrides
-	@$(MAKE) --no-print-directory _pault-deploy VARS=$(PAULT_VARS) HOST=pault SHA='$(SHA)'
+	@$(MAKE) --no-print-directory _pault-deploy VARS=$(PAULT_VARS) HOST=pault SHA='$(SHA)' CONFIRM=$(PAULT_HOST)
 
 .PHONY: pault-staging
 pault-staging: ## Redeploy the staging pault stack, repinned to the pault repo's HEAD. SHA= overrides
