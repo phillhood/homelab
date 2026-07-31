@@ -42,6 +42,20 @@
       pault_s3_bucket must be set.
     quiet: true
 
+- name: Check for a leftover seed environment
+  ansible.builtin.stat:
+    path: "{{ pault_stack_dir }}/minio-seed.env"
+  register: pault_seed_env_stat
+
+- name: Refuse to seed over a leftover seed environment
+  ansible.builtin.assert:
+    that:
+      - not pault_seed_env_stat.stat.exists
+    fail_msg: >-
+      minio-seed.env is still present from a previous seed that did not clean up.
+      Remove it before retrying.
+    quiet: true
+
 - name: Mirror the source bucket into this stack
   block:
     - name: Deploy the MinIO seed script
@@ -78,6 +92,7 @@
           - "{{ pault_mc_image }}"
           - /minio-seed.sh
       changed_when: true
+      no_log: true
   always:
     - name: Remove the seed environment
       ansible.builtin.file:

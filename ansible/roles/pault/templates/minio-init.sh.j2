@@ -82,6 +82,10 @@ if [ "$ro_attached" = "$ro_entities" ]; then
 fi
 
 case "$ro_attached" in
+	*pault-rw*) echo "pault-rw is attached to $PAULT_S3_READONLY_ACCESS_KEY" >&2; exit 1 ;;
+esac
+
+case "$ro_attached" in
 	*pault-ro*) ;;
 	*) echo "pault-ro is not attached to $PAULT_S3_READONLY_ACCESS_KEY" >&2; exit 1 ;;
 esac

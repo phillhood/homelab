@@ -1,6 +1,11 @@
 #!/bin/sh
 set -eu
 
+if [ -z "$SRC_BUCKET" ]; then
+	echo "SRC_BUCKET is empty" >&2
+	exit 1
+fi
+
 attempt=0
 until mc ls "local/{{ pault_s3_bucket }}" >/dev/null 2>&1; do
 	attempt=$((attempt + 1))
@@ -14,6 +19,18 @@ done
 mc ls --recursive "src/$SRC_BUCKET" >/tmp/src-listing
 if [ ! -s /tmp/src-listing ]; then
 	echo "source bucket is empty" >&2
+	exit 1
+fi
+
+found_manifest=0
+while IFS= read -r line; do
+	case "$line" in
+		*" manifest.json") found_manifest=1 ;;
+	esac
+done </tmp/src-listing
+
+if [ "$found_manifest" -eq 0 ]; then
+	echo "source bucket has no manifest.json" >&2
 	exit 1
 fi
 

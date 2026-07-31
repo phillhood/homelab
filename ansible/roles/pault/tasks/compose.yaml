@@ -15,6 +15,14 @@
       One or more pault secrets are unset. Set them in the pault sops file.
     quiet: true
 
+- name: Refuse to render the stack with a shared S3 access key
+  ansible.builtin.assert:
+    that:
+      - pault_s3_readonly_access_key != pault_s3_access_key
+    fail_msg: >-
+      pault_s3_readonly_access_key and pault_s3_access_key must differ.
+    quiet: true
+
 - name: Refuse to render the stack with missing hostnames
   ansible.builtin.assert:
     that:

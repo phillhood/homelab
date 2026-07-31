@@ -24,6 +24,16 @@
     pault_ct_conf_text: "{{ pault_ct_conf.content | b64decode }}"
   when: pault_ct_conf_stat.stat.exists
 
+- name: Refuse to touch a container that is not this host
+  ansible.builtin.assert:
+    that:
+      - "('hostname: ' ~ inventory_hostname) in pault_ct_conf_text.splitlines()"
+    fail_msg: >-
+      CT {{ pault_container_id }} is not {{ inventory_hostname }}.
+      Check pault_container_id for this host.
+    quiet: true
+  when: pault_ct_conf_stat.stat.exists
+
 - name: Set the container feature flags
   ansible.builtin.command:
     argv:
