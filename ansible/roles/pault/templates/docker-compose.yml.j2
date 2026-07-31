@@ -78,6 +78,8 @@ services:
       MINIO_ROOT_PASSWORD: {{ pault_minio_root_password | to_json }}
       PAULT_S3_ACCESS_KEY: {{ pault_s3_access_key | to_json }}
       PAULT_S3_SECRET_KEY: {{ pault_s3_secret_key | to_json }}
+      PAULT_S3_READONLY_ACCESS_KEY: {{ pault_s3_readonly_access_key | to_json }}
+      PAULT_S3_READONLY_SECRET_KEY: {{ pault_s3_readonly_secret_key | to_json }}
     entrypoint: ["/bin/sh", "/minio-init.sh"]
     volumes:
       - {{ pault_stack_dir }}/minio-init.sh:/minio-init.sh:ro

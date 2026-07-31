@@ -20,8 +20,8 @@
     that:
       - pault_seed_source | default('') | length > 0
       - pault_seed_source in groups['pault_env']
-      - hostvars[pault_seed_source].pault_s3_access_key | default('') | length > 0
-      - hostvars[pault_seed_source].pault_s3_secret_key | default('') | length > 0
+      - hostvars[pault_seed_source].pault_s3_readonly_access_key | default('') | length > 0
+      - hostvars[pault_seed_source].pault_s3_readonly_secret_key | default('') | length > 0
     fail_msg: >-
       pault_seed_source must name a host in pault_env whose S3 credentials are set.
     quiet: true

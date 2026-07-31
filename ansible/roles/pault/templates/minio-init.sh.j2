@@ -38,3 +38,34 @@ case "$(mc admin policy entities local --user "$PAULT_S3_ACCESS_KEY")" in
 	*pault-rw*) ;;
 	*) echo "pault-rw is not attached to $PAULT_S3_ACCESS_KEY" >&2; exit 1 ;;
 esac
+
+cat >/tmp/pault-ro.json <<'POLICY'
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": ["s3:GetObject"],
+      "Resource": ["arn:aws:s3:::{{ pault_s3_bucket }}/*"]
+    },
+    {
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": ["arn:aws:s3:::{{ pault_s3_bucket }}"]
+    }
+  ]
+}
+POLICY
+
+mc admin policy info local pault-ro >/dev/null 2>&1 \
+	|| mc admin policy create local pault-ro /tmp/pault-ro.json
+
+mc admin user info local "$PAULT_S3_READONLY_ACCESS_KEY" >/dev/null 2>&1 \
+	|| mc admin user add local "$PAULT_S3_READONLY_ACCESS_KEY" "$PAULT_S3_READONLY_SECRET_KEY"
+
+mc admin policy attach local pault-ro --user "$PAULT_S3_READONLY_ACCESS_KEY" 2>/dev/null || true
+
+case "$(mc admin policy entities local --user "$PAULT_S3_READONLY_ACCESS_KEY")" in
+	*pault-ro*) ;;
+	*) echo "pault-ro is not attached to $PAULT_S3_READONLY_ACCESS_KEY" >&2; exit 1 ;;
+esac
