@@ -174,6 +174,8 @@ apply: ## Converge the homelab (site.yaml)
 
 .PHONY: _pault-deploy
 _pault-deploy:
+	@[ -n "$(HOST)" ] || { echo "HOST is required" >&2; exit 1; }
+	@[ -n "$(VARS)" ] || { echo "VARS is required" >&2; exit 1; }
 	@if [ -z "$(SHA)" ]; then echo "No SHA resolved from $(PAULT_REPO); deploying the pinned images"; fi
 	@if [ -n "$(SHA)" ]; then \
 	  for svc in web api; do \
