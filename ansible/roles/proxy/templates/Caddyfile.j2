@@ -43,7 +43,10 @@
 		reverse_proxy {{ pault_staging_web_backend }}
 	}
 
-	@pault_staging_media host pault-staging-media.{{ lab_domain }}
+	@pault_staging_media {
+		host pault-staging-media.{{ lab_domain }}
+		path /{{ pault_staging_media_bucket }}/* /minio/health/live
+	}
 	handle @pault_staging_media {
 		reverse_proxy {{ pault_staging_media_backend }}
 	}
