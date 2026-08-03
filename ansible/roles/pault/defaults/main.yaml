@@ -19,8 +19,6 @@ pault_seed_target: false
 pault_s3_bucket: pault
 pault_s3_region: us-east-1
 pault_session_ttl: 7d
-pault_throttle_ttl: 60s
-pault_throttle_limit: 10
 pault_presign_ttl: 1h
 pault_presign_window: 15m
 pault_manifest_cache_ttl: 60s

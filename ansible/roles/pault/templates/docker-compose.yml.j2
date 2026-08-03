@@ -19,12 +19,9 @@ services:
     environment:
       NODE_ENV: production
       PORT: "8080"
-      GATE_WORD: {{ pault_gate_word | to_json }}
       SESSION_SECRET: {{ pault_session_secret | to_json }}
       SESSION_TTL: {{ pault_session_ttl }}
       DATABASE_URL: postgresql://{{ postgresql_user }}:{{ postgresql_password | urlencode | replace('/', '%2F') }}@localhost/{{ postgresql_db }}?host=/var/run/postgresql
-      THROTTLE_TTL: {{ pault_throttle_ttl }}
-      THROTTLE_LIMIT: "{{ pault_throttle_limit }}"
       S3_INTERNAL_ENDPOINT: http://minio:9000
       S3_PUBLIC_ENDPOINT: https://{{ pault_media_host }}
       S3_BUCKET: {{ pault_s3_bucket }}
