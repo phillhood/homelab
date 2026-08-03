@@ -208,7 +208,8 @@ _pault-deploy:
 	  done; \
 	  for svc in web api; do \
 	    repo=$$(sed -n "s|^pault_$${svc}_image: \(.*\):[^:]*$$|\1|p" $(VARS)); \
-	    sed -i "s|^pault_$${svc}_image: .*|pault_$${svc}_image: $$repo:$(SHA)|" $(VARS); \
+	    sed -i.bak "s|^pault_$${svc}_image: .*|pault_$${svc}_image: $$repo:$(SHA)|" $(VARS); \
+	    rm -f $(VARS).bak; \
 	  done; \
 	  test $$(grep -cE "^pault_(web|api)_image: .*:$(SHA)$$" $(VARS)) -eq 2 \
 	    || { echo "repin did not take" >&2; exit 1; }; \
