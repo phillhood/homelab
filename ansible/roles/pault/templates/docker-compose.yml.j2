@@ -35,6 +35,9 @@ services:
       PRESIGN_WINDOW: {{ pault_presign_window }}
       MANIFEST_CACHE_TTL: {{ pault_manifest_cache_ttl }}
       PHOTOS_MAX_LIMIT: "{{ pault_photos_max_limit }}"
+      SITE_TIMEZONE: {{ pault_site_timezone }}
+      WEBAUTHN_RP_ID: {{ pault_webauthn_rp_id }}
+      WEBAUTHN_ORIGIN: {{ pault_webauthn_origin }}
     volumes:
       - /var/run/postgresql:/var/run/postgresql
     ports:

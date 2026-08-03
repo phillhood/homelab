@@ -37,7 +37,9 @@
       - pault_media_host | default('') | length > 0
     fail_msg: >-
       pault_public_host and pault_media_host must both be set. Both are rendered
-      into S3_PUBLIC_ENDPOINT and the tunnel ingress rules.
+      into S3_PUBLIC_ENDPOINT and the tunnel ingress rules, and pault_public_host
+      also becomes WEBAUTHN_RP_ID and WEBAUTHN_ORIGIN, which every enrolled
+      passkey is bound to.
     quiet: true
 
 - name: Create the stack directory

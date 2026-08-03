@@ -25,6 +25,9 @@ pault_presign_ttl: 1h
 pault_presign_window: 15m
 pault_manifest_cache_ttl: 60s
 pault_photos_max_limit: 100
+pault_site_timezone: America/Toronto
+pault_webauthn_rp_id: "{{ pault_public_host }}"
+pault_webauthn_origin: "https://{{ pault_public_host }}"
 
 pault_minio_healthcheck:
   - CMD-SHELL
