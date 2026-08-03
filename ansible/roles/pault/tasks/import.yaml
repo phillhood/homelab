@@ -1,0 +1,87 @@
+---
+- name: Refuse to import without an importer image
+  ansible.builtin.assert:
+    that:
+      - pault_import_image | default('') | length > 0
+    fail_msg: >-
+      pault_import_image must name an image built from the server Dockerfile's
+      build stage. The runtime image carries neither the sources the importer
+      imports nor ts-node.
+    quiet: true
+
+- name: Refuse to import without an owner
+  ansible.builtin.assert:
+    that:
+      - pault_import_owner_email | default('') | length > 0
+    fail_msg: >-
+      pault_import_owner_email must name an account that already exists on this
+      stack. Every imported photo is attributed to it.
+    quiet: true
+
+- name: Refuse to import with missing secrets
+  ansible.builtin.assert:
+    that:
+      - pault_s3_access_key | default('') | length > 0
+      - pault_s3_secret_key | default('') | length > 0
+      - pault_s3_bucket | default('') | length > 0
+      - postgresql_db | default('') | length > 0
+      - postgresql_user | default('') | length > 0
+      - postgresql_password | default('') | length > 0
+    fail_msg: >-
+      One or more of pault_s3_access_key, pault_s3_secret_key, pault_s3_bucket,
+      postgresql_db, postgresql_user or postgresql_password is unset. Set them
+      in the pault sops file.
+    quiet: true
+
+- name: Check for a leftover import environment
+  ansible.builtin.stat:
+    path: "{{ pault_stack_dir }}/pault-import.env"
+  register: pault_import_env_stat
+
+- name: Refuse to import over a leftover import environment
+  ansible.builtin.assert:
+    that:
+      - not pault_import_env_stat.stat.exists
+    fail_msg: >-
+      pault-import.env is still present from a previous import that did not
+      clean up. Remove it before retrying.
+    quiet: true
+
+- name: Import the manifest into the photos table
+  block:
+    - name: Write the import environment
+      ansible.builtin.template:
+        src: pault-import.env.j2
+        dest: "{{ pault_stack_dir }}/pault-import.env"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Run the importer
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --network
+          - pault
+          - --env-file
+          - "{{ pault_stack_dir }}/pault-import.env"
+          - -v
+          - /var/run/postgresql:/var/run/postgresql
+          - "{{ pault_import_image }}"
+          - npm
+          - run
+          - db:import-photos
+      register: pault_import
+      changed_when: "'Rows inserted: 0' not in pault_import.stdout"
+
+    - name: Report what the import inserted
+      ansible.builtin.debug:
+        var: pault_import.stdout_lines
+  always:
+    - name: Remove the import environment
+      ansible.builtin.file:
+        path: "{{ pault_stack_dir }}/pault-import.env"
+        state: absent

@@ -230,6 +230,30 @@ pault-staging-seed: ## Replace staging's photo bucket with a mirror of productio
 	@cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) \
 		--limit pault-staging --tags seed -e pault_seed_source=pault
 
+.PHONY: _pault-import
+_pault-import:
+	@[ -n "$(HOST)" ] || { echo "HOST is required" >&2; exit 1; }
+	@[ -n "$(VARS)" ] || { echo "VARS is required" >&2; exit 1; }
+	@[ -n "$(EMAIL)" ] || { \
+		echo "EMAIL is required — every imported photo is attributed to that account" >&2; exit 1; }
+	@img=$$(sed -n "s|^pault_api_image: ||p" $(VARS) | sed "s|/pault-api:|/pault-import:|"); \
+	  [ -n "$$img" ] || { echo "pault_api_image is not set" >&2; exit 1; }; \
+	  docker manifest inspect "$$img" >/dev/null 2>&1 || { \
+	    echo "$$img is not in the registry. Build and push it from the pault repo:" >&2; \
+	    echo "  docker build --platform linux/amd64 --target build -t $$img ./server" >&2; \
+	    exit 1; }; \
+	  cd $(ANSIBLE_DIR) && $(UV) ansible-playbook $(SITE) \
+	    --limit $(HOST) --tags import \
+	    -e pault_import_image="$$img" -e pault_import_owner_email='$(EMAIL)'
+
+.PHONY: pault-staging-import
+pault-staging-import: ## Import staging's bucket manifest into its photos table. EMAIL= is required
+	@$(MAKE) --no-print-directory _pault-import VARS=$(PAULT_STAGING_VARS) HOST=pault-staging EMAIL='$(EMAIL)'
+
+.PHONY: pault-import
+pault-import: ## Import production's bucket manifest into its photos table. EMAIL= is required
+	@$(MAKE) --no-print-directory _pault-import VARS=$(PAULT_VARS) HOST=pault EMAIL='$(EMAIL)'
+
 .PHONY: pault-tags
 pault-tags: ## Published pault image tags, newest first, marked with what is deployed
 	@repo=$$(sed -n "s|^pault_web_image: \(.*\):[^:]*$$|\1|p" $(PAULT_VARS)); \

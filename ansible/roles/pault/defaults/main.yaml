@@ -12,6 +12,7 @@ pault_minio_port: 9000
 
 pault_web_image: ""
 pault_api_image: ""
+pault_import_image: ""
 pault_tunnel_id: ""
 
 pault_seed_target: false

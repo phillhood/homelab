@@ -6,3 +6,7 @@
 - name: Seed the bucket from another environment
   ansible.builtin.import_tasks: seed.yaml
   tags: [seed, never]
+
+- name: Import the bucket manifest into the photos table
+  ansible.builtin.import_tasks: import.yaml
+  tags: [import, never]
