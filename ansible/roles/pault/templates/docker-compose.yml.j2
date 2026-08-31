@@ -4,6 +4,8 @@ services:
     image: {{ pault_web_image }}
     container_name: pault-web
     restart: unless-stopped
+    environment: 
+      MEDIA_ORIGIN: https://{{ pault_media_host }}
     ports:
       - "{{ pault_web_port }}:8080"
     networks:
