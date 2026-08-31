@@ -10,8 +10,8 @@ pault_mc_image: minio/mc:RELEASE.2025-08-13T08-35-41Z
 pault_public_host: pault-staging.lab.shychedelic.com
 pault_media_host: pault-staging-media.lab.shychedelic.com
 
-pault_web_image: git.lab.shychedelic.com/phillhood/pault-web:3e25265d
-pault_api_image: git.lab.shychedelic.com/phillhood/pault-api:3e25265d
+pault_web_image: git.lab.shychedelic.com/phillhood/pault-web:c519e22f
+pault_api_image: git.lab.shychedelic.com/phillhood/pault-api:c519e22f
 pault_tunnel_id: ""
 
 pault_seed_target: true
